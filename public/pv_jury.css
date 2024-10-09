@@ -1,0 +1,6 @@
+@CHARSET "utf-8";
+
+.log-content {
+  overflow: auto;
+  max-height: 30em;
+}

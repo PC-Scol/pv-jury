@@ -1,0 +1,27 @@
+#!/bin/bash
+# -*- coding: utf-8 mode: sh -*- vim:sw=4:sts=4:et:ai:si:sta:fenc=utf-8
+
+user_dirs=(
+    "$PV_JURY_DATADIR"/{etc,log,var}
+)
+apache_dirs=(
+    /var/cache/apache2/mod_auth_cas
+    /var/cache/apache2/mod_cache_disk
+)
+(
+    source /etc/apache2/envvars
+    for dir in "${user_dirs[@]}"; do
+        mkdir -p "$dir"
+        chown "$APACHE_RUN_USER:$APACHE_RUN_GROUP" "$dir"
+    done
+    if [ "$APACHE_RUN_USER" != www-data ]; then
+        for dir in "${apache_dirs[@]}"; do
+            mkdir -p "$dir"
+            chown "$APACHE_RUN_USER:$APACHE_RUN_GROUP" "$dir"
+        done
+    fi
+)
+
+rm -f "$PV_JURY_DATADIR/var"/*.{run,lock}
+
+exit 0

@@ -1,0 +1,30 @@
+# -*- coding: utf-8 mode: dockerfile -*- vim:sw=4:sts=4:et:ai:si:sta:fenc=utf-8
+ARG NDIST=12
+ARG REGISTRY=pubdocker.univ-reunion.fr
+
+FROM $REGISTRY/src/base AS base
+FROM $REGISTRY/src/php AS php
+
+################################################################################
+FROM debian:${NDIST}-slim AS builder
+ARG APT_MIRROR SEC_MIRROR APT_PROXY TIMEZONE
+ENV APT_MIRROR=$APT_MIRROR SEC_MIRROR=$SEC_MIRROR APT_PROXY=$APT_PROXY TIMEZONE=$TIMEZONE
+
+COPY --from=base /g/ /g/
+COPY --from=base /src/ /src/
+RUN /g/build core lite _builder
+RUN /g/build _su-exec_builder
+
+################################################################################
+FROM debian:${NDIST}-slim
+ARG APT_MIRROR SEC_MIRROR APT_PROXY TIMEZONE
+ENV APT_MIRROR=$APT_MIRROR SEC_MIRROR=$SEC_MIRROR APT_PROXY=$APT_PROXY TIMEZONE=$TIMEZONE
+
+COPY --from=base /g/ /g/
+COPY --from=builder /src/su-exec/su-exec /g/
+RUN /g/build
+
+COPY --from=php /g/ /g/
+RUN /g/build @php-cli php-utils
+
+ENTRYPOINT ["/g/entrypoint"]

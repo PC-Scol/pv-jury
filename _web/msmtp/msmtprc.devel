@@ -1,0 +1,19 @@
+# -*- coding: utf-8 mode: conf -*- vim:sw=4:sts=4:et:ai:si:sta:fenc=utf-8
+defaults
+logfile -
+domain univ-reunion.fr
+from no-reply@univ-reunion.fr
+maildomain univ-reunion.fr
+aliases /etc/aliases.msmtp
+
+# via smtp.univ.run
+account ur
+host maildev.devel.self
+
+# Compte par défaut
+# NB: si l'option -f de msmtp est utilisée, ce n'est pas le compte par défaut
+# qui est sélectionné, mais le premier qui a l'adresse from correspondante, i.e
+# ur avec -f no-reply@univ-reunion.fr
+# donc il on veut être sûr qu'un compte sera utilisé, il vaut mieux commenter
+# les autres définitions
+account default: ur
