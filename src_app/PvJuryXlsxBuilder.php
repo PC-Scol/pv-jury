@@ -440,19 +440,28 @@ class PvJuryXlsxBuilder
       $this->apply_style($cellStyle_A7, $sheet->getStyle($columnLetter . 8));
     }
 
+    $longueur_max=0;
 
     //Ecire $data["stats"]["body"] dans le fichier excel
     for ($i = 0; $i < count($data["stats"]["body"]); $i++) {
       $bodyRow = $data["stats"]["body"][$i];
+      if (count($bodyRow) > $longueur_max) {
+        $longueur_max = count($bodyRow);
+      }
       for ($j = 0; $j < count($bodyRow); $j++) {
       $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($j + 1);
       $sheet->setCellValue($columnLetter . ($i + 9), $bodyRow[$j]);
-      // Appliquer le style de la cellule B8
-      $this->apply_style($cellStyle_B8[0], $sheet->getStyle($columnLetter . ($i + 9)));
       }
     }
 
-    print_r($data);
+    //Apliquer le style cellStyle_B8 sur toute les cellules ecrite via $data["stats"]["body"]
+    for($i=0;$i<count($data["stats"]["body"]);$i++){
+      for($j=0;$j<$longueur_max;$j++){
+        $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($j + 1);
+        $this->apply_style($cellStyle_B8[0], $sheet->getStyle($columnLetter . ($i + 9)));
+      }
+    }
+
 
     // Déterminer la colonne de départ en fonction de la configuration
     $startColumn = $data["config"]['have_gpt'] == 1 ? 'B' : 'A';
