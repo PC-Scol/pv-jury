@@ -23,8 +23,9 @@ class CellStyles
   public $borderbottom;
   public $borderleft;
   public $borderright;
+  public $formatcell;
 
-  public function __construct($font, $bold = false, $italic = false, $underline = false, $size = 11, $color = null, $bordertop = null, $borderbottom = null, $borderleft = null, $borderright = null)
+  public function __construct($font, $bold = false, $italic = false, $underline = false, $size = 11, $color = null, $bordertop = null, $borderbottom = null, $borderleft = null, $borderright = null, $formatcell = null)
   {
     $this->font = $font;
     $this->bold = $bold;
@@ -36,6 +37,7 @@ class CellStyles
     $this->borderbottom = $borderbottom;
     $this->borderleft = $borderleft;
     $this->borderright = $borderright;
+    $this->formatcell = $formatcell;
   }
 }
 
@@ -89,6 +91,9 @@ class PvJuryXlsxBuilder
     $cell->getBorders()->getBottom()->setBorderStyle($cellStyles->borderbottom);
     $cell->getBorders()->getLeft()->setBorderStyle($cellStyles->borderleft);
     $cell->getBorders()->getRight()->setBorderStyle($cellStyles->borderright);
+    if ($cellStyles->formatcell != null) {
+        $cell->getStyle()->getNumberFormat()->setFormatCode($cellStyles->formatcell);
+    }
   }
 
   private function countSpaces($array): array
@@ -407,6 +412,9 @@ class PvJuryXlsxBuilder
 
     //recuperer les styles de cellule pour le titre
     $cellStyles_title_notes = $this->getCellStylesFromModel($spreadsheet_model, [0],"B",6);
+    //Recuperer le style de la cellule B8
+    $cellStyle_B8 = $this->getCellStylesFromModel($spreadsheet_model, ['B8'], 'B', 8);
+
 
     //Ecrire $data["stats"]["headers"] dans le fichier excel
     for ($i = 0; $i < count($data["stats"]["headers"]); $i++) {
@@ -439,6 +447,8 @@ class PvJuryXlsxBuilder
       for ($j = 0; $j < count($bodyRow); $j++) {
       $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($j + 1);
       $sheet->setCellValue($columnLetter . ($i + 9), $bodyRow[$j]);
+      // Appliquer le style de la cellule B8
+      $this->apply_style($cellStyle_B8[0], $sheet->getStyle($columnLetter . ($i + 9)));
       }
     }
 
