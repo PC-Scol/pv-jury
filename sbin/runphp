@@ -132,8 +132,22 @@ function composer() {
     fi
 }
 function ensure_image() {
+    local dfdir suffix dockerfiles dockerfile
     local privareg imagename
-    if [ -z "$IMAGE" ]; then
+    if [ -z "$Image" ]; then
+        [ -n "$RUNPHP_STANDALONE" ] && dfdir="$RUNPHP_STANDALONE/runphp" || dfdir="$MYDIR"
+        dockerfiles=(
+            "_local:$dfdir/Dockerfile.runphp.local"
+            "${BUILD_FLAVOUR//+/_}:$dfdir/Dockerfile.runphp$BUILD_FLAVOUR"
+            ":$dfdir/Dockerfile.runphp"
+        )
+        for dockerfile in "${dockerfiles[@]}"; do
+            suffix="${dockerfile%:*}"
+            dockerfile="${dockerfile##*:}"
+            [ -f "$dockerfile" ] && break
+        done
+        Dockerfile="$dockerfile"
+
         [[ "$IMAGENAME" == */ ]] && imagename=runphp || imagename="${IMAGENAME%/*}/runphp"
         privareg="$PRIVAREG"
         if [ "$imagename" == runphp ]; then
@@ -141,11 +155,11 @@ function ensure_image() {
         else
             [ -z "$privareg" ] && privareg=docker.io
         fi
-        IMAGE="$privareg/$imagename:$DIST"
+        Image="$privareg/$imagename$suffix:$DIST"
     fi
 }
 function check_image() {
-    local image="$IMAGE"
+    local image="$Image"
     for prefix in docker.io/library/ docker.io; do
         if [ "${image#$prefix}" != "$image" ]; then
             image="${image#$prefix}"
@@ -265,7 +279,7 @@ if [ "$RUNPHP_MODE" != docker ]; then
     fi
 
     # Toujours vérifier l'existence de l'image
-    IMAGE=
+    Image=
     if [ -z "$Bootstrap" ]; then
         if [ -n "$RUNPHP_FORCE_BUILDENVS" ]; then
             eval "Configs=($RUNPHP_FORCE_BUILDENVS)"
@@ -376,26 +390,13 @@ OPTIONS
         ensure_image
         check_image && exists=1 || exists=
         if [ -z "$UnlessExists" -o -z "$exists" ]; then
-            eecho "== Building $IMAGE"
-            if [ -n "$RUNPHP_STANDALONE" ]; then
-                DFDIR="$RUNPHP_STANDALONE/runphp"
-            else
-                DFDIR="$MYDIR"
-            fi
-            dockerfiles=(
-                "$DFDIR/Dockerfile.runphp.local"
-                "$DFDIR/Dockerfile.runphp$BUILD_FLAVOUR"
-                "$DFDIR/Dockerfile.runphp"
-            )
-            for dockerfile in "${dockerfiles[@]}"; do
-                [ -f "$dockerfile" ] && break
-            done
+            eecho "== Building $Image"
             args=(
-                -f "$dockerfile"
+                -f "$Dockerfile"
                 ${Pull:+--pull}
                 ${NoCache:+--no-cache}
                 ${BuildPlain:+--progress plain}
-                -t "$IMAGE"
+                -t "$Image"
             )
             for arg in "${BUILD_ARGS[@]}"; do
                 args+=(--build-arg "$arg=${!arg}")
@@ -410,8 +411,8 @@ OPTIONS
             docker build "${args[@]}" /tmp/runphp-build || exit 1
 
             if [ -n "$Push" -a -n "$PRIVAREG" ]; then
-                eecho "== Pushing $IMAGE"
-                docker push "$IMAGE" || exit 1
+                eecho "== Pushing $Image"
+                docker push "$Image" || exit 1
             fi
         fi
         if [ -z "$RUNPHP_STANDALONE" -a ! -f "$PROJDIR/$VENDORDIR/oulib/php/load.sh" ]; then
@@ -522,7 +523,7 @@ OPTIONS
     fi
 
     args+=(
-        "$IMAGE"
+        "$Image"
         exec "$0" ${Chdir:+-w "$Chdir"}
     )
     [ -n "$ComposerInstall" ] && set -- ci
