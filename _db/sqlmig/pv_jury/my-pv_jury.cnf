@@ -1,9 +1,0 @@
-# Paramètres de connexion pour pv-jury
-[client]
-#user=
-#password=
-
-[sqlmig]
-csv2sql=0
-csv_null=\N
-load-data=default

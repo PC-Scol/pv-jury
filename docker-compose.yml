@@ -1,32 +1,6 @@
 # -*- coding: utf-8 mode: yaml -*- vim:sw=4:sts=4:et:ai:si:sta:fenc=utf-8
 
 services:
-  db:
-    build: &build-db
-      context: .
-      dockerfile: Dockerfile.db
-      args:
-        REGISTRY: ${PRIVAREG:-docker.io}/
-    environment: &environment-db
-      DEVEL: 1
-    volumes:
-      - db-data:/var/lib/mysql
-      - ./_db/sqlmig:/mariadb-config/sqlmig
-    networks:
-      default:
-        aliases:
-          - pv-jurydb
-
-  adminer:
-    build: &build-adminer
-      context: .
-      dockerfile: Dockerfile.adminer
-      args:
-        REGISTRY: ${PRIVAREG:-docker.io}/
-    environment: &environment-adminer
-      DBHOST: pv-jurydb
-      DBAUTO: admin/admin@pv_jury
-
   web:
     build: &build-web
       context: .
@@ -35,7 +9,6 @@ services:
         REGISTRY: ${PRIVAREG:-docker.io}/
         XDEBUG: 1
     environment: &environment-web
-      <<: *environment-adminer
       DEVEL: 1
       DEVUSER_USERENT: ${DEVUSER_USERENT:-}
       DEVUSER_GROUPENT: ${DEVUSER_GROUPENT:-}
@@ -51,8 +24,6 @@ services:
       - .:/var/www/app
       - ./devel:/data/pv-jury
       # cf la clé "require" dans composer.json
-      - ../nulib:/var/www/nulib
-      - ../nur-sery:/var/www/nur-sery
     ports:
       - 7081:80
       #- 7444:443
@@ -71,7 +42,6 @@ services:
       disable: true
 
 volumes:
-  db-data:
   session-data:
 
 networks:

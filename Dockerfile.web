@@ -5,6 +5,8 @@ FROM ${REGISTRY}pv-jury-app/php-apache
 ARG XDEBUG
 RUN [ -n "$XDEBUG" ] && /g/php-exts/enable-xdebug
 
+ENV RUNPHP_MODE=docker
+
 ENV MSMTP_ENABLE=1
 ENV UPDATE_CRON_FILES="php"
 COPY _web/msmtp/ /msmtp-config/
