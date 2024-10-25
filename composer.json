@@ -11,7 +11,7 @@
 	"require": {
 		"oulib/php": "dev-master",
 		"our/sery": "dev-master",
-		"lib/spout": "dev-master",
+		"lib/spout": "^4-dev",
 		"phpoffice/phpspreadsheet": "^3.3.0",
 		"ext-bcmath": "*",
 		"php": ">=8.2"

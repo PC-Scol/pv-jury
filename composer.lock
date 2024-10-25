@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1a301b3fc1e191687c8b8136c3db367e",
+    "content-hash": "a4c72d02a47bdc0198f1555791faf022",
     "packages": [
         {
             "name": "lib/spout",
@@ -12,7 +12,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/lib-spout.git",
-                "reference": "055f0f092573787fb6587beda2d03768a921238a"
+                "reference": "f00f819e78ea9e1ae05b4f0caf5796222a606a2a"
             },
             "require": {
                 "ext-dom": "*",
@@ -43,7 +43,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.3.x-dev"
+                    "dev-master": "4.26.x-dev"
                 }
             },
             "autoload": {
@@ -87,7 +87,7 @@
                 "write",
                 "xlsx"
             ],
-            "time": "2024-10-21T12:32:07+00:00"
+            "time": "2024-10-25T04:29:09+00:00"
         },
         {
             "name": "maennchen/zipstream-php",
@@ -279,7 +279,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/oulib.git",
-                "reference": "a782795257fae2bacf5c4d99f4998ab8259b2889"
+                "reference": "a4edeb59ea9fb9515e0570f516620d913a5545e4"
             },
             "require": {
                 "php": "^8.2"
@@ -308,7 +308,7 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2024-10-21T13:14:03+00:00"
+            "time": "2024-10-21T14:54:09+00:00"
         },
         {
             "name": "our/sery",
@@ -316,7 +316,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/our-sery.git",
-                "reference": "47b167b2cb4cbd051cb43637cba9254c2926685f"
+                "reference": "525c21e99e60c7a558ef2838e0a4c60a4e2a1044"
             },
             "require": {
                 "php": "^8.2",
@@ -387,7 +387,7 @@
                 }
             ],
             "description": "espace de maturation pour les librairies",
-            "time": "2024-10-21T13:39:04+00:00"
+            "time": "2024-10-21T13:41:55+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",
