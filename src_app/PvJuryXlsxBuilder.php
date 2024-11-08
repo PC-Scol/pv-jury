@@ -5,6 +5,11 @@ use nur\sery\ext\spreadsheet\SsBuilder;
 use nur\sery\file;
 use nur\sery\file\csv\IBuilder;
 
+use nur\sery\file\TempStream;
+use nur\sery\file\TmpfileWriter;
+use nur\sery\os\path;
+use nur\sery\ref\web\ref_mimetypes;
+use nur\sery\web\http;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -513,11 +518,21 @@ class PvJuryXlsxBuilder
 
   function send(bool $exit = true): void
   {
-    $this->builder->sendFile();
+    $tmpfile = new TmpfileWriter();
+    $writer = new Xlsx($this->spreadsheet);
+    $writer->save($tmpfile->getFile());
+
+    $output = $this->output;
+    if ($output === null) {
+      $output = "pv-de-jury.xlsx";
+    } else {
+      $output = path::filename($output);
+    }
+    http::content_type(ref_mimetypes::XLSX);
+    http::download_as($output);
+
+    $tmpfile->fpassthru();
     if ($exit)
       exit();
   }
-
-
-
 }

@@ -1,10 +1,11 @@
 <?php
 namespace web\pages;
 
-use app\PvJuryCsvBuilder;
 use app\PvJuryExtractor;
+use app\PvJuryXlsxBuilder;
 use Exception;
 use nur\sery\file\web\Upload;
+use nur\sery\os\path;
 use nur\sery\web\uploads;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
@@ -33,7 +34,7 @@ class IndexPage extends ANavigablePage {
       "submitted_key" => "convert",
       "autoload_params" => true,
     ]);
-    $this->addPlugin(new formfilePlugin("Conversion de '", "'", formfilePlugin::AUTOSUBMIT_ON_CHANGE));
+    $this->addPlugin(new formfilePlugin("Conversion de '", "' EN COURS...", formfilePlugin::AUTOSUBMIT_ON_CHANGE));
 
     if ($convertfo->isSubmitted()) {
       al::reset();
@@ -61,10 +62,12 @@ class IndexPage extends ANavigablePage {
     /** @var Upload $file */
     $file = $this->file;
     $extractor = new PvJuryExtractor();
-    $builder = new PvJuryCsvBuilder();
+    $builder = new PvJuryXlsxBuilder();
+    $output = path::filename($file->fullPath);
+    $output = path::ensure_ext($output, ".xlsx", ".csv");
     try {
       $data = $extractor->extract($file);
-      $builder->build($data, "exemple-pv-de-jury.csv")->send();
+      $builder->build($data, $output)->send();
     } catch (Exception $e) {
       al::error($e->getMessage());
       page::redirect(true);
@@ -74,7 +77,7 @@ class IndexPage extends ANavigablePage {
 
   function print(): void {
     vo::h1(self::TITLE);
-    vo::p("Veuillez déposer le fichier édité dans PEGASE. Vous obtiendrez en retour un fichier Excel mis en forme");
+    vo::p("Veuillez déposer le fichier édité depuis PEGASE. Vous obtiendrez en retour un fichier Excel mis en forme");
 
     al::print();
     $this->convertfo->print();
