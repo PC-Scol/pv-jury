@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a4c72d02a47bdc0198f1555791faf022",
+    "content-hash": "e09bd0c96dcd937566717f623829550b",
     "packages": [
         {
             "name": "lib/spout",
@@ -279,7 +279,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/oulib.git",
-                "reference": "a4edeb59ea9fb9515e0570f516620d913a5545e4"
+                "reference": "226e588d1387716f2ccc09c1fa6f360d89d503ac"
             },
             "require": {
                 "php": "^8.2"
@@ -308,14 +308,14 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2024-10-21T14:54:09+00:00"
+            "time": "2024-11-08T13:13:20+00:00"
         },
         {
             "name": "our/sery",
             "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://git.univ-reunion.fr/sda-php/our-sery.git",
+            "dist": {
+                "type": "path",
+                "url": "../our-sery",
                 "reference": "d1b4bc29542c5d8e3b6f6a1e70e864ed3057576a"
             },
             "require": {
@@ -387,20 +387,22 @@
                 }
             ],
             "description": "espace de maturation pour les librairies",
-            "time": "2024-11-08T11:47:26+00:00"
+            "transport-options": {
+                "relative": true
+            }
         },
         {
             "name": "phpoffice/phpspreadsheet",
-            "version": "3.3.0",
+            "version": "3.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-                "reference": "87ddd21eb0b6b7ad20a11d314348ef307475f547"
+                "reference": "eec07c20b51cc785295a6feef81ada7feda755e7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/87ddd21eb0b6b7ad20a11d314348ef307475f547",
-                "reference": "87ddd21eb0b6b7ad20a11d314348ef307475f547",
+                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/eec07c20b51cc785295a6feef81ada7feda755e7",
+                "reference": "eec07c20b51cc785295a6feef81ada7feda755e7",
                 "shasum": ""
             },
             "require": {
@@ -489,9 +491,9 @@
             ],
             "support": {
                 "issues": "https://github.com/PHPOffice/PhpSpreadsheet/issues",
-                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/3.3.0"
+                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/3.4.0"
             },
-            "time": "2024-09-29T07:04:07+00:00"
+            "time": "2024-11-10T10:10:41+00:00"
         },
         {
             "name": "psr/http-client",

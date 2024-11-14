@@ -24,6 +24,7 @@ services:
       - .:/var/www/app
       - ./devel:/data/pv-jury
       # cf la clé "require" dans composer.json
+      - ../our-sery:/var/www/our-sery
     ports:
       - 7081:80
       #- 7444:443
