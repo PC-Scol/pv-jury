@@ -33,13 +33,11 @@ class PvChannel extends CapacitorChannel {
 
   function onCreate($item, array $values, ?array $alwaysNull): ?array {
     $name = $values["name"];
-    file::writer(pvs::file("$name.json"))->encodeJson($values["data"]);
+    file::writer(pvs::file("$name.json"), "w+b")->encodeJson($values["data"]);
     return ["data" => null];
   }
 
   function onUpdate($item, array $values, array $pvalues): ?array {
-    $name = $values["name"];
-    file::writer(pvs::file("$name.json"))->encodeJson($values["data"]);
-    return ["data" => null];
+    return $this->onCreate($item, $values, $pvalues);
   }
 }
