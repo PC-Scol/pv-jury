@@ -4,17 +4,14 @@
 	"description": "Conversion de PV Jury",
 	"repositories": [
 		{
-			"type": "path",
-			"url": "../our-sery"
-		},
-		{
 			"type": "composer",
 			"url": "https://repos.univ-reunion.fr/composer"
 		}
 	],
 	"require": {
 		"oulib/php": "dev-master",
-		"our/sery": "dev-master",
+		"nur/sery": "dev-master",
+		"nur/sery82": "dev-master",
 		"lib/spout": "^4-dev",
 		"phpoffice/phpspreadsheet": "^3.3.0",
 		"ext-bcmath": "*",

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e09bd0c96dcd937566717f623829550b",
+    "content-hash": "17307a47baf2a7ea1154279428ef2ebc",
     "packages": [
         {
             "name": "lib/spout",
@@ -274,6 +274,135 @@
             "time": "2022-12-02T22:17:43+00:00"
         },
         {
+            "name": "nur/sery",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://git.univ-reunion.fr/sda-php/nur-sery.git",
+                "reference": "b6ef3c984e1d70cd988fdb57400749b24afd23dd"
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "replace": {
+                "nur/base": "dev-wip",
+                "nur/ldap": "dev-wip",
+                "nur/m-oracle": "dev-wip",
+                "nur/m-pdo": "dev-wip",
+                "nur/m-pgsql": "dev-wip",
+                "nur/mapper": "dev-wip",
+                "nur/passwd": "dev-wip",
+                "nur/tests": "dev-master",
+                "nur/v-bs3": "dev-wip"
+            },
+            "require-dev": {
+                "ext-bcmath": "*",
+                "ext-curl": "*",
+                "ext-fileinfo": "*",
+                "ext-iconv": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "ext-oci8": "*",
+                "ext-pcntl": "*",
+                "ext-pdo": "*",
+                "ext-pgsql": "*",
+                "ext-posix": "*",
+                "ext-sqlite3": "*",
+                "ext-tidy": "*",
+                "ext-zip": "*",
+                "nulib/tests": ">=7.4"
+            },
+            "bin": [
+                "nur_bin/compctl.php",
+                "nur_bin/compdep.php",
+                "nur_bin/datectl.php",
+                "nur_bin/fsvdiff.php"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "nur\\sery\\wip\\": "wip",
+                    "nur\\sery\\": [
+                        "wip_app",
+                        "src"
+                    ],
+                    "nur\\": "nur_src"
+                },
+                "files": [
+                    "nur_autoload.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "nur\\sery\\": "tests",
+                    "nur\\": "nur_tests"
+                }
+            },
+            "scripts": {
+                "uc": [
+                    "@php sbin/update_classes.php"
+                ]
+            },
+            "authors": [
+                {
+                    "name": "Jephte Clain",
+                    "email": "Jephte.Clain@univ-reunion.fr"
+                }
+            ],
+            "description": "espace de maturation pour les librairies",
+            "time": "2024-11-14T15:56:26+00:00"
+        },
+        {
+            "name": "nur/sery82",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://git.univ-reunion.fr/sda-php/nur-sery82.git",
+                "reference": "f938b6c7e77f0b8689f099d1ea49634694587c6b"
+            },
+            "require": {
+                "ext-ldap": "*",
+                "nur/sery": "dev-master",
+                "php": "^8.2",
+                "symfony/yaml": "^7.1"
+            },
+            "require-dev": {
+                "lib/spout": "^4-dev",
+                "nulib/tests": "8.2",
+                "phpoffice/phpspreadsheet": "^3.3.0"
+            },
+            "bin": [
+                "nur_bin/cachectl.php",
+                "nur_bin/dumpser.php",
+                "nur_bin/ldap-delete.php",
+                "nur_bin/ldap-get-infos.php",
+                "nur_bin/ldap-search.php",
+                "nur_bin/sqlite-storage.php",
+                "nur_bin/mysql-storage.php"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "nur\\sery\\": "src",
+                    "nur\\": "nur_src"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "nur\\sery\\": "tests",
+                    "nur\\": "nur_tests"
+                }
+            },
+            "authors": [
+                {
+                    "name": "Jephte Clain",
+                    "email": "Jephte.Clain@univ-reunion.fr"
+                }
+            ],
+            "description": "espace de maturation pour les librairies (spécifique php8.2)",
+            "time": "2024-11-14T15:59:48+00:00"
+        },
+        {
             "name": "oulib/php",
             "version": "dev-master",
             "source": {
@@ -309,87 +438,6 @@
             ],
             "description": "fonctions et classes essentielles",
             "time": "2024-11-08T13:13:20+00:00"
-        },
-        {
-            "name": "our/sery",
-            "version": "dev-master",
-            "dist": {
-                "type": "path",
-                "url": "../our-sery",
-                "reference": "d1b4bc29542c5d8e3b6f6a1e70e864ed3057576a"
-            },
-            "require": {
-                "php": "^8.2",
-                "symfony/yaml": "^7.1"
-            },
-            "require-dev": {
-                "ext-bcmath": "*",
-                "ext-curl": "*",
-                "ext-fileinfo": "*",
-                "ext-iconv": "*",
-                "ext-json": "*",
-                "ext-ldap": "*",
-                "ext-mbstring": "*",
-                "ext-oci8": "*",
-                "ext-pcntl": "*",
-                "ext-pdo": "*",
-                "ext-pgsql": "*",
-                "ext-posix": "*",
-                "ext-sqlite3": "*",
-                "ext-tidy": "*",
-                "ext-zip": "*",
-                "lib/spout": "dev-master",
-                "nulib/tests": "8.2",
-                "phpoffice/phpspreadsheet": "^3.3.0"
-            },
-            "bin": [
-                "nur_bin/compctl.php",
-                "nur_bin/compdep.php",
-                "nur_bin/cachectl.php",
-                "nur_bin/dumpser.php",
-                "nur_bin/datectl.php",
-                "nur_bin/fsvdiff.php",
-                "nur_bin/ldap-delete.php",
-                "nur_bin/ldap-get-infos.php",
-                "nur_bin/ldap-search.php",
-                "nur_bin/sqlite-storage.php",
-                "nur_bin/mysql-storage.php"
-            ],
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "nur\\sery\\wip\\": "wip",
-                    "nur\\sery\\": [
-                        "wip_app",
-                        "src"
-                    ],
-                    "nur\\": "nur_src"
-                },
-                "files": [
-                    "nur_autoload.php"
-                ]
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "nur\\sery\\": "tests",
-                    "nur\\": "nur_tests"
-                }
-            },
-            "scripts": {
-                "uc": [
-                    "@php sbin/update_classes.php"
-                ]
-            },
-            "authors": [
-                {
-                    "name": "Jephte Clain",
-                    "email": "Jephte.Clain@univ-reunion.fr"
-                }
-            ],
-            "description": "espace de maturation pour les librairies",
-            "transport-options": {
-                "relative": true
-            }
         },
         {
             "name": "phpoffice/phpspreadsheet",
@@ -862,7 +910,8 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "oulib/php": 20,
-        "our/sery": 20,
+        "nur/sery": 20,
+        "nur/sery82": 20,
         "lib/spout": 20
     },
     "prefer-stable": false,
