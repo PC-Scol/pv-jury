@@ -18,7 +18,7 @@ class PvDataExtractor {
       # il faut au moins 4 lignes de titre
       return true;
     }
-    $data["document"]["title"][] = implode(" ", array_filter($row));
+    $data["title"][] = implode(" ", array_filter($row));
     $ctx++;
     return false;
   }
@@ -56,8 +56,8 @@ class PvDataExtractor {
 
       function commit(): void {
         if ($this->newGpt) return;
-        $this->data["tmp"]["gpts"][] = $this->gpt;
-        $this->data["tmp"]["gpt_objs"][] = [
+        $this->data["gpts"][] = $this->gpt;
+        $this->data["gpt_objs"][] = [
           "title" => $this->gpt["title"],
           "objs" => [],
         ];
@@ -92,8 +92,8 @@ class PvDataExtractor {
       function __construct(array &$data) {
         $this->data =& $data;
         $this->igpt = 0;
-        $this->gpt =& $this->data["tmp"]["gpts"][$this->igpt];
-        $this->gptsObjs =& $this->data["tmp"]["gpt_objs"][$this->igpt];
+        $this->gpt =& $this->data["gpts"][$this->igpt];
+        $this->gptsObjs =& $this->data["gpt_objs"][$this->igpt];
       }
 
       function new($col): bool {
@@ -127,8 +127,8 @@ class PvDataExtractor {
         $this->obj = null;
         if ($next && $this->wobj >= $this->gpt["size"]) {
           $igpt = ++$this->igpt;
-          $this->gpt =& $this->data["tmp"]["gpts"][$igpt];
-          $this->gptsObjs =& $this->data["tmp"]["gpt_objs"][$igpt];
+          $this->gpt =& $this->data["gpts"][$igpt];
+          $this->gptsObjs =& $this->data["gpt_objs"][$igpt];
           $this->wobj = 0;
         }
       }
@@ -163,7 +163,7 @@ class PvDataExtractor {
       function __construct(array &$data) {
         $this->data =& $data;
         $this->igpt = 0;
-        $this->gpt =& $this->data["tmp"]["gpts"][$this->igpt];
+        $this->gpt =& $this->data["gpts"][$this->igpt];
         $this->iobj = 0;
         $this->obj =& $this->gpt["objs"][$this->iobj];
       }
@@ -206,7 +206,7 @@ class PvDataExtractor {
         if ($this->newSes) return;
         $ises = $this->ises++;
         $this->obj["sess"][$ises] = $this->ses;
-        $sesCols =& $this->data["tmp"]["ses_cols"];
+        $sesCols =& $this->data["ses_cols"];
         if (!isset($sesCols[$ises])) {
           $sesCols[$ises] = [
             "title" => $this->ses["title"],
@@ -216,7 +216,7 @@ class PvDataExtractor {
         $this->ses = null;
         if ($next) {
           if ($this->wobj >= $this->gpt["size"]) {
-            $this->gpt =& $this->data["tmp"]["gpts"][++$this->igpt];
+            $this->gpt =& $this->data["gpts"][++$this->igpt];
             $this->obj =& $this->gpt["objs"][$this->iobj = 0];
             $this->wobj = 0;
             $this->ises = 0;
@@ -255,7 +255,7 @@ class PvDataExtractor {
 
       function __construct(array &$data) {
         $this->data =& $data;
-        $this->gpt =& $this->data["tmp"]["gpts"][$this->xgpt];
+        $this->gpt =& $this->data["gpts"][$this->xgpt];
         $this->obj =& $this->gpt["objs"][$this->xobj];
         $this->ses =& $this->obj["sess"][$this->xses];
       }
@@ -295,13 +295,13 @@ class PvDataExtractor {
             if ($this->xobj >= count($this->gpt["objs"])) {
               $this->xobj = 0;
               $this->xgpt++;
-              if ($this->xgpt >= count($this->data["tmp"]["gpts"])) {
+              if ($this->xgpt >= count($this->data["gpts"])) {
                 $updateRefs = false;
               }
             }
           }
           if ($updateRefs) {
-            $this->gpt =& $this->data["tmp"]["gpts"][$this->xgpt];
+            $this->gpt =& $this->data["gpts"][$this->xgpt];
             $this->obj =& $this->gpt["objs"][$this->xobj];
             $this->ses =& $this->obj["sess"][$this->xses];
           }
@@ -319,9 +319,9 @@ class PvDataExtractor {
 
   static function parse6_row(array $row, array &$data): void {
     $codApr = $row[0];
-    $data["tmp"]["rows"][$codApr] = $row;
+    $data["rows"][$codApr] = $row;
     $sindex = 3;
-    foreach ($data["tmp"]["gpts"] as &$gpt) {
+    foreach ($data["gpts"] as &$gpt) {
       foreach ($gpt["objs"] as &$obj) {
         foreach ($obj["sess"] as &$ses) {
           $noteCol = $ses["note_col"];
@@ -341,8 +341,8 @@ class PvDataExtractor {
   }
 
   static function update_metadata(array &$data): void {
-    $sesCols =& $data["tmp"]["ses_cols"];
-    foreach ($data["tmp"]["gpts"] as &$gpt) {
+    $sesCols =& $data["ses_cols"];
+    foreach ($data["gpts"] as &$gpt) {
       foreach ($gpt["objs"] as &$obj) {
         foreach ($obj["sess"] as $ises => &$ses) {
           $obj["have_value"] = $obj["have_value"] || $ses["have_value"];
@@ -371,7 +371,7 @@ class PvDataExtractor {
     }; unset($gpt);
   }
 
-  function extract($input): array {
+  function extract($input): PvData {
     $reader = SsReader::with($input, [
       "use_headers" => false,
       "parse_none" => true,
@@ -386,17 +386,11 @@ class PvDataExtractor {
       if ($count > $maxCols) $maxCols = $count;
     }
     $data = [
-      "config" => null,
-      "document" => null,
-      "promo" => null,
-      "stats" => null,
-      "totals" => null,
-      "tmp" => [
-        "gpts" => null,
-        "gpt_objs" => null,
-        "ses_cols" => null,
-        "rows" => null,
-      ],
+      "title" => null,
+      "gpts" => null,
+      "gpt_objs" => null,
+      "ses_cols" => null,
+      "rows" => null,
     ];
     $state = 1;
     foreach ($reader as $row) {
@@ -417,6 +411,6 @@ class PvDataExtractor {
     }
     self::update_metadata($data);
 
-    return $data;
+    return new PvData($data);
   }
 }

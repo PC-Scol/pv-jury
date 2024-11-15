@@ -10,17 +10,17 @@ abstract class CsvPvBuilder implements IPvBuilder {
 
   protected $output = null;
 
-  protected abstract function compute(array &$data): void;
-  protected abstract function writeRows(array $data): void;
+  protected abstract function compute(PvData $pvData): void;
+  protected abstract function writeRows(PvData $pvData): void;
 
-  function build(array $data, $output): self {
+  function build(PvData $pvData, $output): self {
     $this->output = $output;
     $this->builder = SsBuilder::with($output, [
       "use_headers" => false,
     ]);
 
-    $this->compute($data);
-    $this->writeRows($data);
+    $this->compute($pvData);
+    $this->writeRows($pvData);
 
     $this->builder->build();
     return $this;

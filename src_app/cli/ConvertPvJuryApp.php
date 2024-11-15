@@ -59,32 +59,41 @@ class ConvertPvJuryApp extends Application {
     if (!$args || !$csvInput) self::die("Vous devez spécifier le fichier en entrée");
 
     $extractor = new PvDataExtractor();
-    $data = $extractor->extract($csvInput);
+    $pvData = $extractor->extract($csvInput);
 
-    $csvOutput = $this->csvOutput;
-    $jsonOutput = $this->jsonOutput;
-    $xlsxOutput = $this ->xlsxOutput;
     $dumpYaml = $this->dumpYaml;
-    if ($csvOutput === null && $jsonOutput === null && !$dumpYaml && $xlsxOutput === null) {
+    $jsonOutput = $this->jsonOutput;
+    $csvOutput = $this->csvOutput;
+    $xlsxOutput = $this ->xlsxOutput;
+    if (!$dumpYaml && $jsonOutput === null && $csvOutput === null && $xlsxOutput === null) {
       $csvOutput = "-";
     }
+    $wsdump = $dumpYaml && $csvOutput !== null || $xlsxOutput !== null;
 
-    if ($dumpYaml) {
-      yaml::dump($data);
+    if ($dumpYaml && !$wsdump) {
+      yaml::dump($pvData->data);
     }
     if ($jsonOutput !== null) {
-      json::dump($data, $jsonOutput);
+      json::dump($pvData->data, $jsonOutput);
     }
     if ($csvOutput !== null) {
       $class = self::CSV_BUILDERS[$this->model] ?? null;
       if ($class === null) throw StateException::unexpected_state();
       /** @var CsvPvBuilder $builder */
       $builder = new $class();
-      $builder->build($data, $csvOutput)->write();
+      $builder->build($pvData, $csvOutput);
+      if ($dumpYaml) {
+        yaml::dump([
+          "data" => $pvData->data,
+          "ws" => $pvData->ws,
+        ]);
+      } else {
+        $builder->write();
+      }
     }
     if($xlsxOutput !== null){
       $builder = new PvJuryXlsxBuilder();
-      $builder->build($data, $xlsxOutput)->write();
+      $builder->build($pvData->data, $xlsxOutput)->write();
     }
   }
 }

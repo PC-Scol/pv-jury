@@ -7,18 +7,24 @@ use nur\sery\cv;
 use nur\sery\str;
 
 class CsvPvModel2Builder extends CsvPvBuilder {
-  static function prepare_layout(array &$data): void {
+  static function prepare_layout(PvData $pvData): void {
+    $data = $pvData->data;
+    $ws =& $pvData->ws;
+    $promo =& $ws["sheet_promo"];
+    $stats =& $ws["stats"];
+
+    $ws["document"]["title"] = $data["title"];
     $firstObj = true;
     $haveGpt = false;
     $stats = [];
     $colIndexes = [];
-    foreach ($data["tmp"]["gpts"] as $igpt => $gpt) {
+    foreach ($data["gpts"] as $igpt => $gpt) {
       if ($gpt["title"] !== null) $haveGpt = true;
       $stats[$igpt] = [];
       $stgpt =& $stats[$igpt];
       foreach ($gpt["objs"] as $iobj => $obj) {
         if ($firstObj) {
-          $data["document"]["header"] = $obj["title"];
+          $ws["document"]["header"] = $obj["title"];
           $firstObj = false;
         }
         $stgpt[$iobj] = [];
@@ -44,8 +50,7 @@ class CsvPvModel2Builder extends CsvPvBuilder {
         }
       }
     }
-    $data["config"]["have_gpt"] = $haveGpt;
-    $data["tmp"]["stats"] = $stats;
+    $ws["have_gpt"] = $haveGpt;
 
     $offset = 0;
     foreach ($colIndexes as &$indexes) {
@@ -53,7 +58,7 @@ class CsvPvModel2Builder extends CsvPvBuilder {
         $index = $offset++;
       }; unset($index);
     }; unset($indexes);
-    $data["tmp"]["col_indexes"] = $colIndexes;
+    $ws["col_indexes"] = $colIndexes;
 
     $colRow = ["Apprenant", "Objet maquette"];
     if ($haveGpt) array_splice($colRow, 1, 0, ["Groupement"]);
@@ -64,25 +69,28 @@ class CsvPvModel2Builder extends CsvPvBuilder {
       $sesRow[] = cv::vn($sesTitle);
       A::merge($sesRow, array_fill(0, count($cols) - 1, null));
     }
-    $data["promo"]["headers"] = [$sesRow, $colRow];
+    $promo["headers"] = [$sesRow, $colRow];
   }
 
-  static function parse_row(array $row, array &$data): bool {
+  static function parse_row(array $row, PvData $pvData): bool {
     $codApr = $row[0];
-    $resultats =& $data["tmp"]["resultats"];
+    $data = $pvData->data;
+    $ws =& $pvData->ws;
+    $promo =& $ws["sheet_promo"];
+    $stats =& $ws["stats"];
+    $resultats =& $ws["resultats"];
 
-    $haveGpt = $data["config"]["have_gpt"];
-    $colIndexes = $data["tmp"]["col_indexes"];
+    $haveGpt = $ws["have_gpt"];
+    $colIndexes = $ws["col_indexes"];
     $bodyPrefix = [implode(" ", array_splice($row, 0, 3))];
 
     # mettre le nom d'étudiant sur une ligne à part
-    $data["promo"]["body"][] = $bodyPrefix; $bodyPrefix[0] = null;
-    $stats =& $data["tmp"]["stats"];
+    $promo["body"][] = $bodyPrefix; $bodyPrefix[0] = null;
 
     $sindex = 0;
     $firstObj = true;
     $resultat = null;
-    foreach ($data["tmp"]["gpts"] as $igpt => $gpt) {
+    foreach ($data["gpts"] as $igpt => $gpt) {
       $gptPrefix = [];
       if ($haveGpt) {
         $gptPrefix[] = null;
@@ -120,7 +128,7 @@ class CsvPvModel2Builder extends CsvPvBuilder {
             $body[$dindex + $colIndex] = $value;
           }
         }
-        $data["promo"]["body"][] = $body;
+        $promo["body"][] = $body;
         $bodyPrefix[0] = null;
         if ($haveGpt) $gptPrefix[0] = null;
         $firstObj = false;
@@ -133,12 +141,14 @@ class CsvPvModel2Builder extends CsvPvBuilder {
   const NOTE_COLS = ["Min", "Max", "Moy", "Écart type", "Moy-EcTyp"];
   const RES_COLS = ["Admis", "Ajournés", "Absents"];
 
-  static function compute_stats(array &$data): void {
-    $haveGpt = $data["config"]["have_gpt"];
-    $stats = $data["tmp"]["stats"];
+  static function compute_stats(PvData $pvData): void {
+    $data = $pvData->data;
+    $ws =& $pvData->ws;
+
+    $haveGpt = $ws["have_gpt"];
 
     # tout d'abord, calculer les stats
-    foreach ($stats as &$gpt) {
+    foreach ($ws["stats"] as &$gpt) {
       foreach ($gpt as &$obj) {
         foreach ($obj as &$ses) {
           if ($ses === null) continue;
@@ -194,7 +204,7 @@ class CsvPvModel2Builder extends CsvPvBuilder {
       array_splice($col1Row, 0, 0, [null]);
       array_splice($col2Row, 0, 0, ["Groupement"]);
     }
-    foreach ($data["tmp"]["ses_cols"] as $ses) {
+    foreach ($data["ses_cols"] as $ses) {
       $haveNoteCol = $ses["note_col"] !== null;
       $haveResCol = $ses["res_col"] !== null;
       if (!$haveNoteCol && !$haveResCol) continue;
@@ -216,11 +226,11 @@ class CsvPvModel2Builder extends CsvPvBuilder {
         array_fill(0, count($cols) - 1, null));
       A::merge($col2Row, $cols);
     }
-    $data["stats"]["headers"] = [$sesRow, $col1Row, $col2Row];
+    $ws["sheet_stats"]["headers"] = [$sesRow, $col1Row, $col2Row];
 
     # puis faire autant de lignes que nécessaire
-    $body =& $data["stats"]["body"];
-    foreach ($data["tmp"]["gpts"] as $igpt => $gpt) {
+    $body =& $ws["sheet_stats"]["body"];
+    foreach ($data["gpts"] as $igpt => $gpt) {
       $gptTitle = $gpt["title"];
       foreach ($gpt["objs"] as $iobj => $obj) {
         $row = $haveGpt? [$gptTitle]: [];
@@ -247,7 +257,8 @@ class CsvPvModel2Builder extends CsvPvBuilder {
       }
     }
 
-    $resultats = $data["tmp"]["resultats"];
+    $resultats = $ws["resultats"];
+    $nbApprenants = count($resultats);
     $nbAdmis = 0;
     $nbAjournes = 0;
     $nbAbsents = 0;
@@ -262,7 +273,6 @@ class CsvPvModel2Builder extends CsvPvBuilder {
         $nbAbsents++;
       }
     }
-    $nbApprenants = count($resultats);
     $totals = [
       "nb_apprenants" => $nbApprenants,
       "nb_admis" => $nbAdmis,
@@ -271,10 +281,10 @@ class CsvPvModel2Builder extends CsvPvBuilder {
       "per_ajournes" => bcnumber::with($nbAjournes)->_div($nbApprenants)->floatval(4),
       "nb_absents" => $nbAbsents,
     ];
-    $data["totals"]["headers"] = [
+    $ws["sheet_totals"]["headers"] = [
       [null, "Nombre", "Pourcentage"],
     ];
-    $data["totals"]["body"] = [
+    $ws["sheet_totals"]["body"] = [
       ["Etudiants", $totals["nb_apprenants"], null],
       ["Admis", $totals["nb_admis"], $totals["per_admis"]],
       ["Ajournés", $totals["nb_ajournes"], $totals["per_ajournes"]],
@@ -282,45 +292,55 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     ];
   }
 
-  protected function compute(array &$data): void {
-    self::prepare_layout($data);
-    foreach ($data["tmp"]["rows"] as $row) {
-      self::parse_row($row, $data);
+  protected function compute(PvData $pvData): void {
+    $pvData->ws = [
+      "document" => null,
+      "sheet_promo" => null,
+      "sheet_stats" => null,
+      "sheet_totals" => null,
+    ];
+    self::prepare_layout($pvData);
+    foreach ($pvData->data["rows"] as $row) {
+      self::parse_row($row, $pvData);
     }
-    self::compute_stats($data);
+    self::compute_stats($pvData);
   }
 
-  protected function writeRows(array $data): void {
+  protected function writeRows(PvData $pvData): void {
     $builder = $this->builder;
+    $ws = $pvData->ws;
 
-    foreach ($data["document"]["title"] as $line) {
+    foreach ($ws["document"]["title"] as $line) {
       $builder->write([$line]);
     }
 
+    $promo = $pvData->ws["sheet_promo"];
     $builder->write([]);
-    foreach ($data["promo"]["headers"] as $row) {
+    foreach ($promo["headers"] as $row) {
       $builder->write($row);
     }
-    foreach ($data["promo"]["body"] as $row) {
+    foreach ($promo["body"] as $row) {
       $builder->write($row);
     }
 
+    $stats = $pvData->ws["sheet_stats"];
     $builder->write([]);
     $prefix = [null];
-    foreach ($data["stats"]["headers"] as $row) {
+    foreach ($stats["headers"] as $row) {
       $builder->write(cl::merge($prefix, $row));
     }
-    foreach ($data["stats"]["body"] as $row) {
+    foreach ($stats["body"] as $row) {
       $builder->write(cl::merge($prefix, $row));
     }
 
+    $totals = $pvData->ws["sheet_totals"];
     $builder->write([]);
     $prefix = [null];
-    if ($data["config"]["have_gpt"]) $prefix[] = null;
-    foreach ($data["totals"]["headers"] as $row) {
+    if ($ws["have_gpt"]) $prefix[] = null;
+    foreach ($totals["headers"] as $row) {
       $builder->write(cl::merge($prefix, $row));
     }
-    foreach ($data["totals"]["body"] as $row) {
+    foreach ($totals["body"] as $row) {
       $builder->write(cl::merge($prefix, $row));
     }
   }

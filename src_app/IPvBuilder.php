@@ -2,7 +2,7 @@
 namespace app;
 
 interface IPvBuilder {
-  function build(array $data, $output): self;
+  function build(PvData $pvData, $output): self;
 
   function write(): void;
 
