@@ -35,14 +35,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     "AJOURNE" => "AJ",
   ];
 
-  function compute(?PvData $pvData=null): static {
-    $this->ensurePvData($pvData);
-    $data = $pvData->data;
-    $ws =& $pvData->ws;
-    $ws = [
-      "document" => null,
-      "sheet_pv" => null,
-    ];
+  function prepareMetadata(): void {
+    $data = $this->pvData->data;
+    $ws =& $this->pvData->ws;
 
     $ws["document"]["title"] = $data["title"];
     $firstObj = true;
@@ -70,8 +65,13 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     }
     $ws["have_gpt"] = $haveGpt;
     $ws["objs"] = $objs;
+  }
 
+  function prepareLayout(): void {
+    $ws =& $this->pvData->ws;
+    $objs = $ws["objs"];
     $pv =& $ws["sheet_pv"];
+
     $hrow1 = [null, "Code apprenant", "Nom", "Prénom"];
     $hrow2 = [null, null, null, null];
     $firstObj = true;
@@ -96,37 +96,55 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       $hrow2[] = $ects;
     }
     $pv["headers"] = [$hrow1, $hrow2];
+  }
 
-    foreach ($pvData->rows as $row) {
-      $brow1 = cl::merge([null], array_slice($row, 0, 3));
-      $brow2 = [null, null, null, null];
-      foreach ($objs as $obj) {
-        $ses = $obj["ses"];
-        $noteCol = $ses["note_col"];
-        $resCol = $ses["res_col"];
-        $ectsCol = $ses["ects_col"];
-        $note = null;
-        if ($noteCol !== null) {
-          $note = $row[$ses["col_indexes"][$noteCol]];
-          if (is_numeric($note)) $note = bcnumber::with($note)->floatval(3);
-        }
-        $brow1[] = $note;
-        $brow1[] = null;
-        $res = null;
-        if ($resCol !== null) {
-          $res = $row[$ses["col_indexes"][$resCol]];
-          $res = cl::get(self::RES_MAP, $res, $res);
-        }
-        $brow2[] = $res;
-        $ects = null;
-        if ($ectsCol !== null) {
-          $ects = $row[$ses["col_indexes"][$ectsCol]];
-          if (is_numeric($ects)) $ects = bcnumber::with($ects)->numval(3);
-        }
-        $brow2[] = $ects;
+  function parseRow(array $row): void {
+    $ws =& $this->pvData->ws;
+    $objs = $ws["objs"];
+    $pv =& $ws["sheet_pv"];
+
+    $brow1 = cl::merge([null], array_slice($row, 0, 3));
+    $brow2 = [null, null, null, null];
+    foreach ($objs as $obj) {
+      $ses = $obj["ses"];
+      $noteCol = $ses["note_col"];
+      $resCol = $ses["res_col"];
+      $ectsCol = $ses["ects_col"];
+      $note = null;
+      if ($noteCol !== null) {
+        $note = $row[$ses["col_indexes"][$noteCol]];
+        if (is_numeric($note)) $note = bcnumber::with($note)->floatval(3);
       }
-      $pv["body"][] = $brow1;
-      $pv["body"][] = $brow2;
+      $brow1[] = $note;
+      $brow1[] = null;
+      $res = null;
+      if ($resCol !== null) {
+        $res = $row[$ses["col_indexes"][$resCol]];
+        $res = cl::get(self::RES_MAP, $res, $res);
+      }
+      $brow2[] = $res;
+      $ects = null;
+      if ($ectsCol !== null) {
+        $ects = $row[$ses["col_indexes"][$ectsCol]];
+        if (is_numeric($ects)) $ects = bcnumber::with($ects)->numval(3);
+      }
+      $brow2[] = $ects;
+    }
+    $pv["body"][] = $brow1;
+    $pv["body"][] = $brow2;
+  }
+
+  function compute(?PvData $pvData=null): static {
+    $this->ensurePvData($pvData);
+    $pvData->ws = [
+      "document" => null,
+      "sheet_pv" => null,
+    ];
+
+    $this->prepareMetadata();
+    $this->prepareLayout();
+    foreach ($pvData->rows as $row) {
+      $this->parseRow($row);
     }
     return $this;
   }
