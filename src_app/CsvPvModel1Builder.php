@@ -2,6 +2,7 @@
 namespace app;
 
 use nur\sery\cl;
+use nur\sery\cv;
 use nur\sery\str;
 use nur\sery\ValueException;
 
@@ -22,10 +23,18 @@ class CsvPvModel1Builder extends CsvPvBuilder {
 
   private int $ises;
 
-  function setIses(int $ises) {
+  function setIses(int $ises): void {
     $ses = $this->pvData->sesCols[$ises] ?? null;
     ValueException::check_null($ses);
     $this->ises = $ises;
+  }
+
+  const ORDER_NOTE = "note", ORDER_NOM = "nom";
+
+  private string $order = self::ORDER_NOM;
+
+  function setOrder(string $order): void {
+    $this->order = $order;
   }
 
   const RES_MAP = [
@@ -105,6 +114,60 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $pv["headers"] = [$hrow1, $hrow2];
   }
 
+  function getNoteResEcts(array $row, array $obj): array {
+    $ses = $obj["ses"];
+    $noteCol = $ses["note_col"];
+    $note = null;
+    $resCol = $ses["res_col"];
+    $res = null;
+    $ectsCol = $ses["ects_col"];
+    $ects = null;
+    if ($resCol !== null) {
+      $res = $row[$ses["col_indexes"][$resCol]];
+      $res = cl::get(self::RES_MAP, $res, $res);
+    }
+    if ($noteCol !== null) {
+      $note = $row[$ses["col_indexes"][$noteCol]];
+      if (is_numeric($note)) {
+        $note = bcnumber::with($note)->floatval(3);
+      } elseif (is_string($note)) {
+        if ($res === null) $res = cl::get(self::RES_MAP, $note, $note);
+        $note = null;
+      }
+    }
+    if ($ectsCol !== null) {
+      $ects = $row[$ses["col_indexes"][$ectsCol]];
+      if (is_numeric($ects)) {
+        $ects = bcnumber::with($ects)->numval(3);
+      } elseif (is_string($ects)) {
+        $ects = cl::get(self::RES_MAP, $ects, $ects);
+      }
+    }
+    return [
+      "note" => $note,
+      "res" => $res,
+      "ects" => $ects,
+    ];
+  }
+
+  function compareNom(array $a, array $b) {
+    $comparator = cl::compare(["+1", "+2"]);
+    return $comparator($a, $b);
+  }
+
+  function compareNote(array $rowa, array $rowb) {
+    $obj = cl::first($this->pvData->ws["objs"]);
+    ["note" => $notea,
+    ] = $this->getNoteResEcts($rowa, $obj);
+    ["note" => $noteb,
+    ] = $this->getNoteResEcts($rowb, $obj);
+    if (!is_numeric($notea)) $notea = -1;
+    if (!is_numeric($noteb)) $noteb = -1;
+    $c = -cv::compare($notea, $noteb);
+    if ($c !== 0) return $c;
+    else return $this->compareNom($rowa, $rowb);
+  }
+
   function parseRow(array $row): void {
     $ws =& $this->pvData->ws;
     $objs = $ws["objs"];
@@ -117,34 +180,11 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $brow2 = [null, null, null];
     $firstObj = true;
     foreach ($objs as $iobj => $obj) {
-      $ses = $obj["ses"];
-      $noteCol = $ses["note_col"];
-      $note = null;
-      $resCol = $ses["res_col"];
-      $res = null;
-      $ectsCol = $ses["ects_col"];
-      $ects = null;
-      if ($resCol !== null) {
-        $res = $row[$ses["col_indexes"][$resCol]];
-        $res = cl::get(self::RES_MAP, $res, $res);
-      }
-      if ($noteCol !== null) {
-        $note = $row[$ses["col_indexes"][$noteCol]];
-        if (is_numeric($note)) {
-          $note = bcnumber::with($note)->floatval(3);
-        } elseif (is_string($note)) {
-          if ($res === null) $res = cl::get(self::RES_MAP, $note, $note);
-          $note = null;
-        }
-      }
-      if ($ectsCol !== null) {
-        $ects = $row[$ses["col_indexes"][$ectsCol]];
-        if (is_numeric($ects)) {
-          $ects = bcnumber::with($ects)->numval(3);
-        } elseif (is_string($ects)) {
-          $ects = cl::get(self::RES_MAP, $ects, $ects);
-        }
-      }
+      [
+        "note" => $note,
+        "res" => $res,
+        "ects" => $ects,
+      ] = $this->getNoteResEcts($row, $obj);
       $brow1[] = $note;
       $brow1[] = null;
       $brow2[] = $res;
@@ -189,10 +229,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     foreach ($objs as $iobj => $obj) {
       $onotes = $notes[$iobj] ?? null;
       if ($onotes !== null) {
-        [$min, $max, $avg] = bcnumber::min_max_avg($onotes);
-        $stdev = bcnumber::stdev($onotes);
-        if ($avg !== null) $avg_stdev = $avg->sub($stdev);
-        else $avg_stdev = null;
+        [$min, $max, $avg] = bcnumber::min_max_avg($onotes, true);
+        $stdev = bcnumber::stdev($onotes, true);
+        $avg_stdev = $avg->sub($stdev);
       } else {
         $min = $max = $avg = $stdev = $avg_stdev = null;
       }
@@ -265,7 +304,16 @@ class CsvPvModel1Builder extends CsvPvBuilder {
 
     $this->prepareMetadata();
     $this->prepareLayout();
-    foreach ($pvData->rows as $row) {
+    $rows = $pvData->rows;
+    switch ($this->order) {
+    case self::ORDER_NOTE:
+      usort($rows, [self::class, "compareNote"]);
+      break;
+    case self::ORDER_NOM:
+      usort($rows, [self::class, "compareNom"]);
+      break;
+    }
+    foreach ($rows as $row) {
       $this->parseRow($row);
     }
     $this->computeStats();

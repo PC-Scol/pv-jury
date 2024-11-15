@@ -43,16 +43,28 @@ class ConvertPage extends ANavigablePage {
     $pvData = $this->pvData = new PvData($data);
     $builder = $this->builder = new CsvPvModel1Builder($pvData);
 
+    $sessions = $builder->getSessions();
     $convertfo = $this->convertfo = new FormBasic([
       "method" => "post",
       "schema" => [
-        "ises" => ["int", null, "Session"],
+        "ises" => ["?int", null, "Session"],
+        "order" => ["string", null, "Ordre"],
       ],
       "params" => [
         "convert" => ["control" => "hidden", "value" => 1],
-        "ises" => [
+        "ises" => cl::merge([
           "control" => "select",
-          "items" => $builder->getSessions(),
+          "items" => $sessions,
+        ], count($sessions) > 1? [
+          "no_item_value" => "",
+          "no_item_text" => "-- Veuillez choisir la session --",
+        ]: null),
+        "order" => [
+          "control" => "select",
+          "items" => [
+            [CsvPvModel1Builder::ORDER_NOTE, "Classer par mérite (note)"],
+            [CsvPvModel1Builder::ORDER_NOM, "Classer par ordre alphabétique (nom)"],
+          ],
         ],
       ],
       "submit" => [
@@ -64,9 +76,17 @@ class ConvertPage extends ANavigablePage {
       "submitted_key" => "convert",
       "autoload_params" => true,
     ]);
+    $action = false;
     if ($convertfo->isSubmitted()) {
       al::reset();
-    } else {
+      if ($convertfo["ises"] !== null) {
+        $action = true;
+      } else {
+        al::error("Vous devez choisir la session");
+        $this->dispatchAction(false);
+      }
+    }
+    if (!$action) {
       $tbuilder = new CsvPvModel2Builder();
       $tbuilder->compute($pvData);
       $this->tbuilder = $tbuilder;
@@ -85,7 +105,9 @@ class ConvertPage extends ANavigablePage {
   function convertAction() {
     page::more_time();
     $builder = $this->builder;
-    $builder->setIses($this->convertfo["ises"]);
+    $convertfo = $this->convertfo;
+    $builder->setIses($convertfo["ises"]);
+    $builder->setOrder($convertfo["order"]);
     $output = path::filename($this->pvData->origname);
     $output = path::ensure_ext($output, ".xlsx", ".csv");
     try {

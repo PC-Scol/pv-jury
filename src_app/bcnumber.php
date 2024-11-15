@@ -123,8 +123,8 @@ class bcnumber {
     return new self(bcsqrt($this->value, static::PRECISION), false);
   }
 
-  static function min(array $values): ?self {
-    $min = null;
+  static function min(array $values, bool $ensureNotNull=false): ?self {
+    $min = $ensureNotNull? new static(): null;
     foreach ($values as $value) {
       $value = new static($value);
       if ($min === null) $min = $value;
@@ -133,8 +133,8 @@ class bcnumber {
     return $min;
   }
 
-  static function max(array $values): ?self {
-    $max = null;
+  static function max(array $values, bool $ensureNotNull=false): ?self {
+    $max = $ensureNotNull? new static(): null;
     foreach ($values as $value) {
       $value = new static($value);
       if ($max === null) $max = $value;
@@ -143,9 +143,9 @@ class bcnumber {
     return $max;
   }
 
-  static function avg(array $values): ?self {
+  static function avg(array $values, bool $ensureNotNull=false): ?self {
     $count = 0;
-    $avg = null;
+    $avg = $ensureNotNull? new static(): null;
     foreach ($values as $value) {
       if (!self::is_valid($value)) continue;
       $count++;
@@ -156,11 +156,11 @@ class bcnumber {
     return $avg;
   }
 
-  static function min_max_avg(array $values): array {
+  static function min_max_avg(array $values, bool $ensureNotNull=false): array {
     $min = null;
     $max = null;
     $count = 0;
-    $avg = null;
+    $avg = $ensureNotNull? new static(): null;
     foreach ($values as $value) {
       if (!self::is_valid($value)) continue;
       $count++;
@@ -176,10 +176,10 @@ class bcnumber {
     return [$min, $max, $avg];
   }
 
-  static function stdev(array $values): ?self {
+  static function stdev(array $values, bool $ensureNotNull=false): ?self {
     $count = 0;
     $avg = self::avg($values);
-    $stdev = null;
+    $stdev = $ensureNotNull? new static(): null;
     foreach ($values as $value) {
       if (!self::is_valid($value)) continue;
       $count++;
