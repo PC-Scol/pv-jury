@@ -266,14 +266,14 @@ class PvDataExtractor {
       function addCol($col, int $colIndex): void {
         if ($col === "Note") {
           $this->ses["note_col"] = $col;
-        } elseif ($col === "Résultat") {
-          $this->ses["res_col"] = $col;
         } elseif ($col === "Note Retenue") {
           $this->ses["note_col"] = $col;
           # ne pas mettre les colonnes résultat, puisque la seule information
           # disponible est l'absence, et qu'on n'est pas capable de calculer
           # de façon fiable les colonnes admis & ajournés
           #$this->ses["res_col"] = $col;
+        } elseif ($col === "Résultat") {
+          $this->ses["res_col"] = $col;
         } elseif ($col === "ECTS") {
           $this->ses["ects_col"] = $col;
         } elseif ($col === "ECTS Finaux") {
@@ -322,7 +322,6 @@ class PvDataExtractor {
 
   static function parse6_row(array $row, array &$data): void {
     $codApr = $row[0];
-    $data["rows"][$codApr] = $row;
     $sindex = 3;
     foreach ($data["gpts"] as &$gpt) {
       foreach ($gpt["objs"] as &$obj) {
@@ -330,17 +329,20 @@ class PvDataExtractor {
           $noteCol = $ses["note_col"];
           $resCol = $ses["res_col"];
           foreach ($ses["cols"] as $col) {
-            $value = $row[$sindex++];
+            $value = $row[$sindex];
             $isValue = $value !== null && $value !== "-";
+            if (!$isValue) $row[$sindex] = $value = null;
             $ses["have_value"] = $ses["have_value"] || $isValue;
             $haveNote = $col === $noteCol && $isValue;
             $ses["have_note"] = $ses["have_note"] || $haveNote;
             $haveRes = $col === $resCol && $isValue;
             $ses["have_res"] = $ses["have_res"] || $haveRes;
+            $sindex++;
           }
         }; unset($ses);
       }; unset($obj);
     }; unset($gpt);
+    $data["rows"][$codApr] = $row;
   }
 
   static function update_metadata(array &$data): void {

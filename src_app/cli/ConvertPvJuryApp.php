@@ -23,6 +23,9 @@ class ConvertPvJuryApp extends Application {
     ["-1", "--model1", "name" => "model", "value" => 1,
       "help" => "Sélectionner le modèle n°1",
     ],
+    ["-s", "--ises", "args" => 1, "argsdesc" => "ISES",
+      "help" => "spécifier l'identifiant de session pour le modèle n°1",
+    ],
     ["-2", "--model2", "name" => "model", "value" => 2,
       "help" => "Sélectionner le modèle n°1",
     ],
@@ -47,6 +50,7 @@ class ConvertPvJuryApp extends Application {
   ];
 
   protected int $model = 2;
+  protected ?int $ises = null;
   protected bool $dumpYaml = false;
   protected ?string $jsonOutput = null;
   protected ?string $csvOutput = null;
@@ -81,7 +85,9 @@ class ConvertPvJuryApp extends Application {
       if ($class === null) throw StateException::unexpected_state();
       /** @var CsvPvBuilder $builder */
       $builder = new $class();
-      $builder->build($csvOutput, $pvData);
+      $builder->setPvData($pvData);
+      if ($this->ises !== null) $builder->setIses($this->ises);
+      $builder->build($csvOutput);
       if ($dumpYaml) {
         yaml::dump([
           "data" => $pvData->data,

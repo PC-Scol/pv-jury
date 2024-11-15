@@ -1,6 +1,8 @@
 <?php
 namespace app;
 
+use nur\sery\str;
+
 /**
  * Class PvData
  *
@@ -8,6 +10,10 @@ namespace app;
  * @property-read string name
  * @property-read string date
  * @property-read array title
+ * @property-read array gpts
+ * @property-read array gptsObjs
+ * @property-read array sesCols
+ * @property-read array rows
  */
 class PvData {
   function __construct(array $data) {
@@ -19,6 +25,7 @@ class PvData {
   function __get($name) {
     switch ($name) {
     default:
+      $name = str::camel2us($name);
       return $this->data[$name];
     }
   }

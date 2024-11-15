@@ -5,6 +5,7 @@ use nur\sery\A;
 use nur\sery\cl;
 use nur\sery\cv;
 use nur\sery\str;
+use nur\v\vo;
 
 class CsvPvModel2Builder extends CsvPvBuilder {
   static function prepare_layout(PvData $pvData): void {
@@ -292,7 +293,8 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     ];
   }
 
-  protected function compute(PvData $pvData): void {
+  function compute(?PvData $pvData=null): static {
+    $this->ensurePvData($pvData);
     $pvData->ws = [
       "document" => null,
       "sheet_promo" => null,
@@ -300,13 +302,15 @@ class CsvPvModel2Builder extends CsvPvBuilder {
       "sheet_totals" => null,
     ];
     self::prepare_layout($pvData);
-    foreach ($pvData->data["rows"] as $row) {
+    foreach ($pvData->rows as $row) {
       self::parse_row($row, $pvData);
     }
     self::compute_stats($pvData);
+    return $this;
   }
 
-  protected function writeRows(PvData $pvData): void {
+  protected function writeRows(?PvData $pvData=null): void {
+    $this->ensurePvData($pvData);
     $builder = $this->builder;
     $ws = $pvData->ws;
 
@@ -314,7 +318,7 @@ class CsvPvModel2Builder extends CsvPvBuilder {
       $builder->write([$line]);
     }
 
-    $promo = $pvData->ws["sheet_promo"];
+    $promo = $ws["sheet_promo"];
     $builder->write([]);
     foreach ($promo["headers"] as $row) {
       $builder->write($row);
@@ -323,7 +327,7 @@ class CsvPvModel2Builder extends CsvPvBuilder {
       $builder->write($row);
     }
 
-    $stats = $pvData->ws["sheet_stats"];
+    $stats = $ws["sheet_stats"];
     $builder->write([]);
     $prefix = [null];
     foreach ($stats["headers"] as $row) {
@@ -333,7 +337,7 @@ class CsvPvModel2Builder extends CsvPvBuilder {
       $builder->write(cl::merge($prefix, $row));
     }
 
-    $totals = $pvData->ws["sheet_totals"];
+    $totals = $ws["sheet_totals"];
     $builder->write([]);
     $prefix = [null];
     if ($ws["have_gpt"]) $prefix[] = null;
@@ -343,5 +347,30 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     foreach ($totals["body"] as $row) {
       $builder->write(cl::merge($prefix, $row));
     }
+  }
+
+  function print(): void {
+    $ws = $this->pvData->ws;
+    $promo = $ws["sheet_promo"];
+    vo::stable(["class" => "table-bordered"]);
+    vo::sthead();
+    foreach ($promo["headers"] as $row) {
+      vo::str();
+      foreach ($row as $col) {
+        vo::th($col ?? ["&nbsp;"]);
+      }
+      vo::etr();
+    }
+    vo::ethead();
+    vo::stbody();
+    foreach ($promo["body"] as $row) {
+      vo::str();
+      foreach ($row as $col) {
+        vo::td($col ?? ["&nbsp;"]);
+      }
+      vo::etr();
+    }
+    vo::etbody();
+    vo::etable();
   }
 }

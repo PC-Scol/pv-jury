@@ -1,8 +1,8 @@
 <?php
 namespace web\pages;
 
-use app\CsvPvBuilder;
 use app\CsvPvModel1Builder;
+use app\CsvPvModel2Builder;
 use app\PvData;
 use app\pvs;
 use Exception;
@@ -12,7 +12,7 @@ use nur\sery\os\path;
 use nur\sery\web\params\F;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
-use nur\v\bs3\fo\FormInline;
+use nur\v\bs3\fo\FormBasic;
 use nur\v\page;
 use nur\v\v;
 use nur\v\vo;
@@ -41,15 +41,22 @@ class ConvertPage extends ANavigablePage {
     }
     if (!$valid) page::redirect(IndexPage::class);
     $pvData = $this->pvData = new PvData($data);
-    $this->builder = new CsvPvModel1Builder($pvData);
+    $builder = $this->builder = new CsvPvModel1Builder($pvData);
 
-    $convertfo = $this->convertfo = new FormInline([
-      "upload" => true,
+    $convertfo = $this->convertfo = new FormBasic([
+      "method" => "post",
+      "schema" => [
+        "ises" => ["int", null, "Session"],
+      ],
       "params" => [
         "convert" => ["control" => "hidden", "value" => 1],
+        "ises" => [
+          "control" => "select",
+          "items" => $builder->getSessions(),
+        ],
       ],
       "submit" => [
-        "Convertir",
+        "Editer le PV",
         "name" => "action",
         "value" => "convert",
         "accesskey" => "s",
@@ -59,30 +66,37 @@ class ConvertPage extends ANavigablePage {
     ]);
     if ($convertfo->isSubmitted()) {
       al::reset();
+    } else {
+      $tbuilder = new CsvPvModel2Builder();
+      $tbuilder->compute($pvData);
+      $this->tbuilder = $tbuilder;
     }
   }
 
   private PvData $pvData;
 
-  private CsvPvBuilder $builder;
+  private CsvPvModel1Builder $builder;
 
-  /** @var Form */
-  protected $convertfo;
+  protected Form $convertfo;
 
   const VALID_ACTIONS = ["convert"];
   const ACTION_PARAM = "action";
 
   function convertAction() {
     page::more_time();
+    $builder = $this->builder;
+    $builder->setIses($this->convertfo["ises"]);
     $output = path::filename($this->pvData->origname);
     $output = path::ensure_ext($output, ".xlsx", ".csv");
     try {
-      $this->builder->build($output)->send();
+      $builder->build($output)->send();
     } catch (Exception $e) {
       al::error($e->getMessage());
     }
     page::redirect(true);
   }
+
+  protected CsvPvModel2Builder $tbuilder;
 
   function print(): void {
     $title = null;
@@ -100,5 +114,7 @@ class ConvertPage extends ANavigablePage {
 
     al::print();
     $this->convertfo->print();
+
+    $this->tbuilder->print();
   }
 }
