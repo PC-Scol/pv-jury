@@ -17,6 +17,21 @@
             </DockerContainerSettings>
           </value>
         </entry>
+        <entry key="25b28922-6e72-4f8a-9157-1a0df29f05e1">
+          <value>
+            <DockerContainerSettings>
+              <option name="version" value="1" />
+              <option name="volumeBindings">
+                <list>
+                  <DockerVolumeBindingImpl>
+                    <option name="containerPath" value="/opt/project" />
+                    <option name="hostPath" value="$PROJECT_DIR$" />
+                  </DockerVolumeBindingImpl>
+                </list>
+              </option>
+            </DockerContainerSettings>
+          </value>
+        </entry>
         <entry key="385aa179-8c50-45e2-9ad7-4d9bfba298a3">
           <value>
             <DockerContainerSettings>
