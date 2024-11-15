@@ -26,7 +26,7 @@ class IndexPage extends ANavigablePage {
   const TITLE = "PV Jury";
 
   function setup(): void {
-    $convertfo = $this->convertfo = new FormInline([
+    $importfo = $this->importfo = new FormInline([
       "upload" => true,
       "params" => [
         "import" => ["control" => "hidden", "value" => 1],
@@ -44,7 +44,7 @@ class IndexPage extends ANavigablePage {
     ]);
     $this->addPlugin(new formfilePlugin("Importation de '", "'...", formfilePlugin::AUTOSUBMIT_ON_CHANGE));
 
-    if ($convertfo->isSubmitted()) {
+    if ($importfo->isSubmitted()) {
       al::reset();
       try {
         /** @var Upload[] $files */
@@ -63,7 +63,7 @@ class IndexPage extends ANavigablePage {
   }
 
   /** @var Form */
-  protected $convertfo;
+  protected $importfo;
 
   /** @var Upload */
   protected $file;
@@ -71,29 +71,13 @@ class IndexPage extends ANavigablePage {
   /** @var array */
   protected $pvs;
 
-  const VALID_ACTIONS = ["import", "convert"];
+  const VALID_ACTIONS = ["import"];
   const ACTION_PARAM = "action";
 
   function importAction() {
     $file = $this->file;
     pvs::channel()->charge($file, null, null, $values);
     page::redirect(page::bu(ConvertPage::class, ["n" => $values["name"]]));
-  }
-
-  function convertAction() {
-    page::more_time();
-    $file = $this->file;
-    $extractor = new PvDataExtractor();
-    $builder = new PvJuryXlsxBuilder();
-    $output = path::filename($file->fullPath);
-    $output = path::ensure_ext($output, ".xlsx", ".csv");
-    try {
-      $data = $extractor->extract($file);
-      $builder->build($data, $output)->send();
-    } catch (Exception $e) {
-      al::error($e->getMessage());
-    }
-    page::redirect(true);
   }
 
   function print(): void {
@@ -103,7 +87,7 @@ class IndexPage extends ANavigablePage {
     vo::p("Veuillez déposer le fichier édité depuis PEGASE. Les options seront affichées une fois le fichier importé");
 
     al::print();
-    $this->convertfo->print();
+    $this->importfo->print();
 
     $pvs = $this->pvs;
     if ($pvs) {

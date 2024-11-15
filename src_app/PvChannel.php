@@ -18,15 +18,12 @@ class PvChannel extends CapacitorChannel {
     /** @var Upload $file */
     $file = $item;
     $extractor = new PvDataExtractor();
-    $data = $extractor->extract($file);
-    $origname = path::filename($file->fullPath);
-    $name = pvs::basename($origname);
-    $date = pvs::get_date($origname);
+    $pvData = $extractor->extract($file);
     return [
-      "origname" => $origname,
-      "name" => $name,
-      "date" => $date,
-      "data" => $data,
+      "origname" => $pvData->origname,
+      "name" => $pvData->name,
+      "date" => $pvData->date,
+      "data" => $pvData->data,
       "item" => null,
     ];
   }

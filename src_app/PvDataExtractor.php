@@ -4,7 +4,10 @@ namespace app;
 use nur\sery\A;
 use nur\sery\cl;
 use nur\sery\ext\spreadsheet\SsReader;
+use nur\sery\file\web\Upload;
+use nur\sery\os\path;
 use nur\sery\str;
+use nur\sery\ValueException;
 use stdClass;
 
 /**
@@ -372,6 +375,16 @@ class PvDataExtractor {
   }
 
   function extract($input): PvData {
+    if ($input instanceof Upload) {
+      $origname = path::filename($input->fullPath);
+    } elseif (is_string($input)) {
+      $origname = path::filename($input);
+    } else {
+      throw ValueException::invalid_kind($input, "file");
+    }
+    $name = pvs::basename($origname);
+    $date = pvs::get_date($origname);
+
     $reader = SsReader::with($input, [
       "use_headers" => false,
       "parse_none" => true,
@@ -386,6 +399,9 @@ class PvDataExtractor {
       if ($count > $maxCols) $maxCols = $count;
     }
     $data = [
+      "origname" => $origname,
+      "name" => $name,
+      "date" => $date,
       "title" => null,
       "gpts" => null,
       "gpt_objs" => null,
