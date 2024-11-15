@@ -33,6 +33,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     "ADMIS" => "ADM /",
     "ADMIS PAR COMPENSATION" => "ADMC /",
     "AJOURNE" => "AJ",
+    "ABS. INJ." => "ABI",
+    "ABS. JUS." => "ABS",
+    "DEFAILLANT" => "DEF",
   ];
 
   function prepareMetadata(): void {
@@ -114,6 +117,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       if ($noteCol !== null) {
         $note = $row[$ses["col_indexes"][$noteCol]];
         if (is_numeric($note)) $note = bcnumber::with($note)->floatval(3);
+        elseif (is_string($note)) $note = cl::get(self::RES_MAP, $note, $note);
       }
       $brow1[] = $note;
       $brow1[] = null;
