@@ -26,6 +26,8 @@
       <path value="$PROJECT_DIR$/vendor/psr/simple-cache" />
       <path value="$PROJECT_DIR$/vendor/lib/spout" />
       <path value="$PROJECT_DIR$/vendor/our/sery" />
+      <path value="$PROJECT_DIR$/vendor/nur/sery82" />
+      <path value="$PROJECT_DIR$/vendor/nur/sery" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2" />

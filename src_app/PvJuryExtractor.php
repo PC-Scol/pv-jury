@@ -41,6 +41,9 @@ class PvJuryExtractor {
         $this->gpt = [
           "title" => $col,
           "size" => 1,
+          "have_value" => false,
+          "have_note" => false,
+          "have_res" => false,
         ];
         $this->newGpt = false;
         return true;
@@ -101,6 +104,9 @@ class PvJuryExtractor {
         $this->obj = [
           "title" => $col,
           "size" => 1,
+          "have_value" => false,
+          "have_note" => false,
+          "have_res" => false,
         ];
         $this->wobj++;
         $this->newObj = false;
@@ -170,8 +176,16 @@ class PvJuryExtractor {
         $this->ses = [
           "title" => $col,
           "size" => 1,
+          "is_session" => false,
+          "have_value" => false,
+          "have_note" => false,
+          "have_res" => false,
           "note_col" => null,
           "res_col" => null,
+          "ects_col" => null,
+          "pj_col" => null,
+          "bareme_col" => null,
+          "coef_col" => null,
         ];
         $this->wobj++;
         $this->wses++;
@@ -249,7 +263,7 @@ class PvJuryExtractor {
         $this->ses =& $this->obj["sess"][$this->xses];
       }
 
-      function addCol($col): void {
+      function addCol($col, int $colIndex): void {
         if ($col === "Note") {
           $this->ses["note_col"] = $col;
         } elseif ($col === "Résultat") {
@@ -260,9 +274,20 @@ class PvJuryExtractor {
           # disponible est l'absence, et qu'on n'est pas capable de calculer
           # de façon fiable les colonnes admis & ajournés
           #$this->ses["res_col"] = $col;
+        } elseif ($col === "ECTS") {
+          $this->ses["ects_col"] = $col;
+        } elseif ($col === "ECTS Finaux") {
+          $this->ses["ects_col"] = $col;
+        } elseif ($col === "Points Jury") {
+          $this->ses["pj_col"] = $col;
+        } elseif ($col === "Barème") {
+          $this->ses["bareme_col"] = $col;
+        } elseif ($col === "Coefficient") {
+          $this->ses["coef_col"] = $col;
         }
         $cols =& $this->ses["cols"];
         $cols[] = $col;
+        $this->ses["col_indexes"][$col] = $colIndex;
 
         if (count($cols) >= $this->ses["size"]) {
           $this->xses++;
@@ -286,22 +311,67 @@ class PvJuryExtractor {
         }
       }
     };
+
     array_splice($row, 0, 3);
+    $sindex = 3;
     foreach ($row as $col) {
-      $c->addCol($col);
-    }
-    $sesCols =& $data["tmp"]["ses_cols"];
-    foreach ($data["tmp"]["gpts"] as $gpt) {
-      foreach ($gpt["objs"] as $obj) {
-        foreach ($obj["sess"] as $ises => $ses) {
-          if (!isset($sesCols[$ises]["cols"])) {
-            A::merge($sesCols[$ises],
-              cl::select($ses, ["note_col", "res_col", "cols"]));
-          }
-        }
-      }
+      $c->addCol($col, $sindex++);
     }
     return true;
+  }
+
+  static function parse6_row(array $row, array &$data): void {
+    $codApr = $row[0];
+    $data["tmp"]["rows"][$codApr] = $row;
+    $sindex = 3;
+    foreach ($data["tmp"]["gpts"] as &$gpt) {
+      foreach ($gpt["objs"] as &$obj) {
+        foreach ($obj["sess"] as &$ses) {
+          $noteCol = $ses["note_col"];
+          $resCol = $ses["res_col"];
+          foreach ($ses["cols"] as $col) {
+            $value = $row[$sindex++];
+            $isValue = $value !== null && $value !== "-";
+            $ses["have_value"] = $ses["have_value"] || $isValue;
+            $haveNote = $col === $noteCol && $isValue;
+            $ses["have_note"] = $ses["have_note"] || $haveNote;
+            $haveRes = $col === $resCol && $isValue;
+            $ses["have_res"] = $ses["have_res"] || $haveRes;
+          }
+        }; unset($ses);
+      }; unset($obj);
+    }; unset($gpt);
+  }
+
+  static function update_metadata(array &$data): void {
+    $sesCols =& $data["tmp"]["ses_cols"];
+    foreach ($data["tmp"]["gpts"] as &$gpt) {
+      foreach ($gpt["objs"] as &$obj) {
+        foreach ($obj["sess"] as $ises => &$ses) {
+          $obj["have_value"] = $obj["have_value"] || $ses["have_value"];
+          $obj["have_note"] = $obj["have_note"] || $ses["have_note"];
+          $obj["have_res"] = $obj["have_res"] || $ses["have_res"];
+          $sesTitle = $ses["title"];
+          $ses["is_session"] = $sesTitle !== null && (
+              str::starts_with("Session ", $sesTitle) ||
+              $sesTitle === "Evaluations Finales"
+            );
+          if (!isset($sesCols[$ises]["cols"])) {
+            A::merge($sesCols[$ises],
+              cl::select($ses, [
+                "is_session",
+                "have_value", "have_note", "have_res",
+                "note_col", "res_col", "ects_col",
+                "pj_col", "bareme_col", "coef_col",
+                "cols", "col_indexes",
+              ]));
+          }
+        }; unset($ses);
+        $gpt["have_value"] = $gpt["have_value"] || $obj["have_value"];
+        $gpt["have_note"] = $gpt["have_note"] || $obj["have_note"];
+        $gpt["have_res"] = $gpt["have_res"] || $obj["have_res"];
+      }; unset($obj);
+    }; unset($gpt);
   }
 
   static function prepare_promo_layout(array &$data): void {
@@ -580,13 +650,13 @@ class PvJuryExtractor {
   }
 
   static function cleanup(array &$data): void {
-    unset($data["tmp"]);
+    //unset($data["tmp"]);
   }
 
   function extract($input): array {
     $reader = SsReader::with($input, [
       "use_headers" => false,
-      "parse_not" => true,
+      "parse_none" => true,
     ]);
     $maxCols = 0;
     foreach ($reader as $row) {
@@ -603,7 +673,12 @@ class PvJuryExtractor {
       "promo" => null,
       "stats" => null,
       "totals" => null,
-      "tmp" => null,
+      "tmp" => [
+        "gpts" => null,
+        "gpt_objs" => null,
+        "ses_cols" => null,
+        "rows" => null,
+      ],
     ];
     $state = 1;
     foreach ($reader as $row) {
@@ -617,13 +692,15 @@ class PvJuryExtractor {
       } elseif ($state == 4 && self::parse4_sess($row, $data)) {
         $state = 5;
       } elseif ($state == 5 && self::parse5_cols($row, $data)) {
-        self::prepare_promo_layout($data);
+        //self::prepare_promo_layout($data);
         $state = 6;
       } elseif ($state == 6) {
-        self::parse6_promo_row($row, $data);
+        self::parse6_row($row, $data);
+        //self::parse6_promo_row($row, $data);
       }
     }
-    self::compute_stats($data);
+    self::update_metadata($data);
+    //self::compute_stats($data);
     self::cleanup($data);
 
     return $data;

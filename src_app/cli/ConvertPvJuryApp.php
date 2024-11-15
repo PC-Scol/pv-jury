@@ -15,36 +15,33 @@ class ConvertPvJuryApp extends Application {
 
   const ARGS = [
     "purpose" => "convertir une extraction de PV de jury",
-    "usage" => "-f INPUT.csv",
+    "usage" => "INPUT.csv [-o OUTPUT.csv]",
 
-    ["-f", "--csv-input", "args" => "file",
-      "help" => "Spécifier le fichier CSV en entrée",
-    ],
     ["-d", "--dump-yaml", "value" => true,
       "help" => "Afficher les données au format YAML",
+    ],
+    ["-j", "--json-output", "args" => "file",
+      "help" => "Spécifier le fichier JSON en sortie",
     ],
     ["-o", "--csv-output", "args" => "file",
       "help" => "Spécifier le fichier CSV en sortie",
     ],
     ["-x", "--xlsx-output", "args" => "file",
-      "help" => "Spécifier le fichier XLSX en sortie",
+      "help" => "Spécifier le fichier XLSX mis en forme en sortie",
     ],
-    ["-j", "--json-output", "args" => "file",
-      "help" => "Spécifier le fichier JSON en sortie",
-    ],
+    ["args" => "file", "name" => "args"],
   ];
 
-  protected ?string $csvInput = null;
   protected bool $dumpYaml = false;
+  protected ?string $jsonOutput = null;
   protected ?string $csvOutput = null;
   protected ?string $xlsxOutput = null;
-  protected ?string $jsonOutput = null;
+  protected ?array $args = null;
 
   function main() {
-    $csvInput = $this->csvInput;
-    if ($csvInput === null) {
-      self::die("Vous devez spécifier le fichier en entrée");
-    }
+    $args = $this->args;
+    $csvInput = $args[0] ?? null;
+    if (!$args || !$csvInput) self::die("Vous devez spécifier le fichier en entrée");
 
     $extractor = new PvJuryExtractor();
     $data = $extractor->extract($csvInput);
@@ -57,6 +54,12 @@ class ConvertPvJuryApp extends Application {
       $csvOutput = "-";
     }
 
+    if ($dumpYaml) {
+      yaml::dump($data);
+    }
+    if ($jsonOutput !== null) {
+      json::dump($data, $jsonOutput);
+    }
     if ($csvOutput !== null) {
       $builder = new PvJuryCsvBuilder();
       $builder->build($data, $csvOutput)->write();
@@ -64,12 +67,6 @@ class ConvertPvJuryApp extends Application {
     if($xlsxOutput !== null){
       $builder = new PvJuryXlsxBuilder();
       $builder->build($data, $xlsxOutput)->write();
-    }
-    if ($jsonOutput !== null) {
-      json::dump($data, $jsonOutput);
-    }
-    if ($dumpYaml) {
-      yaml::dump($data);
     }
   }
 }
