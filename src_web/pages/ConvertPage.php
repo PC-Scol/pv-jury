@@ -1,7 +1,8 @@
 <?php
 namespace web\pages;
 
-use app\CsvPvModel2Builder;
+use app\CsvPvBuilder;
+use app\CsvPvModel1Builder;
 use app\PvData;
 use app\pvs;
 use Exception;
@@ -35,13 +36,12 @@ class ConvertPage extends ANavigablePage {
       $file = pvs::json_file($name);
       if (file_exists($file)) {
         $data = file::reader($file)->decodeJson();
-        if ($data) {
-          $valid = true;
-          $this->pvData = new PvData($data);
-        }
+        if ($data) $valid = true;
       }
     }
     if (!$valid) page::redirect(IndexPage::class);
+    $pvData = $this->pvData = new PvData($data);
+    $this->builder = new CsvPvModel1Builder($pvData);
 
     $convertfo = $this->convertfo = new FormInline([
       "upload" => true,
@@ -64,6 +64,8 @@ class ConvertPage extends ANavigablePage {
 
   private PvData $pvData;
 
+  private CsvPvBuilder $builder;
+
   /** @var Form */
   protected $convertfo;
 
@@ -72,13 +74,10 @@ class ConvertPage extends ANavigablePage {
 
   function convertAction() {
     page::more_time();
-    $pvData = $this->pvData;
-    $output = path::filename($pvData->origname);
+    $output = path::filename($this->pvData->origname);
     $output = path::ensure_ext($output, ".xlsx", ".csv");
-
-    $builder = new CsvPvModel2Builder();
     try {
-      $builder->build($pvData, $output)->send();
+      $this->builder->build($output)->send();
     } catch (Exception $e) {
       al::error($e->getMessage());
     }

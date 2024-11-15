@@ -81,7 +81,7 @@ class ConvertPvJuryApp extends Application {
       if ($class === null) throw StateException::unexpected_state();
       /** @var CsvPvBuilder $builder */
       $builder = new $class();
-      $builder->build($pvData, $csvOutput);
+      $builder->build($csvOutput, $pvData);
       if ($dumpYaml) {
         yaml::dump([
           "data" => $pvData->data,

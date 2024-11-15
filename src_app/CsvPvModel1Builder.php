@@ -6,17 +6,11 @@ namespace app;
  * délibération: sélection par session, et affichage en colonnes
  */
 class CsvPvModel1Builder extends CsvPvBuilder {
-  function __construct(string $session) {
-    $this->session = $session;
-  }
-
-  private string $session;
-
-  protected function compute(array &$pvData): void {
+  protected function compute(PvData $pvData): void {
 
   }
 
-  protected function writeRows(array $pvData): void {
+  protected function writeRows(PvData $pvData): void {
 
   }
 }
