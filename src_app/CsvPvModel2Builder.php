@@ -357,7 +357,7 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     foreach ($promo["headers"] as $row) {
       vo::str();
       foreach ($row as $col) {
-        vo::th($col ?? ["&nbsp;"]);
+        vo::th($col);
       }
       vo::etr();
     }
@@ -366,7 +366,7 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     foreach ($promo["body"] as $row) {
       vo::str();
       foreach ($row as $col) {
-        vo::td($col ?? ["&nbsp;"]);
+        vo::td($col);
       }
       vo::etr();
     }
