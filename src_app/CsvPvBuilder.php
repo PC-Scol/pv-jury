@@ -27,7 +27,7 @@ abstract class CsvPvBuilder implements IPvBuilder {
   }
 
   function write(): void {
-    $this->builder->copyTo(file::writer($this->output, "w+b"), true);
+    $this->builder->copyTo(file::writer($this->output), true);
     $this->builder = null;
     $this->output = null;
   }

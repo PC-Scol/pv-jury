@@ -507,7 +507,6 @@ class PvJuryXlsxBuilder
 
   function write(): void
   {
-    //$this->builder->copyTo(file::writer($this->output, "w+b"), true);
     $writer = new Xlsx($this->spreadsheet);
     $writer->save($this->output);
 

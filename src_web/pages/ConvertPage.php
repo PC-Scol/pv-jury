@@ -25,7 +25,7 @@ class ConvertPage extends ANavigablePage {
     $name = F::get("n");
     if (!$name) page::redirect(IndexPage::class);
 
-    $file = pvs::file("$name.json");
+    $file = pvs::json_file($name);
     if (!file_exists($file)) page::redirect(IndexPage::class);
 
     $data = file::reader($file)->decodeJson();

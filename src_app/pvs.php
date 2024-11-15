@@ -35,6 +35,10 @@ class pvs {
     else return "$vardir/$filename";
   }
 
+  static function json_file(string $name): string {
+    return self::file("$name.json");
+  }
+
   static function channel(): PvChannel {
     $sqlite = new Sqlite(app::get()->getVarfile("pvs.db"));
     $channel = new PvChannel();
