@@ -17,7 +17,7 @@ class PvChannel extends CapacitorChannel {
   function getItemValues($item): ?array {
     /** @var Upload $file */
     $file = $item;
-    $extractor = new PvJuryExtractor();
+    $extractor = new PvDataExtractor();
     $data = $extractor->extract($file);
     $origname = path::filename($file->fullPath);
     $name = pvs::basename($origname);

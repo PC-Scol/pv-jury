@@ -1,7 +1,7 @@
 <?php
 namespace web\pages;
 
-use app\PvJuryExtractor;
+use app\PvDataExtractor;
 use app\PvJuryXlsxBuilder;
 use app\pvs;
 use Exception;
@@ -83,7 +83,7 @@ class IndexPage extends ANavigablePage {
   function convertAction() {
     page::more_time();
     $file = $this->file;
-    $extractor = new PvJuryExtractor();
+    $extractor = new PvDataExtractor();
     $builder = new PvJuryXlsxBuilder();
     $output = path::filename($file->fullPath);
     $output = path::ensure_ext($output, ".xlsx", ".csv");
