@@ -33,7 +33,7 @@ BUILDENV0=..env.dist
 BUILDENV=.env
 
 # Listes des images que le script build construit automatiquement
-BUILD_IMAGES=(php-apache)
+BUILD_IMAGES=(php-apache mariadb10 adminer)
 BUILD_FLAVOUR=
 
 ## En ce qui concerne DIST et IMAGENAME, les valeurs dans BUILDENV prennent le

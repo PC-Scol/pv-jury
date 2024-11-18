@@ -1,6 +1,7 @@
 <?php
 namespace app;
 
+use nur\authz;
 use nur\sery\db\CapacitorChannel;
 use nur\sery\file;
 use nur\sery\file\web\Upload;
@@ -10,18 +11,28 @@ class PvChannel extends CapacitorChannel {
   const COLUMN_DEFINITIONS = [
     "srcname" => "varchar",
     "name" => "varchar primary key",
+    "cod_usr" => "varchar",
+    "lib_usr" => "varchar",
+    "title" => "varchar",
     "date" => "datetime",
     "data__" => "text",
   ];
 
   function getItemValues($item): ?array {
+    $usr = authz::get();
+    $codUsr = $usr->getUsername();
+    $libUsr = $usr->getDisplayName();
     /** @var Upload $file */
     $file = $item;
     $extractor = new PvDataExtractor();
     $pvData = $extractor->extract($file);
+    $title = $pvData->data["title"][0] ?? null;
     return [
       "origname" => $pvData->origname,
       "name" => $pvData->name,
+      "cod_usr" => $codUsr,
+      "lib_usr" => $libUsr,
+      "title" => $title,
       "date" => $pvData->date,
       "data" => $pvData->data,
       "item" => null,

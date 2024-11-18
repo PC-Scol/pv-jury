@@ -293,6 +293,12 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     ];
   }
 
+  function setCodApr(string $codApr) {
+    $this->codApr = $codApr;
+  }
+
+  private ?string $codApr = null;
+
   function compute(?PvData $pvData=null): static {
     $this->ensurePvData($pvData);
     $pvData->ws = [
@@ -302,7 +308,9 @@ class CsvPvModel2Builder extends CsvPvBuilder {
       "sheet_totals" => null,
     ];
     self::prepare_layout($pvData);
+    $codApr = $this->codApr;
     foreach ($pvData->rows as $row) {
+      if ($codApr !== null && $row[0] !== $codApr) continue;
       self::parse_row($row, $pvData);
     }
     self::compute_stats($pvData);
@@ -352,11 +360,20 @@ class CsvPvModel2Builder extends CsvPvBuilder {
   function print(): void {
     $ws = $this->pvData->ws;
     $promo = $ws["sheet_promo"];
+    $one = $this->codApr !== null;
+
+    if ($one) vo::h1($promo["body"][0]);
+
     vo::stable(["class" => "table-bordered"]);
     vo::sthead();
     foreach ($promo["headers"] as $row) {
       vo::str();
+      $first = true;
       foreach ($row as $col) {
+        if ($one && $first) {
+          $first = false;
+          continue;
+        }
         vo::th($col);
       }
       vo::etr();
@@ -365,7 +382,12 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     vo::stbody();
     foreach ($promo["body"] as $row) {
       vo::str();
+      $first = true;
       foreach ($row as $col) {
+        if ($one && $first) {
+          $first = false;
+          continue;
+        }
         vo::td($col);
       }
       vo::etr();

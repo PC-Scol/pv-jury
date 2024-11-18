@@ -55,7 +55,7 @@ class IndexPage extends ANavigablePage {
       }
     } else {
       $this->pvs = cl::all(pvs::channel()->all(null, [
-        "cols" => ["name", "date"],
+        "cols" => ["name", "title", "date", "lib_usr"],
         "order by" => "date desc, name",
         "suffix" => "limit 100",
       ]));
@@ -96,11 +96,18 @@ class IndexPage extends ANavigablePage {
       vo::p("Vous pouvez aussi sélectionner un PV dans la liste des fichiers qui ont déjà été importés");
       new CTable($pvs, [
         "table_class" => "table-bordered table-auto",
-        "cols" => ["name", "date"],
-        "headers" => ["Nom", "Date édition"],
-        "col_func" => function($vs, $value, $col) {
+        "cols" => ["name", "title", "date", "lib_usr", null],
+        "headers" => ["Nom", "Type", "Date édition", "Importé par", "Action"],
+        "col_func" => function($vs, $value, $col, $index, $row) {
+          $name = $row["name"];
           if ($col === "name") {
-            return v::a($vs, page::bu(ConvertPage::class, ["n" => $value]));
+            return v::a($vs, page::bu(ConvertPage::class, ["n" => $name]));
+          } elseif ($col === null) {
+            return [
+              v::a("Editer", page::bu(ConvertPage::class, ["n" => $name])),
+              " | ",
+              v::a("Consulter", page::bu(ViewPage::class, ["n" => $name]))
+            ];
           }
           return $vs;
         },

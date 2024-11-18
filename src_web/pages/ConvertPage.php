@@ -3,46 +3,27 @@ namespace web\pages;
 
 use app\CsvPvModel1Builder;
 use app\CsvPvModel2Builder;
-use app\PvData;
-use app\pvs;
 use Exception;
 use nur\sery\cl;
-use nur\sery\file;
 use nur\sery\os\path;
-use nur\sery\web\params\F;
+use nur\sery\text\words;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormBasic;
 use nur\v\page;
 use nur\v\v;
 use nur\v\vo;
-use web\init\ANavigablePage;
+use web\init\APvPage;
 
-class ConvertPage extends ANavigablePage {
+class ConvertPage extends APvPage {
   const TITLE = "PV Jury";
-  const CONTAINER_OPTIONS = [
-    "container" => "fluid",
-  ];
-  function NAVBAR_OPTIONS(): ?array {
-    return cl::merge(parent::NAVBAR_OPTIONS(), [
-      "container" => "fluid",
-    ]);
-  }
 
   function setup(): void {
-    $valid = false;
-    $name = F::get("n");
-    if ($name) {
-      $file = pvs::json_file($name);
-      if (file_exists($file)) {
-        $data = file::reader($file)->decodeJson();
-        if ($data) $valid = true;
-      }
-    }
-    if (!$valid) page::redirect(IndexPage::class);
-    $pvData = $this->pvData = new PvData($data);
-    $builder = $this->builder = new CsvPvModel1Builder($pvData);
+    parent::setup();
+    $pvData = $this->pvData;
+    $this->count = count($pvData->rows);
 
+    $builder = $this->builder = new CsvPvModel1Builder($pvData);
     $sessions = $builder->getSessions();
     $convertfo = $this->convertfo = new FormBasic([
       "method" => "post",
@@ -93,7 +74,7 @@ class ConvertPage extends ANavigablePage {
     }
   }
 
-  private PvData $pvData;
+  private int $count;
 
   private CsvPvModel1Builder $builder;
 
@@ -133,10 +114,16 @@ class ConvertPage extends ANavigablePage {
       }
     }
     vo::h3($title);
+    vo::h4(words::q($this->count, "l'étudiant#s dans ce fichier|m"));
+    vo::p([
+      "Afficher ",
+      v::a("le détail des dossiers étudiants", page::bu(ViewPage::class, [
+        "n" => $this->name,
+      ])),
+      " tel que mentionnés dans le fichier importé",
+    ]);
 
     al::print();
     $this->convertfo->print();
-
-    $this->tbuilder->print();
   }
 }
