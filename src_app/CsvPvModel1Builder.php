@@ -371,5 +371,11 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     foreach ($totals["body"] as $row) {
       $builder->write(cl::merge($prefix, $row));
     }
+
+    $builder->write([]);
+    $prefix = [null, null, null];
+    $builder->write(cl::merge($prefix, ["Le président du jury"]));
+    $builder->write(cl::merge($prefix, ["Date"]));
+    $builder->write(cl::merge($prefix, ["Les membres du jury"]));
   }
 }
