@@ -1,6 +1,8 @@
 <?php
 namespace app\config;
 
+use nur\authz;
+use nur\b\authnz\CasAuthzManager;
 use nur\config;
 use nur\config\ArrayConfig;
 use nur\config\EnvConfig;
@@ -51,6 +53,10 @@ class bootstrap {
         "say" => false, #XXX implémenter affichage à l'écran
       ]);
     }
+  }
+
+  function configure__authnz() {
+    authz::set_manager_class(CasAuthzManager::class);
   }
 
   function configure__routes() {
