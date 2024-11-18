@@ -5,9 +5,10 @@ use nur\authz;
 use nur\sery\db\CapacitorChannel;
 use nur\sery\file;
 use nur\sery\file\web\Upload;
-use nur\sery\os\path;
 
 class PvChannel extends CapacitorChannel {
+  const TABLE_NAME = "pv";
+
   const COLUMN_DEFINITIONS = [
     "srcname" => "varchar",
     "name" => "varchar primary key",

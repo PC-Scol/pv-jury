@@ -3,6 +3,7 @@ namespace app;
 
 use nur\sery\app;
 use nur\sery\db\Capacitor;
+use nur\sery\db\CapacitorStorage;
 use nur\sery\db\sqlite\Sqlite;
 use nur\sery\db\sqlite\SqliteStorage;
 use nur\sery\os\path;
@@ -12,6 +13,7 @@ class pvs {
   static function basename(string $filename, ?string $ext=null): string {
     $basename = path::basename($filename);
     $basename = preg_replace('/^pv-de-jury-/', "", $basename);
+    $basename = preg_replace('/\s+.*$/', "", $basename);
     $basename = preg_replace('/-\d{8}-\d{6}$/', "", $basename);
     return "$basename$ext";
   }
@@ -19,6 +21,7 @@ class pvs {
   static function get_date(?string $filename): ?DateTime {
     if ($filename === null) return null;
     $basename = path::basename($filename);
+    $basename = preg_replace('/\s+.*$/', "", $basename);
     if (!preg_match('/-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})$/', $basename, $ms)) {
       return null;
     }
@@ -39,10 +42,24 @@ class pvs {
     return self::file("$name.json");
   }
 
+  static function storage_file(): string {
+    return app::get()->getVarfile("pvs.db");
+  }
+
+  static function storage(): CapacitorStorage {
+    $sqlite = new Sqlite(self::storage_file());
+    return new SqliteStorage($sqlite);
+  }
+
   static function channel(): PvChannel {
-    $sqlite = new Sqlite(app::get()->getVarfile("pvs.db"));
     $channel = new PvChannel();
-    new Capacitor(new SqliteStorage($sqlite), $channel);
+    new Capacitor(self::storage(), $channel);
+    return $channel;
+  }
+
+  static function channel_rebuilder(): PvChannelRebuilder {
+    $channel = new PvChannelRebuilder();
+    new Capacitor(self::storage(), $channel);
     return $channel;
   }
 }
