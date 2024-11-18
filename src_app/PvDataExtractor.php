@@ -41,9 +41,6 @@ class PvDataExtractor {
         $this->gpt = [
           "title" => $col,
           "size" => 1,
-          "have_value" => false,
-          "have_note" => false,
-          "have_res" => false,
         ];
         $this->newGpt = false;
         return true;
@@ -104,9 +101,6 @@ class PvDataExtractor {
         $this->obj = [
           "title" => $col,
           "size" => 1,
-          "have_value" => false,
-          "have_note" => false,
-          "have_res" => false,
         ];
         $this->wobj++;
         $this->newObj = false;
@@ -176,16 +170,16 @@ class PvDataExtractor {
         $this->ses = [
           "title" => $col,
           "size" => 1,
-          "is_session" => false,
           "have_value" => false,
           "have_note" => false,
           "have_res" => false,
+          "is_acquis" => false,
+          "acquis_col" => null,
+          "is_session" => false,
           "note_col" => null,
           "res_col" => null,
           "ects_col" => null,
           "pj_col" => null,
-          "bareme_col" => null,
-          "coef_col" => null,
         ];
         $this->wobj++;
         $this->wses++;
@@ -264,7 +258,9 @@ class PvDataExtractor {
       }
 
       function addCol($col, int $colIndex): void {
-        if ($col === "Note") {
+        if ($col === "Amngt/Acquis/CHC incomplet") {
+          $this->ses["acquis_col"] = $col;
+        } elseif ($col === "Note") {
           $this->ses["note_col"] = $col;
         } elseif ($col === "Note Retenue") {
           $this->ses["note_col"] = $col;
@@ -280,10 +276,6 @@ class PvDataExtractor {
           $this->ses["ects_col"] = $col;
         } elseif ($col === "Points Jury") {
           $this->ses["pj_col"] = $col;
-        } elseif ($col === "Barème") {
-          $this->ses["bareme_col"] = $col;
-        } elseif ($col === "Coefficient") {
-          $this->ses["coef_col"] = $col;
         }
         $cols =& $this->ses["cols"];
         $cols[] = $col;
@@ -350,28 +342,24 @@ class PvDataExtractor {
     foreach ($data["gpts"] as &$gpt) {
       foreach ($gpt["objs"] as &$obj) {
         foreach ($obj["sess"] as $ises => &$ses) {
-          $obj["have_value"] = $obj["have_value"] || $ses["have_value"];
-          $obj["have_note"] = $obj["have_note"] || $ses["have_note"];
-          $obj["have_res"] = $obj["have_res"] || $ses["have_res"];
           $sesTitle = $ses["title"];
           $ses["is_session"] = $sesTitle !== null && (
               str::starts_with("Session ", $sesTitle) ||
               $sesTitle === "Evaluations Finales"
             );
+          $ses["is_acquis"] = $sesTitle === null && $ses["acquis_col"] !== null;
           if (!isset($sesCols[$ises]["cols"])) {
             A::merge($sesCols[$ises],
               cl::select($ses, [
-                "is_session",
                 "have_value", "have_note", "have_res",
-                "note_col", "res_col", "ects_col",
-                "pj_col", "bareme_col", "coef_col",
+                "is_acquis",
+                "acquis_col",
+                "is_session",
+                "note_col", "res_col", "ects_col", "pj_col",
                 "cols", "col_indexes",
               ]));
           }
         }; unset($ses);
-        $gpt["have_value"] = $gpt["have_value"] || $obj["have_value"];
-        $gpt["have_note"] = $gpt["have_note"] || $obj["have_note"];
-        $gpt["have_res"] = $gpt["have_res"] || $obj["have_res"];
       }; unset($obj);
     }; unset($gpt);
   }

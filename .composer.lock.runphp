@@ -279,7 +279,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-sery.git",
-                "reference": "0bbc07311a28496a720addb288e0198164d9d5b0"
+                "reference": "0f71fa0918cf49380acd9b80e84ebc9616b55b86"
             },
             "require": {
                 "php": ">=7.4"
@@ -350,7 +350,7 @@
                 }
             ],
             "description": "espace de maturation pour les librairies",
-            "time": "2024-11-15T12:11:58+00:00"
+            "time": "2024-11-18T16:01:15+00:00"
         },
         {
             "name": "nur/sery82",

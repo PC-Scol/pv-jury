@@ -32,6 +32,12 @@ class pvs {
     return new DateTime("$d/$m/$Y $H:$M:$S");
   }
 
+  static function upload_file(?string $filename): string {
+    $vardir = path::join(app::get()->getVardir(), "uploads");
+    if ($filename === null) return $vardir;
+    else return "$vardir/$filename";
+  }
+
   static function file(?string $filename): string {
     $vardir = path::join(app::get()->getVardir(), "pvs");
     if ($filename === null) return $vardir;

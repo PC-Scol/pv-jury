@@ -77,10 +77,10 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $titleObj = null;
     $titleSes = null;
     foreach ($data["gpts"] as $gpt) {
-      if (!$gpt["have_value"]) continue;
+      //if (!$gpt["have_value"]) continue;
       if ($gpt["title"] !== null) $haveGpt = true;
       foreach ($gpt["objs"] as $obj) {
-        if (!$obj["have_value"]) continue;
+        //if (!$obj["have_value"]) continue;
         if ($firstObj) {
           $titleObj = $obj["title"];
           self::split_code_title($titleObj);
@@ -139,12 +139,17 @@ class CsvPvModel1Builder extends CsvPvBuilder {
 
   function getNoteResEcts(array $row, array $obj): array {
     $ses = $obj["ses"];
+    $acquisCol = $ses["acquis_col"];
+    $acquis = null;
     $noteCol = $ses["note_col"];
     $note = null;
     $resCol = $ses["res_col"];
     $res = null;
     $ectsCol = $ses["ects_col"];
     $ects = null;
+    if ($acquisCol !== null) {
+      $acquis = $row[$ses["col_indexes"][$acquisCol]];
+    }
     if ($resCol !== null) {
       $res = $row[$ses["col_indexes"][$resCol]];
       $res = cl::get(self::RES_MAP, $res, $res);
@@ -167,6 +172,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       }
     }
     return [
+      "acquis" => $acquis,
       "note" => $note,
       "res" => $res,
       "ects" => $ects,
@@ -204,12 +210,22 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $firstObj = true;
     foreach ($objs as $iobj => $obj) {
       [
+        "acquis" => $acquis,
         "note" => $note,
         "res" => $res,
         "ects" => $ects,
       ] = $this->getNoteResEcts($row, $obj);
+
+      if ($acquis !== null && preg_match('/CAPITALISÉ(?: \(\d{2}(\d{2})-\d{2}(\d{2})\))?/u', $acquis, $ms)) {
+        $f = $ms[1];
+        $t = $ms[2];
+        if ($f && $t) $acquis = "CAP$f-$t";
+        else $acquis = "CAP";
+      } else {
+        $acquis = null;
+      }
       $brow1[] = $note;
-      $brow1[] = null;
+      $brow1[] = $acquis;
       $brow2[] = $res;
       $brow2[] = $ects;
 
@@ -242,11 +258,11 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $pv =& $ws["sheet_pv"];
 
     $stats = [
-      "notes_min" => null,
-      "notes_max" => null,
-      "notes_avg" => null,
-      "stdev" => null,
-      "avg_stdev" => null,
+      "notes_min" => [],
+      "notes_max" => [],
+      "notes_avg" => [],
+      "stdev" => [],
+      "avg_stdev" => [],
     ];
     $notes = $ws["notes"];
     foreach ($objs as $iobj => $obj) {

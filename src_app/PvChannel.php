@@ -5,6 +5,7 @@ use nur\authz;
 use nur\sery\db\CapacitorChannel;
 use nur\sery\file;
 use nur\sery\file\web\Upload;
+use nur\sery\os\path;
 
 class PvChannel extends CapacitorChannel {
   const TABLE_NAME = "pv";
@@ -25,6 +26,10 @@ class PvChannel extends CapacitorChannel {
     $libUsr = $usr->getDisplayName();
     /** @var Upload $file */
     $file = $item;
+    # faire une copie du fichier
+    $origname = path::filename($file->fullPath);
+    $file->moveTo(pvs::upload_file($origname));
+    # puis extraire les données
     $extractor = new PvDataExtractor();
     $pvData = $extractor->extract($file);
     $title = $pvData->data["title"][0] ?? null;
