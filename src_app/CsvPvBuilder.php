@@ -1,6 +1,7 @@
 <?php
 namespace app;
 
+use nur\sery\cl;
 use nur\sery\ext\spreadsheet\SsBuilder;
 use nur\sery\file;
 use nur\sery\file\csv\IBuilder;
@@ -31,14 +32,19 @@ abstract class CsvPvBuilder implements IPvBuilder {
     $this->pvData = $pvData;
   }
 
+  protected function getBuilderParams(): ?array {
+    return null;
+  }
+
   function build($output, ?PvData $pvData=null): self {
     $this->ensurePvData($pvData);
     $this->compute();
 
     $this->output = $output;
-    $this->builder = SsBuilder::with($output, [
+    $params = cl::merge($this->getBuilderParams(), [
       "use_headers" => false,
     ]);
+    $this->builder = SsBuilder::with($output, $params);
     $this->writeRows();
     $this->builder->build();
     return $this;

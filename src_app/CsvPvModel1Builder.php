@@ -3,7 +3,6 @@ namespace app;
 
 use nur\sery\cl;
 use nur\sery\cv;
-use nur\sery\str;
 use nur\sery\ValueException;
 
 /**
@@ -37,6 +36,14 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $this->order = $order;
   }
 
+  protected function getBuilderParams(): ?array {
+    return [
+      "wsparams" => [
+        "sheetView_freezeRow" => 8,
+      ],
+    ];
+  }
+
   const RES_MAP = [
     "ADMIS" => "ADM",
     "AJOURNE" => "AJ",
@@ -51,26 +58,38 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     "ABS. JUS." => "ABS",
   ];
 
+  private static function split_code_title(string &$title, ?string &$code=null): bool {
+    if (preg_match('/^(.*?) - (.*)/', $title, $ms)) {
+      $code = $ms[1];
+      $title = $ms[2];
+      return true;
+    }
+    return false;
+  }
+
   function prepareMetadata(): void {
     $data = $this->pvData->data;
     $ws =& $this->pvData->ws;
 
-    $ws["document"]["title"] = $data["title"];
     $firstObj = true;
     $haveGpt = false;
     $objs = [];
+    $titleObj = null;
+    $titleSes = null;
     foreach ($data["gpts"] as $gpt) {
       if (!$gpt["have_value"]) continue;
       if ($gpt["title"] !== null) $haveGpt = true;
       foreach ($gpt["objs"] as $obj) {
         if (!$obj["have_value"]) continue;
         if ($firstObj) {
-          $ws["document"]["header"] = $obj["title"];
+          $titleObj = $obj["title"];
+          self::split_code_title($titleObj);
           $firstObj = false;
         }
         foreach ($obj["sess"] as $ises => $ses) {
           if (!$ses["have_value"]) continue;
           if ($ises === $this->ises) {
+            $titleSes ??= $ses["title"];
             unset($obj["sess"]);
             $obj["ses"] = $ses;
             break;
@@ -81,6 +100,13 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     }
     $ws["have_gpt"] = $haveGpt;
     $ws["objs"] = $objs;
+
+    $ws["document"]["title"] = [
+      cl::first($data["title"]),
+      $titleObj,
+      $titleSes,
+      cl::last($data["title"]),
+    ];
   }
 
   function prepareLayout(): void {
@@ -99,10 +125,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         $code = "Note";
         $title = "Résultat";
         $ects = "ECTS";
-      } elseif (preg_match('/^(.*?) - (.*)/', $title, $ms)) {
-        $code = $ms[1];
-        $title = $ms[2];
-      } else {
+      } elseif (!self::split_code_title($title, $code)) {
         $code = $title;
         $title = null;
       }

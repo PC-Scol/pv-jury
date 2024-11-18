@@ -358,7 +358,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-sery82.git",
-                "reference": "f938b6c7e77f0b8689f099d1ea49634694587c6b"
+                "reference": "3000c6f3207261fb9f182535dfb3a94d65350963"
             },
             "require": {
                 "ext-ldap": "*",
@@ -400,7 +400,7 @@
                 }
             ],
             "description": "espace de maturation pour les librairies (spécifique php8.2)",
-            "time": "2024-11-14T15:59:48+00:00"
+            "time": "2024-11-18T07:59:49+00:00"
         },
         {
             "name": "oulib/php",

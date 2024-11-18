@@ -12,10 +12,12 @@ use nur\sery\file\web\Upload;
 use nur\sery\os\path;
 use nur\sery\web\uploads;
 use nur\v\al;
+use nur\v\bs3\Bs3IconManager;
 use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormInline;
 use nur\v\bs3\plugins\formfilePlugin;
 use nur\v\bs3\vc\CTable;
+use nur\v\icon;
 use nur\v\ly;
 use nur\v\page;
 use nur\v\v;
@@ -99,14 +101,15 @@ class IndexPage extends ANavigablePage {
         "cols" => ["name", "title", "date", "lib_usr", null],
         "headers" => ["Nom", "Type", "Date édition", "Importé par", "Action"],
         "col_func" => function($vs, $value, $col, $index, $row) {
+          $icons = icon::manager();
           $name = $row["name"];
           if ($col === "name") {
-            return v::a($vs, page::bu(ConvertPage::class, ["n" => $name]));
+            return v::a($icons->getIcon("print", $name), page::bu(ConvertPage::class, ["n" => $name]));
           } elseif ($col === null) {
             return [
-              v::a("Editer", page::bu(ConvertPage::class, ["n" => $name])),
-              " | ",
-              v::a("Consulter", page::bu(ViewPage::class, ["n" => $name]))
+              v::a("Editer PV", page::bu(ConvertPage::class, ["n" => $name])),
+              "&nbsp;&nbsp;|&nbsp;&nbsp;",
+              v::a($icons->getIcon("eye-open", "Consulter"), page::bu(ViewPage::class, ["n" => $name]))
             ];
           }
           return $vs;
