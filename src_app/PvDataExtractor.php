@@ -348,13 +348,21 @@ class PvDataExtractor {
     $sesCols =& $data["ses_cols"];
     foreach ($data["gpts"] as &$gpt) {
       foreach ($gpt["objs"] as &$obj) {
+        unset($cses); $cses = null;
+        unset($pses); $pses = null;
         foreach ($obj["sess"] as $ises => &$ses) {
           $sesTitle = $ses["title"];
-          $ses["is_session"] = $sesTitle !== null && (
+          $ses["is_acquis"] = $sesTitle === null && $ses["acquis_col"] !== null;
+          $isSession = $ses["is_session"] = $sesTitle !== null && (
               str::starts_with("Session ", $sesTitle) ||
               $sesTitle === "Evaluations Finales"
             );
-          $ses["is_acquis"] = $sesTitle === null && $ses["acquis_col"] !== null;
+          $isControl = $ses["is_control"] = $sesTitle !== null &&
+            str::starts_with("Contrôle ", $sesTitle);
+          if ($isSession) {
+            $pses =& $cses;
+            $cses =& $sesCols[$ises];
+          }
           if (!isset($sesCols[$ises]["cols"])) {
             A::merge($sesCols[$ises],
               cl::select($ses, [
@@ -365,6 +373,10 @@ class PvDataExtractor {
                 "note_col", "res_col", "ects_col", "pj_col",
                 "cols", "col_indexes",
               ]));
+          }
+          if ($cses !== null) {
+            if ($isControl) $cses["ctls"][] = $ses;
+            if ($isSession && $pses !== null) $pses["next"] = $ses;
           }
         }; unset($ses);
       }; unset($obj);
