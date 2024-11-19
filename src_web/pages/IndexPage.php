@@ -1,15 +1,11 @@
 <?php
 namespace web\pages;
 
-use app\PvData;
 use app\pvs;
 use Exception;
 use nur\authz;
 use nur\sery\cl;
-use nur\sery\ext\spreadsheet\SsBuilder;
 use nur\sery\file\web\Upload;
-use nur\sery\os\path;
-use nur\sery\web\params\F;
 use nur\sery\web\uploads;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
@@ -21,12 +17,15 @@ use nur\v\ly;
 use nur\v\page;
 use nur\v\v;
 use nur\v\vo;
-use web\init\ANavigablePage;
+use web\init\APvPage;
 
-class IndexPage extends ANavigablePage {
+class IndexPage extends APvPage {
   const TITLE = "PV Jury";
+  const AUTOLOAD_PV_DATA = false;
 
   function setup(): void {
+    parent::setup();
+
     $importfo = $this->importfo = new FormInline([
       "upload" => true,
       "params" => [
@@ -85,31 +84,6 @@ class IndexPage extends ANavigablePage {
     page::redirect(page::bu(ConvertPage::class, ["n" => $values["name"]]));
   }
 
-  function downloadAction() {
-    $name = F::get("n");
-    $data = pvs::json_data($name);
-    if ($data === null) page::redirect(true);
-    $pvData = new PvData($data);
-    $output = path::ensure_ext($pvData->origname, "-pegase.xlsx", ".csv");
-    $builder = SsBuilder::with([
-      "output" => $output,
-      "use_headers" => false,
-      "wsparams" => [
-        "sheetView_freezeRow" => count($pvData->headers) + 2,
-      ],
-    ]);
-    $writeAll = function ($rows) use ($builder) {
-      foreach ($rows as $row) {
-        $builder->write($row);
-      }
-    };
-    $writeAll(array_slice($pvData->headers, 0, -1));
-    $writeAll([[]]);
-    $writeAll(array_slice($pvData->headers, -1));
-    $writeAll($pvData->rows);
-    $builder->sendFile();
-  }
-
   function print(): void {
     ly::row();
     ly::col(12);
@@ -135,9 +109,9 @@ class IndexPage extends ANavigablePage {
             return v::a($icons->getIcon("print", $row["origname"]), page::bu(ConvertPage::class, ["n" => $name]));
           } elseif ($col === null) {
             return [
-              v::a($icons->getIcon("eye-open", "Consulter"), page::bu(ViewPage::class, ["n" => $name])),
+              v::a($icons->getIcon("eye-open", "Afficher"), page::bu(ViewPage::class, ["n" => $name])),
               "&nbsp;&nbsp;|&nbsp;&nbsp;",
-              v::a($icons->getIcon("download", "Télécharger.xlsx"), page::bu("", [
+              v::a($icons->getIcon("download", "Télécharger"), page::bu("", [
                 "action" => "download",
                 "n" => $name,
               ])),

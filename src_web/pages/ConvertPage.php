@@ -9,6 +9,7 @@ use nur\sery\text\words;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormBasic;
+use nur\v\icon;
 use nur\v\page;
 use nur\v\v;
 use nur\v\vo;
@@ -74,9 +75,9 @@ class ConvertPage extends APvPage {
 
   private CsvPvModel1Builder $builder;
 
-  protected Form $convertfo;
+  private Form $convertfo;
 
-  const VALID_ACTIONS = ["convert"];
+  const VALID_ACTIONS = ["download", "convert"];
   const ACTION_PARAM = "action";
 
   function convertAction() {
@@ -103,18 +104,35 @@ class ConvertPage extends APvPage {
       "<br/>",
       v::tag("small", [
         join("<br/>", array_slice($title, 1)),
-        "<br/>(",
-        $pvData->origname,
-        ")",
       ])
     ]);
     vo::p([
-      "Il y a ",
-      words::q($this->count, "l'étudiant#s dans ce fichier|m"),
-      ". Afficher ",
-      v::a("le détail des dossiers étudiants", page::bu(ViewPage::class, [
-        "n" => $this->name,
-      ])),
+      "Cette page permet de gérer l'import du fichier <tt>",
+      $pvData->origname,
+      "</tt>",
+    ]);
+    vo::ul([
+      v::li([
+        "Il y a ",
+        words::q($this->count, "l'étudiant#s dans ce fichier|m"),
+      ]),
+      v::li([
+        v::a([
+          "Télécharger ",
+          icon::download("au format Excel"),
+        ], page::bu("", [
+          "action" => "download",
+          "n" => $this->name,
+        ])),
+      ]),
+      v::li([
+        v::a([
+          "Afficher ",
+          icon::eye_open("le détail des dossiers étudiants"),
+        ], page::bu(ViewPage::class, [
+          "n" => $this->name,
+        ])),
+      ]),
     ]);
 
     al::print();
