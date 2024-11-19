@@ -65,6 +65,8 @@ class PvDataExtractor {
         $this->gpt = null;
       }
     };
+
+    if (!cl::all_n($row)) $data["headers"][] = $row;
     array_splice($row, 0, 3);
     foreach ($row as $col) {
       if ($c->new($col)) continue;
@@ -130,6 +132,8 @@ class PvDataExtractor {
         }
       }
     };
+
+    if (!cl::all_n($row)) $data["headers"][] = $row;
     array_splice($row, 0, 3);
     foreach ($row as $col) {
       if ($c->new($col)) continue;
@@ -226,6 +230,8 @@ class PvDataExtractor {
         }
       }
     };
+
+    if (!cl::all_n($row)) $data["headers"][] = $row;
     array_splice($row, 0, 3);
     foreach ($row as $col) {
       if ($c->new($col)) continue;
@@ -304,6 +310,7 @@ class PvDataExtractor {
       }
     };
 
+    if (!cl::all_n($row)) $data["headers"][] = $row;
     array_splice($row, 0, 3);
     $sindex = 3;
     foreach ($row as $col) {
@@ -392,10 +399,11 @@ class PvDataExtractor {
       "origname" => $origname,
       "name" => $name,
       "date" => $date,
-      "title" => null,
       "gpts" => null,
       "gpt_objs" => null,
       "ses_cols" => null,
+      "title" => null,
+      "headers" => null,
       "rows" => null,
     ];
     $state = 1;

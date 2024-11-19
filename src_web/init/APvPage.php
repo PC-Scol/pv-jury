@@ -4,7 +4,6 @@ namespace web\init;
 use app\PvData;
 use app\pvs;
 use nur\sery\cl;
-use nur\sery\file;
 use nur\sery\web\params\F;
 use nur\v\page;
 use web\pages\IndexPage;
@@ -20,16 +19,9 @@ class APvPage extends ANavigablePage {
   }
 
   function setup(): void {
-    $valid = false;
     $name = F::get("n");
-    if ($name) {
-      $file = pvs::json_file($name);
-      if (file_exists($file)) {
-        $data = file::reader($file)->decodeJson();
-        if ($data) $valid = true;
-      }
-    }
-    if (!$valid) page::redirect(IndexPage::class);
+    $data = pvs::json_data($name);
+    if ($data === null) page::redirect(IndexPage::class);
     $this->name = $name;
     $this->pvData = new PvData($data);
   }

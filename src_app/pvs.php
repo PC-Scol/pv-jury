@@ -6,6 +6,7 @@ use nur\sery\db\Capacitor;
 use nur\sery\db\CapacitorStorage;
 use nur\sery\db\sqlite\Sqlite;
 use nur\sery\db\sqlite\SqliteStorage;
+use nur\sery\file;
 use nur\sery\os\path;
 use nur\sery\php\time\DateTime;
 
@@ -46,6 +47,15 @@ class pvs {
 
   static function json_file(string $name): string {
     return self::file("$name.json");
+  }
+
+  static function json_data(string $name): ?array {
+    $file = self::json_file($name);
+    if (file_exists($file)) {
+      $data = file::reader($file)->decodeJson();
+      if ($data) return $data;
+    }
+    return null;
   }
 
   static function storage_file(): string {

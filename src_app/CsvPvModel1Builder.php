@@ -158,6 +158,8 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         $t = $ms[2] ?? null;
         if ($f && $t) $acquis = "CAP$f-$t";
         else $acquis = "CAP";
+      } elseif ($acquis === "VALIDATION - EVALUATION") {
+        $acquis = "VAL-EVAL";
       } else {
         $acquis = null;
       }
@@ -411,7 +413,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $ws = $this->pvData->ws;
     $pv = $ws["sheet_pv"];
 
-    vo::stable(["class" => "table-bordered"]);
+    vo::stable(["class" => "table table-bordered"]);
     vo::sthead();
     foreach ($pv["headers"] as $row) {
       vo::str();

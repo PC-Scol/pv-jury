@@ -1,9 +1,9 @@
 <?php
 namespace app\init;
 
+use nur\sery\app\args;
 use nur\sery\os\path;
 use nur\sery\os\proc\Cmd;
-use nur\sery\app\args;
 
 class bg_launcher {
   const PHP_BINARY = "/usr/bin/php";

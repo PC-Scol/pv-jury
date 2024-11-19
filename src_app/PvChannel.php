@@ -6,7 +6,6 @@ use nur\sery\db\CapacitorChannel;
 use nur\sery\file;
 use nur\sery\file\web\Upload;
 use nur\sery\os\path;
-use nur\sery\ValueException;
 
 class PvChannel extends CapacitorChannel {
   const TABLE_NAME = "pv";

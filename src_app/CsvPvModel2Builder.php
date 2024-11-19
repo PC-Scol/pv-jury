@@ -364,7 +364,7 @@ class CsvPvModel2Builder extends CsvPvBuilder {
 
     if ($one) vo::h1($promo["body"][0]);
 
-    vo::stable(["class" => "table-bordered"]);
+    vo::stable(["class" => "table table-bordered"]);
     vo::sthead();
     foreach ($promo["headers"] as $row) {
       vo::str();

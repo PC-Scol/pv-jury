@@ -9,10 +9,11 @@ use nur\sery\str;
  * @property-read string origname
  * @property-read string name
  * @property-read string date
- * @property-read array title
  * @property-read array gpts
  * @property-read array gptsObjs
  * @property-read array sesCols
+ * @property-read array title
+ * @property-read array headers
  * @property-read array rows
  */
 class PvData {
