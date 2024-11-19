@@ -28,9 +28,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $this->ises = $ises;
   }
 
-  const ORDER_NOTE = "note", ORDER_NOM = "nom";
+  const ORDER_MERITE = "note", ORDER_ALPHA = "nom";
 
-  private string $order = self::ORDER_NOM;
+  private string $order = self::ORDER_ALPHA;
 
   function setOrder(string $order): void {
     $this->order = $order;
@@ -345,10 +345,10 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $this->prepareLayout();
     $rows = $pvData->rows;
     switch ($this->order) {
-    case self::ORDER_NOTE:
+    case self::ORDER_MERITE:
       usort($rows, [self::class, "compareNote"]);
       break;
-    case self::ORDER_NOM:
+    case self::ORDER_ALPHA:
       usort($rows, [self::class, "compareNom"]);
       break;
     }

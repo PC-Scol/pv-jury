@@ -6,12 +6,13 @@ use nur\sery\db\CapacitorChannel;
 use nur\sery\file;
 use nur\sery\file\web\Upload;
 use nur\sery\os\path;
+use nur\sery\ValueException;
 
 class PvChannel extends CapacitorChannel {
   const TABLE_NAME = "pv";
 
   const COLUMN_DEFINITIONS = [
-    "srcname" => "varchar",
+    "origname" => "varchar",
     "name" => "varchar primary key",
     "cod_usr" => "varchar",
     "lib_usr" => "varchar",
@@ -20,15 +21,27 @@ class PvChannel extends CapacitorChannel {
     "data__" => "text",
   ];
 
+  private bool $rebuilder = false;
+
+  function setRebuilder(bool $rebuilder) {
+    $this->rebuilder = $rebuilder;
+  }
+
   function getItemValues($item): ?array {
-    $usr = authz::get();
-    $codUsr = $usr->getUsername();
-    $libUsr = $usr->getDisplayName();
-    /** @var Upload $file */
+    if ($this->rebuilder) {
+      $codUsr = null;
+      $libUsr = "(rebuilder)";
+    } else {
+      $usr = authz::get();
+      $codUsr = $usr->getUsername();
+      $libUsr = $usr->getDisplayName();
+    }
     $file = $item;
-    # faire une copie du fichier
-    $origname = path::filename($file->fullPath);
-    $file->moveTo(pvs::upload_file($origname));
+    if ($file instanceof Upload) {
+      # faire une copie du fichier
+      $origname = path::filename($file->fullPath);
+      $file->moveTo(pvs::upload_file($origname));
+    }
     # puis extraire les données
     $extractor = new PvDataExtractor();
     $pvData = $extractor->extract($file);

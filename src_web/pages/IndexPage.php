@@ -10,6 +10,7 @@ use nur\sery\cl;
 use nur\sery\file;
 use nur\sery\file\web\Upload;
 use nur\sery\os\path;
+use nur\sery\output\msg;
 use nur\sery\web\uploads;
 use nur\v\al;
 use nur\v\bs3\Bs3IconManager;
@@ -57,7 +58,6 @@ class IndexPage extends ANavigablePage {
       }
     } else {
       $this->pvs = cl::all(pvs::channel()->all(null, [
-        "cols" => ["name", "title", "date", "lib_usr"],
         "order by" => "date desc, name",
         "suffix" => "limit 100",
       ]));
@@ -104,7 +104,7 @@ class IndexPage extends ANavigablePage {
           $icons = icon::manager();
           $name = $row["name"];
           if ($col === "name") {
-            return v::a($icons->getIcon("print", $name), page::bu(ConvertPage::class, ["n" => $name]));
+            return v::a($icons->getIcon("print", $row["origname"]), page::bu(ConvertPage::class, ["n" => $name]));
           } elseif ($col === null) {
             return [
               v::a("Editer PV", page::bu(ConvertPage::class, ["n" => $name])),

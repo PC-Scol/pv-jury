@@ -3,7 +3,7 @@ namespace app;
 
 use nur\sery\db\CapacitorChannel;
 use nur\sery\file;
-use nur\sery\output\log;
+use nur\sery\output\msg;
 
 class PvChannelRebuilder extends CapacitorChannel {
   const TABLE_NAME = PvChannel::TABLE_NAME;
@@ -19,7 +19,7 @@ class PvChannelRebuilder extends CapacitorChannel {
       $data["name"] = $name;
       $data["date"] = $date;
       file::writer($item)->encodeJson($data);
-      log::info("Il faut renommer le fichier $item en $name.json");
+      msg::info("Il faut renommer le fichier $item en $name.json");
     }
 
     return [

@@ -43,8 +43,8 @@ class ConvertPage extends APvPage {
         "order" => [
           "control" => "select",
           "items" => [
-            [CsvPvModel1Builder::ORDER_NOTE, "Classer par mérite (note)"],
-            [CsvPvModel1Builder::ORDER_NOM, "Classer par ordre alphabétique (nom)"],
+            [CsvPvModel1Builder::ORDER_MERITE, "Classer par mérite (note)"],
+            [CsvPvModel1Builder::ORDER_ALPHA, "Classer par ordre alphabétique (nom)"],
           ],
         ],
       ],
@@ -102,25 +102,25 @@ class ConvertPage extends APvPage {
   protected CsvPvModel2Builder $tbuilder;
 
   function print(): void {
-    $title = null;
-    foreach (array_filter($this->pvData->title) as $line) {
-      if ($title === null) {
-        $title = [$line];
-      } else {
-        $title[] = [
-          "<br/>",
-          v::tag("small", $line),
-        ];
-      }
-    }
-    vo::h3($title);
-    vo::h4(words::q($this->count, "l'étudiant#s dans ce fichier|m"));
+    $pvData = $this->pvData;
+    $title = array_filter($pvData->title);
+    vo::h1([
+      $title[0],
+      "<br/>",
+      v::tag("small", [
+        join("<br/>", array_slice($title, 1)),
+        "<br/>(",
+        $pvData->origname,
+        ")",
+      ])
+    ]);
     vo::p([
-      "Afficher ",
+      "Il y a ",
+      words::q($this->count, "l'étudiant#s dans ce fichier|m"),
+      ". Afficher ",
       v::a("le détail des dossiers étudiants", page::bu(ViewPage::class, [
         "n" => $this->name,
       ])),
-      " tel que mentionnés dans le fichier importé",
     ]);
 
     al::print();
