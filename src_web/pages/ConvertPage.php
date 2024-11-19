@@ -24,7 +24,7 @@ class ConvertPage extends APvPage {
     $this->count = count($pvData->rows);
 
     $builder = $this->builder = new CsvPvModel1Builder($pvData);
-    $sessions = $builder->getSessions();
+    $sessions = $this->sessions = $builder->getSessions();
     $convertfo = $this->convertfo = new FormBasic([
       "method" => "post",
       "schema" => [
@@ -67,14 +67,11 @@ class ConvertPage extends APvPage {
         $this->dispatchAction(false);
       }
     }
-    if (!$action) {
-      $tbuilder = new CsvPvModel2Builder();
-      $tbuilder->compute($pvData);
-      $this->tbuilder = $tbuilder;
-    }
   }
 
   private int $count;
+
+  private array $sessions;
 
   private CsvPvModel1Builder $builder;
 
@@ -98,8 +95,6 @@ class ConvertPage extends APvPage {
     }
     page::redirect(true);
   }
-
-  protected CsvPvModel2Builder $tbuilder;
 
   function print(): void {
     $pvData = $this->pvData;
@@ -125,5 +120,15 @@ class ConvertPage extends APvPage {
 
     al::print();
     $this->convertfo->print();
+
+    /*
+    $builder = $this->builder;
+    foreach ($this->sessions as [$ises, $session]) {
+      vo::h2($session);
+      $builder->setIses($ises);
+      $builder->compute();
+      $builder->print();
+    }
+    */
   }
 }

@@ -4,6 +4,7 @@ namespace app;
 use nur\sery\cl;
 use nur\sery\cv;
 use nur\sery\ValueException;
+use nur\v\vo;
 
 /**
  * Class Model1CsvBuilder: construire un document pouvant servir à faire une
@@ -71,32 +72,41 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $data = $this->pvData->data;
     $ws =& $this->pvData->ws;
 
-    $firstObj = true;
     $haveGpt = false;
-    $objs = [];
+    $firstObj = true;
     $titleObj = null;
     $titleSes = null;
+    $tmpObjs = [];
+    # construire la liste des objets
     foreach ($data["gpts"] as $gpt) {
-      //if (!$gpt["have_value"]) continue;
       if ($gpt["title"] !== null) $haveGpt = true;
       foreach ($gpt["objs"] as $obj) {
-        //if (!$obj["have_value"]) continue;
         if ($firstObj) {
           $titleObj = $obj["title"];
           self::split_code_title($titleObj);
           $firstObj = false;
         }
+        $obj["acq"] = null;
+        $obj["ses"] = null;
         foreach ($obj["sess"] as $ises => $ses) {
-          if (!$ses["have_value"]) continue;
-          if ($ises === $this->ises) {
+          if ($obj["acq"] === null && $ses["is_acquis"]) {
+            $obj["acq"] = $ses;
+          }
+          if ($obj["ses"] === null && $ises === $this->ises) {
             $titleSes ??= $ses["title"];
-            unset($obj["sess"]);
             $obj["ses"] = $ses;
-            break;
           }
         }
-        $objs[] = $obj;
+        unset($obj["sess"]);
+        $tmpObjs[] = $obj;
       }
+    }
+    # puis filtrer ceux qui n'ont pas de données
+    $objs = [];
+    foreach ($tmpObjs as $obj) {
+      if ($obj["ses"] === null) continue;
+      if (!$obj["ses"]["have_value"]) continue;
+      $objs[] = $obj;
     }
     $ws["have_gpt"] = $haveGpt;
     $ws["objs"] = $objs;
@@ -137,19 +147,29 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $pv["headers"] = [$hrow1, $hrow2];
   }
 
-  function getNoteResEcts(array $row, array $obj): array {
-    $ses = $obj["ses"];
-    $acquisCol = $ses["acquis_col"];
+  function getAcqNoteResEcts(array $row, array $obj): array {
+    $acq = $obj["acq"];
+    $acquisCol = $acq["acquis_col"];
     $acquis = null;
+    if ($acquisCol !== null) {
+      $acquis = $row[$acq["col_indexes"][$acquisCol]];
+      if (preg_match('/CAPITALISÉ(?: \(\d{2}(\d{2})-\d{2}(\d{2})\))?/u', $acquis, $ms)) {
+        $f = $ms[1] ?? null;
+        $t = $ms[2] ?? null;
+        if ($f && $t) $acquis = "CAP$f-$t";
+        else $acquis = "CAP";
+      } else {
+        $acquis = null;
+      }
+    }
+
+    $ses = $obj["ses"];
     $noteCol = $ses["note_col"];
     $note = null;
     $resCol = $ses["res_col"];
     $res = null;
     $ectsCol = $ses["ects_col"];
     $ects = null;
-    if ($acquisCol !== null) {
-      $acquis = $row[$ses["col_indexes"][$acquisCol]];
-    }
     if ($resCol !== null) {
       $res = $row[$ses["col_indexes"][$resCol]];
       $res = cl::get(self::RES_MAP, $res, $res);
@@ -171,6 +191,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         $ects = cl::get(self::RES_MAP, $ects, $ects);
       }
     }
+
     return [
       "acquis" => $acquis,
       "note" => $note,
@@ -187,9 +208,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
   function compareNote(array $rowa, array $rowb) {
     $obj = cl::first($this->pvData->ws["objs"]);
     ["note" => $notea,
-    ] = $this->getNoteResEcts($rowa, $obj);
+    ] = $this->getAcqNoteResEcts($rowa, $obj);
     ["note" => $noteb,
-    ] = $this->getNoteResEcts($rowb, $obj);
+    ] = $this->getAcqNoteResEcts($rowb, $obj);
     if (!is_numeric($notea)) $notea = -1;
     if (!is_numeric($noteb)) $noteb = -1;
     $c = -cv::compare($notea, $noteb);
@@ -214,16 +235,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         "note" => $note,
         "res" => $res,
         "ects" => $ects,
-      ] = $this->getNoteResEcts($row, $obj);
-
-      if ($acquis !== null && preg_match('/CAPITALISÉ(?: \(\d{2}(\d{2})-\d{2}(\d{2})\))?/u', $acquis, $ms)) {
-        $f = $ms[1];
-        $t = $ms[2];
-        if ($f && $t) $acquis = "CAP$f-$t";
-        else $acquis = "CAP";
-      } else {
-        $acquis = null;
-      }
+      ] = $this->getAcqNoteResEcts($row, $obj);
       $brow1[] = $note;
       $brow1[] = $acquis;
       $brow2[] = $res;
@@ -393,5 +405,31 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $builder->write(cl::merge($prefix, ["Le président du jury"]));
     $builder->write(cl::merge($prefix, ["Date"]));
     $builder->write(cl::merge($prefix, ["Les membres du jury"]));
+  }
+
+  function print(): void {
+    $ws = $this->pvData->ws;
+    $pv = $ws["sheet_pv"];
+
+    vo::stable(["class" => "table-bordered"]);
+    vo::sthead();
+    foreach ($pv["headers"] as $row) {
+      vo::str();
+      foreach ($row as $col) {
+        vo::th($col);
+      }
+      vo::etr();
+    }
+    vo::ethead();
+    vo::stbody();
+    foreach ($pv["body"] as $row) {
+      vo::str();
+      foreach ($row as $col) {
+        vo::td($col);
+      }
+      vo::etr();
+    }
+    vo::etbody();
+    vo::etable();
   }
 }
