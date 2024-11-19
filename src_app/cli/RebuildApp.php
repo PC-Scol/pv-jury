@@ -31,7 +31,7 @@ class RebuildApp extends Application {
     }
 
     if ($this->uploads) {
-      $files = sh::ls_pfiles(pvs::upload_file(null), "pv-de-jury-*.csv");
+      $files = sh::ls_pfiles(pvs::upload_file(null), "*.csv");
       $channel = pvs::channel();
       $channel->setRebuilder(true);
       foreach ($files as $file) {
