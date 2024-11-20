@@ -31,7 +31,7 @@ class APvPage extends ANavigablePage {
     $data = pvs::json_data($name);
     if ($data === null) page::redirect(true);
     $pvData = new PvData($data);
-    $output = path::ensure_ext($pvData->origname, "-pegase.xlsx", ".csv");
+    $output = path::ensure_ext($pvData->origname, "-excel.xlsx", ".csv");
     $builder = SsBuilder::with([
       "output" => $output,
       "use_headers" => false,
