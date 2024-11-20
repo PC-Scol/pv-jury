@@ -311,11 +311,16 @@ class CsvPvModel2Builder extends CsvPvBuilder {
   function compute(?PvData $pvData=null): static {
     $this->ensurePvData($pvData);
     self::prepare_layout($pvData);
+
     $codApr = $this->codApr;
+    $pvData->ws["sheet_promo"] = null;
+    $pvData->ws["sheet_stats"] = null;
+    $pvData->ws["sheet_totals"] = null;
     foreach ($pvData->rows as $row) {
       if ($codApr !== null && $row[0] !== $codApr) continue;
       self::parse_row($row, $pvData);
     }
+
     self::compute_stats($pvData);
     return $this;
   }

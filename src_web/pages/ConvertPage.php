@@ -86,8 +86,9 @@ class ConvertPage extends APvPage {
     $convertfo = $this->convertfo;
     $builder->setIses($convertfo["ises"]);
     $builder->setOrder($convertfo["order"]);
+    $suffix = $builder->getSuffix();
     $output = path::filename($this->pvData->origname);
-    $output = path::ensure_ext($output, ".xlsx", ".csv");
+    $output = path::ensure_ext($output, "-$suffix.xlsx", ".csv");
     try {
       $builder->build($output)->send();
     } catch (Exception $e) {

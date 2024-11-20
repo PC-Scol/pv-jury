@@ -85,6 +85,10 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $this->ises = $ises;
   }
 
+  function getSuffix(): string {
+    return $this->pvData->sesCols[$this->ises]["title"] ?? "";
+  }
+
   const ORDER_MERITE = "note", ORDER_ALPHA = "nom";
 
   private string $order = self::ORDER_ALPHA;
@@ -376,6 +380,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
   function compute(?PvData $pvData=null): static {
     $this->ensurePvData($pvData);
     $this->prepareLayout();
+
     $rows = $pvData->rows;
     switch ($this->order) {
     case self::ORDER_MERITE:
@@ -385,9 +390,12 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       usort($rows, [self::class, "compareNom"]);
       break;
     }
+
+    $pvData->ws["sheet_pv"] = null;
     foreach ($rows as $row) {
       $this->parseRow($row);
     }
+
     $this->computeStats();
     return $this;
   }
