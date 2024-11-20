@@ -379,6 +379,8 @@ class CsvPvModel1Builder extends CsvPvBuilder {
 
   function compute(?PvData $pvData=null): static {
     $this->ensurePvData($pvData);
+
+    $pvData->ws["sheet_pv"] = null;
     $this->prepareLayout();
 
     $rows = $pvData->rows;
@@ -390,8 +392,6 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       usort($rows, [self::class, "compareNom"]);
       break;
     }
-
-    $pvData->ws["sheet_pv"] = null;
     foreach ($rows as $row) {
       $this->parseRow($row);
     }
