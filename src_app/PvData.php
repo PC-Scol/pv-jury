@@ -32,4 +32,6 @@ class PvData {
   }
 
   public ?array $ws = [];
+
+  public bool $verifixed = false;
 }

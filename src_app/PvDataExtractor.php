@@ -179,11 +179,14 @@ class PvDataExtractor {
           "have_res" => false,
           "is_acquis" => false,
           "acquis_col" => null,
+          "is_session_n" => false,
+          "is_session_f" => false,
           "is_session" => false,
           "note_col" => null,
           "res_col" => null,
           "ects_col" => null,
           "pj_col" => null,
+          "is_controle" => false,
         ];
         $this->wobj++;
         $this->wses++;
@@ -205,14 +208,25 @@ class PvDataExtractor {
 
       function commit(bool $next=true): void {
         if ($this->newSes) return;
+
+        $ses =& $this->ses;
+        $sesTitle = $ses["title"];
+        $isSessionN = $ses["is_session_n"] = str::starts_with("Session ", $sesTitle);
+        $isSessionF = $ses["is_session_f"] = $sesTitle === "Evaluations Finales";
+        $ses["is_session"] = $isSessionN || $isSessionF;
+        $isControle = $ses["is_controle"] = str::starts_with("Contrôle ", $sesTitle);
+
         $ises = $this->ises++;
         $this->obj["sess"][$ises] = $this->ses;
-        $sesCols =& $this->data["ses_cols"];
-        if (!isset($sesCols[$ises])) {
-          $sesCols[$ises] = [
-            "title" => $this->ses["title"],
-          ];
+        if (!$isControle) {
+          $sesCols =& $this->data["ses_cols"];
+          if (!isset($sesCols[$ises])) {
+            $sesCols[$ises] = [
+              "title" => $this->ses["title"],
+            ];
+          }
         }
+
         $this->newSes = true;
         $this->ses = null;
         if ($next) {
@@ -348,22 +362,17 @@ class PvDataExtractor {
     $sesCols =& $data["ses_cols"];
     foreach ($data["gpts"] as &$gpt) {
       foreach ($gpt["objs"] as &$obj) {
-        unset($cses); $cses = null;
-        unset($pses); $pses = null;
+        $cses = null;
+        $pses = null;
         foreach ($obj["sess"] as $ises => &$ses) {
-          $sesTitle = $ses["title"];
-          $ses["is_acquis"] = $sesTitle === null && $ses["acquis_col"] !== null;
-          $isSession = $ses["is_session"] = $sesTitle !== null && (
-              str::starts_with("Session ", $sesTitle) ||
-              $sesTitle === "Evaluations Finales"
-            );
-          $isControl = $ses["is_control"] = $sesTitle !== null &&
-            str::starts_with("Contrôle ", $sesTitle);
+          $isAcquis = $ses["is_acquis"] = $ses["title"] === null && $ses["acquis_col"] !== null;
+          $isSession = $ses["is_session"];
+          $isControle = $ses["is_controle"];
           if ($isSession) {
-            $pses =& $cses;
-            $cses =& $sesCols[$ises];
+            if ($cses !== null) $pses =& $cses;
+            $cses =& $ses;
           }
-          if (!isset($sesCols[$ises]["cols"])) {
+          if (($isAcquis || $isSession) && !isset($sesCols[$ises]["cols"])) {
             A::merge($sesCols[$ises],
               cl::select($ses, [
                 "have_value", "have_note", "have_res",
@@ -375,10 +384,12 @@ class PvDataExtractor {
               ]));
           }
           if ($cses !== null) {
-            if ($isControl) $cses["ctls"][] = $ses;
-            if ($isSession && $pses !== null) $pses["next"] = $ses;
+            if ($isControle) $cses["ctls"][] = $ses;
+            if ($pses !== null && $pses["is_session_n"]) $pses["nses"] = $ses;
           }
         }; unset($ses);
+        unset($cses);
+        unset($pses);
       }; unset($obj);
     }; unset($gpt);
   }

@@ -3,6 +3,7 @@ namespace app;
 
 use nur\sery\cl;
 use nur\sery\cv;
+use nur\sery\str;
 use nur\sery\ValueException;
 use nur\v\vo;
 
@@ -11,10 +12,65 @@ use nur\v\vo;
  * délibération: sélection par session, et affichage en colonnes
  */
 class CsvPvModel1Builder extends CsvPvBuilder {
+  protected function verifixPvData(PVData $pvData): void {
+    $data = $pvData->data;
+    $pvData->ws = [
+      "document" => null,
+      "sheet_pv" => null,
+    ];
+    $ws =& $pvData->ws;
+
+    $haveGpt = false;
+    $firstObj = true;
+    $titleObj = null;
+    $titleSes = null;
+    $tmpObjs = [];
+    # construire la liste des objets
+    foreach ($data["gpts"] as $gpt) {
+      if ($gpt["title"] !== null) $haveGpt = true;
+      foreach ($gpt["objs"] as $obj) {
+        if ($firstObj) {
+          $titleObj = $obj["title"];
+          self::split_code_title($titleObj);
+          $firstObj = false;
+        }
+        $obj["acq"] = null;
+        $obj["ses"] = null;
+        foreach ($obj["sess"] as $ises => $ses) {
+          if ($obj["acq"] === null && $ses["is_acquis"]) {
+            $obj["acq"] = $ses;
+          }
+          if ($obj["ses"] === null && $ises === $this->ises) {
+            $titleSes ??= $ses["title"];
+            $obj["ses"] = $ses;
+          }
+        }
+        unset($obj["sess"]);
+        $tmpObjs[] = $obj;
+      }
+    }
+    # puis filtrer ceux qui n'ont pas de données
+    $objs = [];
+    foreach ($tmpObjs as $obj) {
+      if ($obj["ses"] === null) continue;
+      if (!$obj["ses"]["have_value"]) continue;
+      $objs[] = $obj;
+    }
+    $ws["have_gpt"] = $haveGpt;
+    $ws["objs"] = $objs;
+
+    $ws["document"]["title"] = [
+      cl::first($data["title"]),
+      $titleObj,
+      $titleSes,
+      cl::last($data["title"]),
+    ];
+  }
+
   function getSessions(): array {
     $sessions = [];
     foreach ($this->pvData->sesCols as $ises => $ses) {
-      if ($ses["is_session"] && $ses["have_value"]) {
+      if ($ses["is_session"]) {
         $sessions[$ises] = [$ises, $ses["title"]];
       }
     }
@@ -68,57 +124,6 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     return false;
   }
 
-  function prepareMetadata(): void {
-    $data = $this->pvData->data;
-    $ws =& $this->pvData->ws;
-
-    $haveGpt = false;
-    $firstObj = true;
-    $titleObj = null;
-    $titleSes = null;
-    $tmpObjs = [];
-    # construire la liste des objets
-    foreach ($data["gpts"] as $gpt) {
-      if ($gpt["title"] !== null) $haveGpt = true;
-      foreach ($gpt["objs"] as $obj) {
-        if ($firstObj) {
-          $titleObj = $obj["title"];
-          self::split_code_title($titleObj);
-          $firstObj = false;
-        }
-        $obj["acq"] = null;
-        $obj["ses"] = null;
-        foreach ($obj["sess"] as $ises => $ses) {
-          if ($obj["acq"] === null && $ses["is_acquis"]) {
-            $obj["acq"] = $ses;
-          }
-          if ($obj["ses"] === null && $ises === $this->ises) {
-            $titleSes ??= $ses["title"];
-            $obj["ses"] = $ses;
-          }
-        }
-        unset($obj["sess"]);
-        $tmpObjs[] = $obj;
-      }
-    }
-    # puis filtrer ceux qui n'ont pas de données
-    $objs = [];
-    foreach ($tmpObjs as $obj) {
-      if ($obj["ses"] === null) continue;
-      if (!$obj["ses"]["have_value"]) continue;
-      $objs[] = $obj;
-    }
-    $ws["have_gpt"] = $haveGpt;
-    $ws["objs"] = $objs;
-
-    $ws["document"]["title"] = [
-      cl::first($data["title"]),
-      $titleObj,
-      $titleSes,
-      cl::last($data["title"]),
-    ];
-  }
-
   function prepareLayout(): void {
     $ws =& $this->pvData->ws;
     $objs = $ws["objs"];
@@ -147,8 +152,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $pv["headers"] = [$hrow1, $hrow2];
   }
 
-  function getAcqNoteResEcts(array $row, array $obj): array {
-    $acq = $obj["acq"];
+  function getAcq(array $row, array $acq): array {
     $acquisCol = $acq["acquis_col"];
     $acquis = null;
     if ($acquisCol !== null) {
@@ -164,8 +168,10 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         $acquis = null;
       }
     }
+    return ["acquis" => $acquis];
+  }
 
-    $ses = $obj["ses"];
+  function getNoteResEcts(array $row, array $ses): array {
     $noteCol = $ses["note_col"];
     $note = null;
     $resCol = $ses["res_col"];
@@ -193,13 +199,17 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         $ects = cl::get(self::RES_MAP, $ects, $ects);
       }
     }
-
     return [
-      "acquis" => $acquis,
       "note" => $note,
       "res" => $res,
       "ects" => $ects,
     ];
+  }
+
+  function getAcqNoteResEcts(array $row, array $obj): array {
+    $acq = $this->getAcq($row, $obj["acq"]);
+    $noteResEcts = $this->getNoteResEcts($row, $obj["ses"]);
+    return cl::merge($acq, $noteResEcts);
   }
 
   function compareNom(array $a, array $b) {
@@ -238,6 +248,21 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         "res" => $res,
         "ects" => $ects,
       ] = $this->getAcqNoteResEcts($row, $obj);
+
+      $nses = $obj["ses"]["nses"] ?? null;
+      if ($acquis !== null && $res === "AJ" && $nses !== null) {
+        # bug: au 20/11/2024, PEGASE ne remonte pas les capitalisations des
+        # années antérieures sur la bonne session
+        [
+          "note" => $nnote,
+          "res" => $nres,
+          "ects" => $nects,
+        ] = $this->getNoteResEcts($row, $nses);
+        if (str::starts_with("ADM", $nres)) {
+          [$note, $res, $ects] = [$nnote, $nres, $ects];
+        }
+      }
+
       $brow1[] = $note;
       $brow1[] = $acquis;
       $brow2[] = $res;
@@ -350,12 +375,6 @@ class CsvPvModel1Builder extends CsvPvBuilder {
 
   function compute(?PvData $pvData=null): static {
     $this->ensurePvData($pvData);
-    $pvData->ws = [
-      "document" => null,
-      "sheet_pv" => null,
-    ];
-
-    $this->prepareMetadata();
     $this->prepareLayout();
     $rows = $pvData->rows;
     switch ($this->order) {

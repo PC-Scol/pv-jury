@@ -8,6 +8,15 @@ use nur\sery\str;
 use nur\v\vo;
 
 class CsvPvModel2Builder extends CsvPvBuilder {
+  protected function verifixPvData(PVData $pvData): void {
+    $pvData->ws = [
+      "document" => null,
+      "sheet_promo" => null,
+      "sheet_stats" => null,
+      "sheet_totals" => null,
+    ];
+  }
+
   static function prepare_layout(PvData $pvData): void {
     $data = $pvData->data;
     $ws =& $pvData->ws;
@@ -301,12 +310,6 @@ class CsvPvModel2Builder extends CsvPvBuilder {
 
   function compute(?PvData $pvData=null): static {
     $this->ensurePvData($pvData);
-    $pvData->ws = [
-      "document" => null,
-      "sheet_promo" => null,
-      "sheet_stats" => null,
-      "sheet_totals" => null,
-    ];
     self::prepare_layout($pvData);
     $codApr = $this->codApr;
     foreach ($pvData->rows as $row) {

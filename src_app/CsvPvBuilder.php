@@ -12,10 +12,22 @@ abstract class CsvPvBuilder implements IPvBuilder {
     $this->pvData = $pvData;
   }
 
+  abstract protected function verifixPvData(PVData $pvData): void;
+
   protected ?PvData $pvData;
 
-  function setPvData(PvData $pvData) {
+  function setPvData(PvData $pvData): void {
+    if (!$pvData->verifixed) {
+      $this->verifixPvData($pvData);
+      $pvData->verifixed = true;
+    }
     $this->pvData = $pvData;
+  }
+
+  protected function ensurePvData(?PvData &$pvData): void {
+    $pvData ??= $this->pvData;
+    ValueException::check_null($pvData, "pvData");
+    $this->setPvData($pvData);
   }
 
   protected ?IBuilder $builder = null;
@@ -25,12 +37,6 @@ abstract class CsvPvBuilder implements IPvBuilder {
   abstract function compute(?PvData $pvData=null): static;
 
   protected abstract function writeRows(?PvData $pvData=null): void;
-
-  protected function ensurePvData(?PvData &$pvData): void {
-    $pvData ??= $this->pvData;
-    ValueException::check_null($pvData, "pvData");
-    $this->pvData = $pvData;
-  }
 
   protected function getBuilderParams(): ?array {
     return null;
