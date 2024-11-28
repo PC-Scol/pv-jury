@@ -196,7 +196,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "14fa5762a449783a7bea5a5cc054bcd582aee6a7"
+                "reference": "eab8bb674e1b1f6461d92559854c2c200b5a7698"
             },
             "require": {
                 "php": "^8.2"
@@ -382,7 +382,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-ture.git",
-                "reference": "f015c509fb4011944c6f4797d953b1ea1f5b722a"
+                "reference": "bbffcc5a6cbb414e058771587c4106103c88424b"
             },
             "require": {
                 "php": "^8.2"
