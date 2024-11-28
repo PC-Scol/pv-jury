@@ -1,7 +1,7 @@
 <?php
 namespace app;
 
-use nur\sery\str;
+use nulib\str;
 
 /**
  * Class PvData

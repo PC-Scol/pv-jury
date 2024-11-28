@@ -1,9 +1,9 @@
 <?php
 namespace app;
 
-use nur\sery\db\CapacitorChannel;
-use nur\sery\file;
-use nur\sery\output\msg;
+use nulib\db\CapacitorChannel;
+use nulib\file;
+use nulib\output\msg;
 
 class PvChannelRebuilder extends CapacitorChannel {
   const TABLE_NAME = PvChannel::TABLE_NAME;

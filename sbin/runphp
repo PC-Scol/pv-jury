@@ -80,10 +80,12 @@ if [ -n "$RUNPHP_STANDALONE" ]; then
     BUILDENV0=
     BUILDENV=
     DIST="${RUNPHP_DIST:-$DEFAULT_DIST}"
-    IMAGENAME=oulib/
+    IMAGENAME=nulib/
 
     PRIVAREG=docker.io
     REGISTRY="$RUNPHP_REGISTRY"
+
+    [ -n "$RUNPHP_BUILD_FLAVOUR" ] && BUILD_FLAVOUR="$RUNPHP_BUILD_FLAVOUR"
 
 else
     [ -n "$PROJDIR" ] || PROJDIR="$(dirname -- "$MYDIR")"
@@ -95,12 +97,13 @@ else
     [ -n "$BUILDENV0" ] || BUILDENV0=.build.env.dist
     [ -n "$BUILDENV" ] || BUILDENV=build.env
     [ -n "$DIST" ] || DIST="$DEFAULT_DIST"
-    [ -n "$IMAGENAME" ] || IMAGENAME=oulib/
+    [ -n "$IMAGENAME" ] || IMAGENAME=nulib/
 
     [ "$COMPOSERPHAR" == none ] && COMPOSERPHAR=
     [ "$BUILDENV0" == none ] && BUILDENV0=
     [ "$BUILDENV" == none ] && BUILDENV=
 fi
+[ "$BUILD_FLAVOUR" == none ] && BUILD_FLAVOUR=
 
 function after_source_buildenv() {
     NDIST="${DIST#d}"
@@ -187,7 +190,7 @@ fi
 ForcedBootstrap=
 if [ -z "$Bootstrap" -a -z "$RUNPHP_STANDALONE" ]; then
     # si vendor/ n'existe pas, alors on doit faire bootstrap
-    if [ ! -f "$PROJDIR/$VENDORDIR/oulib/php/load.sh" ]; then
+    if [ ! -f "$PROJDIR/$VENDORDIR/nulib/php/load.sh" ]; then
         ForcedBootstrap=1
     elif [ ! -f "$PROJDIR/.composer.lock.runphp" ]; then
         ForcedBootstrap=1
@@ -415,7 +418,7 @@ OPTIONS
                 docker push "$Image" || exit 1
             fi
         fi
-        if [ -z "$RUNPHP_STANDALONE" -a ! -f "$PROJDIR/$VENDORDIR/oulib/php/load.sh" ]; then
+        if [ -z "$RUNPHP_STANDALONE" -a ! -f "$PROJDIR/$VENDORDIR/nulib/php/load.sh" ]; then
             # Forcer l'installation des dépendances si nécessaire
             ComposerInstall=1
         fi
@@ -462,7 +465,7 @@ OPTIONS
             shift
         done
 
-        if [ -z "$RUNPHP_STANDALONE" -a ! -f "$PROJDIR/$VENDORDIR/oulib/php/load.sh" ]; then
+        if [ -z "$RUNPHP_STANDALONE" -a ! -f "$PROJDIR/$VENDORDIR/nulib/php/load.sh" ]; then
             # Forcer l'installation des dépendances si nécessaire
             ComposerInstall=1
         fi
@@ -491,7 +494,7 @@ OPTIONS
     # monter le répertoire qui contient $PROJDIR
     mount_composer=
     mount_runphp=1
-    if [ "${PROJDIR#$HOME/}" != "$PROJDIR" -o "$PROJDIR" == "$HOME" ]; then
+    if [ -z "$PROJDIR" -o "${PROJDIR#$HOME/}" != "$PROJDIR" -o "$PROJDIR" == "$HOME" ]; then
         # bind mount $HOME
         args+=(-v "$HOME:$HOME${UseRslave:+:rslave}")
         [ -n "$RUNPHP_STANDALONE" ] &&

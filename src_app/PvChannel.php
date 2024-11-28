@@ -2,10 +2,10 @@
 namespace app;
 
 use nur\authz;
-use nur\sery\db\CapacitorChannel;
-use nur\sery\file;
-use nur\sery\file\web\Upload;
-use nur\sery\os\path;
+use nulib\db\CapacitorChannel;
+use nulib\file;
+use nulib\file\web\Upload;
+use nulib\os\path;
 
 class PvChannel extends CapacitorChannel {
   const TABLE_NAME = "pv";

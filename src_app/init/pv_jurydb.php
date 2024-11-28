@@ -2,8 +2,8 @@
 namespace app\init;
 
 use nur\config;
-use nur\sery\db\mysql\Mysql;
-use nur\sery\db\mysql\MysqlStorage;
+use nulib\db\mysql\Mysql;
+use nulib\db\mysql\MysqlStorage;
 
 class pv_jurydb {
   private static $mysql;

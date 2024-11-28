@@ -2,7 +2,7 @@
 require __DIR__.'/../vendor/autoload.php';
 # Lancer une application en tâche de fond
 
-use nur\sery\tools\BgLauncherApp;
+use nulib\tools\BgLauncherApp;
 use nur\sery\app;
 
 # chemin vers le lanceur PHP

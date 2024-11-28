@@ -4,7 +4,7 @@ namespace app\cli;
 use app\config\bootstrap;
 use app\pvs;
 use nur\sery\app\cli\Application;
-use nur\sery\os\sh;
+use nulib\os\sh;
 
 class RebuildApp extends Application {
   const PROJDIR = __DIR__.'/../..';
