@@ -382,7 +382,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-ture.git",
-                "reference": "cac1963cef4a3e09d53498a22c97203c5e43679c"
+                "reference": "f015c509fb4011944c6f4797d953b1ea1f5b722a"
             },
             "require": {
                 "php": "^8.2"
