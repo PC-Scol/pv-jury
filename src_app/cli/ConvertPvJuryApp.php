@@ -7,7 +7,7 @@ use app\CsvPvModel1Builder;
 use app\CsvPvModel2Builder;
 use app\PvDataExtractor;
 use app\PvJuryXlsxBuilder;
-use nur\sery\app\cli\Application;
+use nulib\app\cli\Application;
 use nulib\ext\json;
 use nulib\ext\yaml;
 use nulib\StateException;

@@ -2,9 +2,9 @@
 namespace app;
 
 use nulib\cl;
-use nulib\ext\spreadsheet\SsBuilder;
+use nulib\ext\tab\SsBuilder;
 use nulib\file;
-use nulib\file\csv\IBuilder;
+use nulib\file\tab\IBuilder;
 use nulib\ValueException;
 
 abstract class CsvPvBuilder implements IPvBuilder {

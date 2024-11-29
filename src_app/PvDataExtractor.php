@@ -3,7 +3,7 @@ namespace app;
 
 use nulib\A;
 use nulib\cl;
-use nulib\ext\spreadsheet\SsReader;
+use nulib\ext\tab\SsReader;
 use nulib\file\web\Upload;
 use nulib\os\path;
 use nulib\str;

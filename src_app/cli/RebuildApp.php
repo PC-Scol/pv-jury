@@ -3,7 +3,7 @@ namespace app\cli;
 
 use app\config\bootstrap;
 use app\pvs;
-use nur\sery\app\cli\Application;
+use nulib\app\cli\Application;
 use nulib\os\sh;
 
 class RebuildApp extends Application {
