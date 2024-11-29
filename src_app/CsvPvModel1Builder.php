@@ -132,13 +132,48 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     return false;
   }
 
+  const HS = [
+    "font" => ["bold" => true],
+    "border" => "all",
+  ];
+  const BT_HS = [
+    "font" => ["bold" => true],
+    "border" => "left top right thin",
+  ];
+  const BB_HS = [
+    "font" => ["bold" => true],
+    "border" => "left bottom right thin",
+  ];
+  const BLT_HS = [
+    "font" => ["bold" => true],
+    "border" => "left top thin",
+  ];
+  const BLB_HS = [
+    "font" => ["bold" => true],
+    "border" => "left bottom thin",
+  ];
+  const BTR_HS = [
+    "font" => ["bold" => true],
+    "border" => "top right thin",
+  ];
+  const BBR_HS = [
+    "font" => ["bold" => true],
+    "border" => "bottom right thin",
+  ];
+  const N_S = ["align" => "right"];
+  const C_S = ["align" => "center"];
+  const R_S = ["align" => "right"];
+  const E_S = ["align" => "center"];
+
   function prepareLayout(): void {
     $ws =& $this->pvData->ws;
     $objs = $ws["objs"];
     $pv =& $ws["sheet_pv"];
 
     $hrow1 = ["Code apprenant", "Nom", "Prénom"];
+    $hrow1_styles = [self::BT_HS, self::BT_HS, self::BT_HS];
     $hrow2 = [null, null, null];
+    $hrow2_styles = [self::BB_HS, self::BB_HS, self::BB_HS];
     $firstObj = true;
     foreach ($objs as $obj) {
       $title = $obj["title"];
@@ -148,9 +183,22 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         $code = "Note";
         $title = "Résultat";
         $ects = "ECTS";
+        $hrow1_styles[] = cl::merge(self::BLT_HS, self::N_S);
+        $hrow1_styles[] = cl::merge(self::BTR_HS, self::C_S);
+        $hrow2_styles[] = cl::merge(self::BLB_HS, self::R_S);
+        $hrow2_styles[] = cl::merge(self::BBR_HS, self::E_S);
       } elseif (!self::split_code_title($title, $code)) {
         $code = $title;
         $title = null;
+        $hrow1_styles[] = self::BLT_HS;
+        $hrow1_styles[] = self::BTR_HS;
+        $hrow2_styles[] = self::BLB_HS;
+        $hrow2_styles[] = self::BBR_HS;
+      } else {
+        $hrow1_styles[] = self::BLT_HS;
+        $hrow1_styles[] = self::BTR_HS;
+        $hrow2_styles[] = self::BLB_HS;
+        $hrow2_styles[] = self::BBR_HS;
       }
       $hrow1[] = $code;
       $hrow1[] = null;
@@ -158,6 +206,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       $hrow2[] = $ects;
     }
     $pv["headers"] = [$hrow1, $hrow2];
+    $pv["headers_styles"] = [$hrow1_styles, $hrow2_styles];
   }
 
   function getAcq(array $row, array $acq): array {
@@ -247,7 +296,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $codApr = $row[0];
 
     $brow1 = array_slice($row, 0, 3);
+    $brow1_styles = [self::BT_HS, self::BT_HS, self::BT_HS];
     $brow2 = [null, null, null];
+    $brow2_styles = [self::BB_HS, self::BB_HS, self::BB_HS];
     $firstObj = true;
     foreach ($objs as $iobj => $obj) {
       [
@@ -272,9 +323,13 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       }
 
       $brow1[] = $note;
+      $brow1_styles[] = cl::merge(self::BLT_HS, self::N_S);
       $brow1[] = $acquis;
+      $brow1_styles[] = cl::merge(self::BTR_HS, self::C_S);
       $brow2[] = $res;
+      $brow2_styles[] = cl::merge(self::BLB_HS, self::R_S);
       $brow2[] = $ects;
+      $brow2_styles[] = cl::merge(self::BBR_HS, self::E_S);
 
       if ($note !== null) {
         $notes[$iobj][$codApr] = $note;
@@ -285,7 +340,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       $firstObj = false;
     }
     $pv["body"][] = $brow1;
+    $pv["body_styles"][] = $brow1_styles;
     $pv["body"][] = $brow2;
+    $pv["body_styles"][] = $brow2_styles;
   }
 
   private static function stat_brow(string $label, array $notes): array {
@@ -417,24 +474,39 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $pv = $ws["sheet_pv"];
     $builder->write([]);
     $prefix = [null];
-    foreach ($pv["headers"] as $row) {
-      $builder->write(cl::merge($prefix, $row));
+    $sectionStyles = $pv["headers_styles"] ?? null;
+    foreach ($pv["headers"] as $key => $row) {
+      $colStyles = $sectionStyles[$key] ?? null;
+      if ($colStyles !== null) $colStyles = cl::merge($prefix, $colStyles);
+      $builder->write(cl::merge($prefix, $row), $colStyles);
     }
-    foreach ($pv["body"] as $row) {
-      $builder->write(cl::merge($prefix, $row));
+    $sectionStyles = $pv["body_styles"] ?? null;
+    foreach ($pv["body"] as $key => $row) {
+      $colStyles = $sectionStyles[$key] ?? null;
+      if ($colStyles !== null) $colStyles = cl::merge($prefix, $colStyles);
+      $builder->write(cl::merge($prefix, $row), $colStyles);
     }
+    $sectionStyles = $pv["footer_styles"] ?? null;
     foreach ($pv["footer"] as $row) {
-      $builder->write(cl::merge($prefix, $row));
+      $colStyles = $sectionStyles[$key] ?? null;
+      if ($colStyles !== null) $colStyles = cl::merge($prefix, $colStyles);
+      $builder->write(cl::merge($prefix, $row), $colStyles);
     }
 
     $totals = $ws["sheet_totals"];
     $builder->write([]);
     $prefix = [null, null, null];
+    $sectionStyles = $totals["headers_styles"] ?? null;
     foreach ($totals["headers"] as $row) {
-      $builder->write(cl::merge($prefix, $row));
+      $colStyles = $sectionStyles[$key] ?? null;
+      if ($colStyles !== null) $colStyles = cl::merge($prefix, $colStyles);
+      $builder->write(cl::merge($prefix, $row), $colStyles);
     }
+    $sectionStyles = $totals["body_styles"] ?? null;
     foreach ($totals["body"] as $row) {
-      $builder->write(cl::merge($prefix, $row));
+      $colStyles = $sectionStyles[$key] ?? null;
+      if ($colStyles !== null) $colStyles = cl::merge($prefix, $colStyles);
+      $builder->write(cl::merge($prefix, $row), $colStyles);
     }
 
     $builder->write([]);
