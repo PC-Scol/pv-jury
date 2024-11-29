@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "149ae50cb656a75721e7a3757bf9366a",
+    "content-hash": "333ea667914ff748d7f892cf595ad2ea",
     "packages": [
         {
             "name": "maennchen/zipstream-php",
@@ -196,10 +196,12 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "eab8bb674e1b1f6461d92559854c2c200b5a7698"
+                "reference": "c42a4dbd336681e839a8dcb722a5931d8556d366"
             },
             "require": {
-                "php": "^8.2"
+                "ext-json": "*",
+                "php": "^8.2",
+                "symfony/yaml": "^7.1"
             },
             "require-dev": {
                 "ext-curl": "*",
@@ -231,7 +233,7 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2024-11-28T17:32:49+00:00"
+            "time": "2024-11-29T03:23:57+00:00"
         },
         {
             "name": "nulib/phpss",
@@ -239,7 +241,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-phpss.git",
-                "reference": "8a1ba14cb0d3af0587908db0fbbf840008fe0dcc"
+                "reference": "43215186b726fa82dee109ac4a8b129c044f0c4e"
             },
             "require": {
                 "nulib/php": "^8.2-dev",
@@ -273,7 +275,7 @@
                 }
             ],
             "description": "wrapper pour phpoffice/phpspreadsheet",
-            "time": "2024-11-28T16:51:15+00:00"
+            "time": "2024-11-29T03:37:49+00:00"
         },
         {
             "name": "nulib/spout",
@@ -281,7 +283,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "2861fcb91d330d1db805d4d6aabb980364cc42a9"
+                "reference": "7d84d3e9e8d9464e328b9588494cc3a226941541"
             },
             "require": {
                 "ext-dom": "*",
@@ -316,7 +318,7 @@
             "autoload": {
                 "psr-4": {
                     "nulib\\ext\\": "src",
-                    "OpenSpout\\": "upstream-4.x/src"
+                    "OpenSpout\\": "upstream-3.x/src"
                 }
             },
             "autoload-dev": {
@@ -331,50 +333,7 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2024-11-28T16:37:37+00:00"
-        },
-        {
-            "name": "nulib/yaml",
-            "version": "dev-php82",
-            "source": {
-                "type": "git",
-                "url": "https://git.univ-reunion.fr/sda-php/nulib-yaml.git",
-                "reference": "95890a2bd82fdddf0cd29f927438189bb561c99f"
-            },
-            "require": {
-                "ext-json": "*",
-                "nulib/php": "^8.2-dev",
-                "php": "^8.2",
-                "symfony/yaml": "^7.1"
-            },
-            "require-dev": {
-                "nulib/tests": "^8.2"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "7.4.x-dev",
-                    "dev-php82": "8.2.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "nulib\\ext\\": "src"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "nulib\\ext\\": "tests"
-                }
-            },
-            "authors": [
-                {
-                    "name": "Jephte Clain",
-                    "email": "Jephte.Clain@univ-reunion.fr"
-                }
-            ],
-            "description": "Support YAML et JSON",
-            "time": "2024-11-28T16:36:22+00:00"
+            "time": "2024-11-29T03:34:50+00:00"
         },
         {
             "name": "nur/ture",
@@ -942,7 +901,6 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "nulib/php": 20,
-        "nulib/yaml": 20,
         "nulib/spout": 20,
         "nulib/phpss": 20,
         "nur/ture": 20

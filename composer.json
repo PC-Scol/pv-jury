@@ -10,7 +10,6 @@
 	],
 	"require": {
 		"nulib/php": "^8.2-dev",
-		"nulib/yaml": "^8.2-dev",
 		"nulib/spout": "^8.2-dev",
 		"nulib/phpss": "^8.2-dev",
 		"nur/ture": "^8.2-dev",
