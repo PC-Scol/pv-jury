@@ -3,6 +3,7 @@ namespace web\init;
 
 use app\PvData;
 use app\pvs;
+use nulib\ext\spout\SpoutBuilder;
 use nulib\ext\tab\SsBuilder;
 use nulib\os\path;
 use nulib\web\params\F;
@@ -32,11 +33,12 @@ class APvPage extends ANavigablePage {
     if ($data === null) page::redirect(true);
     $pvData = new PvData($data);
     $output = path::ensure_ext($pvData->origname, "-excel.xlsx", ".csv");
+    /** @var SpoutBuilder $builder */
     $builder = SsBuilder::with([
       "output" => $output,
       "use_headers" => false,
-      "wsparams" => [
-        "sheetView_freezeRow" => count($pvData->headers) + 2,
+      "sheet_view" => [
+        "->setFreezeRow" => count($pvData->headers) + 2,
       ],
     ]);
     $writeAll = function ($rows) use ($builder) {
@@ -44,9 +46,11 @@ class APvPage extends ANavigablePage {
         $builder->write($row);
       }
     };
+    $builder->setDifferentOddEven(false);
     $writeAll(array_slice($pvData->headers, 0, -1));
     $writeAll([[]]);
     $writeAll(array_slice($pvData->headers, -1));
+    $builder->setDifferentOddEven(true);
     $writeAll($pvData->rows);
     $builder->sendFile();
   }

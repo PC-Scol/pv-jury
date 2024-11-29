@@ -3,6 +3,7 @@ namespace app;
 
 use nulib\cl;
 use nulib\cv;
+use nulib\ext\spout\SpoutBuilder;
 use nulib\str;
 use nulib\ValueException;
 use nur\v\vo;
@@ -99,8 +100,11 @@ class CsvPvModel1Builder extends CsvPvBuilder {
 
   protected function getBuilderParams(): ?array {
     return [
-      "wsparams" => [
-        "sheetView_freezeRow" => 8,
+      "sheet" => [
+        "different_odd_even" => false,
+      ],
+      "sheet_view" => [
+        "->setFreezeRow" => 8,
       ],
     ];
   }
@@ -324,11 +328,11 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       $stats["avg_stdev"][] = $avg_stdev;
     }
 
-    $pv["body"][] = self::stat_brow("Note min", $stats["notes_min"]);
-    $pv["body"][] = self::stat_brow("Note max", $stats["notes_max"]);
-    $pv["body"][] = self::stat_brow("Note moy", $stats["notes_avg"]);
-    $pv["body"][] = self::stat_brow("écart-type", $stats["stdev"]);
-    $pv["body"][] = self::stat_brow("moy - écart-type", $stats["avg_stdev"]);
+    $pv["footer"][] = self::stat_brow("Note min", $stats["notes_min"]);
+    $pv["footer"][] = self::stat_brow("Note max", $stats["notes_max"]);
+    $pv["footer"][] = self::stat_brow("Note moy", $stats["notes_avg"]);
+    $pv["footer"][] = self::stat_brow("écart-type", $stats["stdev"]);
+    $pv["footer"][] = self::stat_brow("moy - écart-type", $stats["avg_stdev"]);
 
     $resultats = $ws["resultats"];
     if ($resultats !== null) {
@@ -402,6 +406,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
 
   protected function writeRows(?PvData $pvData=null): void {
     $this->ensurePvData($pvData);
+    /** @var SpoutBuilder $builder */
     $builder = $this->builder;
     $ws = $pvData->ws;
 
@@ -416,6 +421,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       $builder->write(cl::merge($prefix, $row));
     }
     foreach ($pv["body"] as $row) {
+      $builder->write(cl::merge($prefix, $row));
+    }
+    foreach ($pv["footer"] as $row) {
       $builder->write(cl::merge($prefix, $row));
     }
 
@@ -459,6 +467,15 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       vo::etr();
     }
     vo::etbody();
+    vo::start("tfoot");
+    foreach ($pv["footer"] as $row) {
+      vo::str();
+      foreach ($row as $col) {
+        vo::td($col);
+      }
+      vo::etr();
+    }
+    vo::end("tfoot");
     vo::etable();
   }
 }
