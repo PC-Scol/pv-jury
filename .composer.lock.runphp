@@ -283,7 +283,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "59bab1788b83f02fc1940bc3f867702d0abbfe01"
+                "reference": "9e0f04097821d62b6873a5cf0117a0fa56814315"
             },
             "require": {
                 "ext-dom": "*",
