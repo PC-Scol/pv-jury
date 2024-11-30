@@ -7,6 +7,12 @@ use nulib\ext\spout\SpoutBuilder;
 use nulib\str;
 use nulib\ValueException;
 use nur\v\vo;
+use OpenSpout\Writer\XLSX\Options\HeaderFooter;
+use OpenSpout\Writer\XLSX\Options\PageMargin;
+use OpenSpout\Writer\XLSX\Options\PageOrder;
+use OpenSpout\Writer\XLSX\Options\PageOrientation;
+use OpenSpout\Writer\XLSX\Options\PageSetup;
+use OpenSpout\Writer\XLSX\Options\PaperSize;
 
 /**
  * Class Model1CsvBuilder: construire un document pouvant servir à faire une
@@ -99,7 +105,15 @@ class CsvPvModel1Builder extends CsvPvBuilder {
   }
 
   protected function getBuilderParams(): ?array {
+    $title = $this->pvData->ws["document"]["title"][1];
+    $footer = htmlspecialchars("&L$title&RPage &P / &N");
     return [
+      "spout" => [
+        "->setColumnWidth" => [0.1, 1],
+        "->setPageSetup" => [new PageSetup(PageOrientation::LANDSCAPE, PaperSize::A3, null, null, PageOrder::OVER_THEN_DOWN)],
+        "->setPageMargin" => [new PageMargin(0.39, 0.39, 0.75, 0.39)],
+        "->setHeaderFooter" => [new HeaderFooter(null, $footer)],
+      ],
       "sheet" => [
         "different_odd_even" => false,
       ],
@@ -132,48 +146,32 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     return false;
   }
 
-  const HS = [
+  const BOLD_S = [
     "font" => ["bold" => true],
-    "border" => "all",
   ];
-  const BT_HS = [
-    "font" => ["bold" => true],
-    "border" => "left top right thin",
-  ];
-  const BB_HS = [
-    "font" => ["bold" => true],
-    "border" => "left bottom right thin",
-  ];
-  const BLT_HS = [
-    "font" => ["bold" => true],
-    "border" => "left top thin",
-  ];
-  const BLB_HS = [
-    "font" => ["bold" => true],
-    "border" => "left bottom thin",
-  ];
-  const BTR_HS = [
-    "font" => ["bold" => true],
-    "border" => "top right thin",
-  ];
-  const BBR_HS = [
-    "font" => ["bold" => true],
-    "border" => "bottom right thin",
-  ];
-  const N_S = ["align" => "right"];
-  const C_S = ["align" => "center"];
-  const R_S = ["align" => "right"];
-  const E_S = ["align" => "center"];
+  const BA_S = ["border" => "all"];
+  const BT_S = ["border" => "left top right thin"];
+  const BB_S = ["border" => "left bottom right thin"];
+  const BLT_S = ["border" => "left top thin"];
+  const BLB_S = ["border" => "left bottom thin"];
+  const BTR_S = ["border" => "top right thin"];
+  const BBR_S = ["border" => "bottom right thin"];
+  const NOTE_S = ["align" => "right"];
+  const CAP_S = ["align" => "center"];
+  const RES_S = ["align" => "right"];
+  const ECTS_S = ["align" => "center"];
 
   function prepareLayout(): void {
     $ws =& $this->pvData->ws;
     $objs = $ws["objs"];
     $pv =& $ws["sheet_pv"];
 
+    $btS = cl::merge(self::BOLD_S, self::BT_S);
+    $bbS = cl::merge(self::BOLD_S, self::BB_S);
     $hrow1 = ["Code apprenant", "Nom", "Prénom"];
-    $hrow1_styles = [self::BT_HS, self::BT_HS, self::BT_HS];
+    $hrow1_styles = [$btS, $btS, $btS];
     $hrow2 = [null, null, null];
-    $hrow2_styles = [self::BB_HS, self::BB_HS, self::BB_HS];
+    $hrow2_styles = [$bbS, $bbS, $bbS];
     $firstObj = true;
     foreach ($objs as $obj) {
       $title = $obj["title"];
@@ -183,22 +181,22 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         $code = "Note";
         $title = "Résultat";
         $ects = "ECTS";
-        $hrow1_styles[] = cl::merge(self::BLT_HS, self::N_S);
-        $hrow1_styles[] = cl::merge(self::BTR_HS, self::C_S);
-        $hrow2_styles[] = cl::merge(self::BLB_HS, self::R_S);
-        $hrow2_styles[] = cl::merge(self::BBR_HS, self::E_S);
+        $hrow1_styles[] = cl::merge(self::BOLD_S, self::BLT_S, self::NOTE_S);
+        $hrow1_styles[] = cl::merge(self::BOLD_S, self::BTR_S, self::CAP_S);
+        $hrow2_styles[] = cl::merge(self::BOLD_S, self::BLB_S, self::RES_S);
+        $hrow2_styles[] = cl::merge(self::BOLD_S, self::BBR_S, self::ECTS_S);
       } elseif (!self::split_code_title($title, $code)) {
         $code = $title;
         $title = null;
-        $hrow1_styles[] = self::BLT_HS;
-        $hrow1_styles[] = self::BTR_HS;
-        $hrow2_styles[] = self::BLB_HS;
-        $hrow2_styles[] = self::BBR_HS;
+        $hrow1_styles[] = cl::merge(self::BOLD_S, self::BLT_S);
+        $hrow1_styles[] = cl::merge(self::BOLD_S, self::BTR_S);
+        $hrow2_styles[] = cl::merge(self::BOLD_S, self::BLB_S);
+        $hrow2_styles[] = cl::merge(self::BOLD_S, self::BBR_S);
       } else {
-        $hrow1_styles[] = self::BLT_HS;
-        $hrow1_styles[] = self::BTR_HS;
-        $hrow2_styles[] = self::BLB_HS;
-        $hrow2_styles[] = self::BBR_HS;
+        $hrow1_styles[] = cl::merge(self::BOLD_S, self::BLT_S);
+        $hrow1_styles[] = cl::merge(self::BOLD_S, self::BTR_S);
+        $hrow2_styles[] = cl::merge(self::BOLD_S, self::BLB_S);
+        $hrow2_styles[] = cl::merge(self::BOLD_S, self::BBR_S);
       }
       $hrow1[] = $code;
       $hrow1[] = null;
@@ -296,9 +294,13 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $codApr = $row[0];
 
     $brow1 = array_slice($row, 0, 3);
-    $brow1_styles = [self::BT_HS, self::BT_HS, self::BT_HS];
+    $brow1_styles = [
+      cl::merge(self::BT_S, ["align" => "center"]),
+      self::BT_S,
+      self::BT_S,
+    ];
     $brow2 = [null, null, null];
-    $brow2_styles = [self::BB_HS, self::BB_HS, self::BB_HS];
+    $brow2_styles = [self::BB_S, self::BB_S, self::BB_S];
     $firstObj = true;
     foreach ($objs as $iobj => $obj) {
       [
@@ -323,13 +325,13 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       }
 
       $brow1[] = $note;
-      $brow1_styles[] = cl::merge(self::BLT_HS, self::N_S);
+      $brow1_styles[] = cl::merge(self::BLT_S, self::NOTE_S);
       $brow1[] = $acquis;
-      $brow1_styles[] = cl::merge(self::BTR_HS, self::C_S);
+      $brow1_styles[] = cl::merge(self::BTR_S, self::CAP_S);
       $brow2[] = $res;
-      $brow2_styles[] = cl::merge(self::BLB_HS, self::R_S);
+      $brow2_styles[] = cl::merge(self::BLB_S, self::RES_S);
       $brow2[] = $ects;
-      $brow2_styles[] = cl::merge(self::BBR_HS, self::E_S);
+      $brow2_styles[] = cl::merge(self::BBR_S, self::ECTS_S);
 
       if ($note !== null) {
         $notes[$iobj][$codApr] = $note;
