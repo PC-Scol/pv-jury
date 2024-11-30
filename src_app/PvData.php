@@ -27,7 +27,7 @@ class PvData {
     switch ($name) {
     default:
       $name = str::camel2us($name);
-      return $this->data[$name];
+      return $this->data[$name] ?? null;
     }
   }
 

@@ -1,6 +1,7 @@
 <?php
 namespace app;
 
+use nulib\A;
 use nulib\cl;
 use nulib\cv;
 use nulib\ext\spout\SpoutBuilder;
@@ -25,6 +26,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $pvData->ws = [
       "document" => null,
       "sheet_pv" => null,
+      "sheet_totals" => null,
     ];
     $ws =& $pvData->ws;
 
@@ -120,6 +122,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       ],
       "sheet_view" => [
         "->setFreezeRow" => 8,
+        "->setFreezeColumn" => "E",
       ],
     ];
   }
@@ -469,7 +472,22 @@ class CsvPvModel1Builder extends CsvPvBuilder {
   function compute(?PvData $pvData=null): static {
     $this->ensurePvData($pvData);
 
-    $pvData->ws["sheet_pv"] = null;
+    A::merge($pvData->ws, [
+      "sheet_pv" => [
+        "headers" => null,
+        "headers_styles" => null,
+        "body" => null,
+        "body_styles" => null,
+        "footer" => null,
+        "footer_styles" => null,
+      ],
+      "sheet_totals" => [
+        "headers" => null,
+        "headers_styles" => null,
+        "body" => null,
+        "body_styles" => null,
+      ],
+    ]);
     $this->prepareLayout();
 
     $rows = $pvData->rows;

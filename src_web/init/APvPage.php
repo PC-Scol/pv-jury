@@ -39,6 +39,7 @@ class APvPage extends ANavigablePage {
       "use_headers" => false,
       "sheet_view" => [
         "->setFreezeRow" => count($pvData->headers) + 2,
+        "->setFreezeColumn" => "D",
       ],
     ]);
     $writeAll = function ($rows) use ($builder) {
