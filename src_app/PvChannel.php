@@ -1,11 +1,11 @@
 <?php
 namespace app;
 
-use nur\authz;
 use nulib\db\CapacitorChannel;
 use nulib\file;
 use nulib\file\web\Upload;
 use nulib\os\path;
+use nur\authz;
 
 class PvChannel extends CapacitorChannel {
   const TABLE_NAME = "pv";
@@ -64,6 +64,12 @@ class PvChannel extends CapacitorChannel {
   }
 
   function onUpdate($item, array $values, array $pvalues): ?array {
-    return $this->onCreate($item, $values, $pvalues);
+    $updates = $this->onCreate($item, $values, $pvalues);
+    if ($this->rebuilder && $values["cod_usr"] === null && $pvalues["cod_usr"] !== null) {
+      # si rebuilder, essayer de garder le même nom d'utilisateur
+      $updates["cod_usr"] = $pvalues["cod_usr"];
+      $updates["lib_usr"] = $pvalues["lib_usr"];
+    }
+    return $updates;
   }
 }

@@ -33,4 +33,14 @@ class PvChannelRebuilder extends CapacitorChannel {
       "item" => null,
     ];
   }
+
+  function onUpdate($item, array $values, array $pvalues): ?array {
+    $updates = null;
+    if ($values["cod_usr"] === null && $pvalues["cod_usr"] !== null) {
+      # si rebuilder, essayer de garder le même nom d'utilisateur
+      $updates["cod_usr"] = $pvalues["cod_usr"];
+      $updates["lib_usr"] = $pvalues["lib_usr"];
+    }
+    return $updates;
+  }
 }
