@@ -125,6 +125,7 @@ class ConvertPage extends APvPage {
           "action" => "download",
           "n" => $this->name,
         ])),
+        " (convertir le fichier CSV au format Excel <em>sans modifications du contenu</em>)"
       ]),
       v::li([
         v::a([
@@ -133,9 +134,11 @@ class ConvertPage extends APvPage {
         ], page::bu(ViewPage::class, [
           "n" => $this->name,
         ])),
+        " (consultation en ligne des résultats, par étudiant)"
       ]),
     ]);
 
+    vo::p(["<b>Edition du PV</b> (met en forme les données du fichier CSV pour impression. inclure aussi les statistiques)"]);
     al::print();
     $this->convertfo->print();
 
