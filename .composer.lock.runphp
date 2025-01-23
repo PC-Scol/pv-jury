@@ -241,7 +241,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-phpss.git",
-                "reference": "43215186b726fa82dee109ac4a8b129c044f0c4e"
+                "reference": "c8b10dcc6d995549b0ba4c5ed91613ec1fe7615b"
             },
             "require": {
                 "nulib/php": "^8.2-dev",
@@ -283,7 +283,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "9e0f04097821d62b6873a5cf0117a0fa56814315"
+                "reference": "d8b169e0b76217530e3db6af07d67324edd50eec"
             },
             "require": {
                 "ext-dom": "*",
@@ -317,7 +317,7 @@
             },
             "autoload": {
                 "psr-4": {
-                    "nulib\\ext\\": "src",
+                    "nulib\\": "src",
                     "OpenSpout\\": "upstream-4.x/src"
                 }
             },
@@ -333,7 +333,7 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2024-11-30T03:22:55+00:00"
+            "time": "2025-01-23T07:08:51+00:00"
         },
         {
             "name": "nur/ture",
@@ -432,16 +432,16 @@
         },
         {
             "name": "phpoffice/phpspreadsheet",
-            "version": "3.5.0",
+            "version": "3.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-                "reference": "fb74dcdfa5b538763ab980e977529bc783039aec"
+                "reference": "949c799c3538f3158bcf6c5f4d8a403027be0fbd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/fb74dcdfa5b538763ab980e977529bc783039aec",
-                "reference": "fb74dcdfa5b538763ab980e977529bc783039aec",
+                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/949c799c3538f3158bcf6c5f4d8a403027be0fbd",
+                "reference": "949c799c3538f3158bcf6c5f4d8a403027be0fbd",
                 "shasum": ""
             },
             "require": {
@@ -475,7 +475,7 @@
                 "phpcompatibility/php-compatibility": "^9.3",
                 "phpstan/phpstan": "^1.1",
                 "phpstan/phpstan-phpunit": "^1.0",
-                "phpunit/phpunit": "^9.6 || ^10.5",
+                "phpunit/phpunit": "^10.5",
                 "squizlabs/php_codesniffer": "^3.7",
                 "tecnickcom/tcpdf": "^6.5"
             },
@@ -530,9 +530,9 @@
             ],
             "support": {
                 "issues": "https://github.com/PHPOffice/PhpSpreadsheet/issues",
-                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/3.5.0"
+                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/3.8.0"
             },
-            "time": "2024-11-22T06:41:00+00:00"
+            "time": "2025-01-12T03:48:58+00:00"
         },
         {
             "name": "psr/http-client",
@@ -764,12 +764,12 @@
             },
             "type": "library",
             "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/contracts",
+                    "name": "symfony/contracts"
+                },
                 "branch-alias": {
                     "dev-main": "3.5-dev"
-                },
-                "thanks": {
-                    "name": "symfony/contracts",
-                    "url": "https://github.com/symfony/contracts"
                 }
             },
             "autoload": {
@@ -838,8 +838,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
