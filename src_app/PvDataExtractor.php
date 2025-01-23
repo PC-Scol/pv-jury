@@ -280,19 +280,11 @@ class PvDataExtractor {
       function addCol($col, int $colIndex): void {
         if (str::starts_with("Amngt/Acquis", $col)) {
           $this->ses["acquis_col"] = $col;
-        } elseif ($col === "Note") {
+        } elseif ($col === "Note" || $col === "Note Retenue") {
           $this->ses["note_col"] = $col;
-        } elseif ($col === "Note Retenue") {
-          $this->ses["note_col"] = $col;
-          # ne pas mettre les colonnes résultat, puisque la seule information
-          # disponible est l'absence, et qu'on n'est pas capable de calculer
-          # de façon fiable les colonnes admis & ajournés
-          #$this->ses["res_col"] = $col;
-        } elseif ($col === "Résultat") {
+        } elseif ($col === "Résultat" || $col === "Résultat Final") {
           $this->ses["res_col"] = $col;
-        } elseif ($col === "ECTS") {
-          $this->ses["ects_col"] = $col;
-        } elseif ($col === "ECTS Finaux") {
+        } elseif ($col === "ECTS" || $col === "ECTS Finaux") {
           $this->ses["ects_col"] = $col;
         } elseif ($col === "Points Jury") {
           $this->ses["pj_col"] = $col;

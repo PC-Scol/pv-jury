@@ -121,7 +121,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         "different_odd_even" => false,
       ],
       "sheet_view" => [
-        "->setFreezeRow" => 8,
+        "->setFreezeRow" => 7,
         "->setFreezeColumn" => "E",
       ],
     ];
@@ -136,7 +136,8 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     "ELIMINE" => "ELIM",
     "EN ATTENTE" => "ATT",
     "NEUTRALISE" => "NEU",
-    "ACQUIS" => "ACQUIS",
+    "ACQUIS" => "ACQ",
+    "NON ACQUIS" => "NACQ",
     "ABS. INJ." => "ABI",
     "ABS. JUS." => "ABS",
   ];
@@ -153,6 +154,11 @@ class CsvPvModel1Builder extends CsvPvBuilder {
   const BOLD_S = [
     "font" => ["bold" => true],
   ];
+  const WRAP_S = ["wrap" => true];
+  const ROTATE_S = ["rotation" => 45];
+  const LEFT_S = ["align" => "left"];
+  const CENTER_S = ["align" => "center"];
+  const RIGHT_S = ["align" => "right"];
   const BA_S = ["border" => "all thin"];
   const BL_S = ["border" => "left top bottom thin"];
   const BT_S = ["border" => "left top right thin"];
@@ -162,55 +168,42 @@ class CsvPvModel1Builder extends CsvPvBuilder {
   const BLB_S = ["border" => "left bottom thin"];
   const BTR_S = ["border" => "top right thin"];
   const BBR_S = ["border" => "right bottom thin"];
-  const NOTE_S = ["align" => "right"];
-  const CAP_S = ["align" => "center"];
-  const RES_S = ["align" => "right"];
-  const ECTS_S = ["align" => "center"];
+  const NOTE_S = self::RIGHT_S;
+  const CAP_S = self::CENTER_S;
+  const RES_S = self::RIGHT_S;
+  const ECTS_S = self::CENTER_S;
 
   function prepareLayout(): void {
     $ws =& $this->pvData->ws;
     $objs = $ws["objs"];
     $Spv =& $ws["sheet_pv"];
 
-    $btS = cl::merge(self::BOLD_S, self::BT_S);
-    $bbS = cl::merge(self::BOLD_S, self::BB_S);
-    $hrow1 = ["Code apprenant", "Nom", "Prénom"];
-    $hrow1_styles = [$btS, $btS, $btS];
-    $hrow2 = [null, null, null];
-    $hrow2_styles = [$bbS, $bbS, $bbS];
+    $baS = cl::merge(self::BOLD_S, self::BA_S);
+    $hrow = ["Code apprenant", "Nom", "Prénom"];
+    $hrow_styles = [cl::merge($baS, self::CENTER_S, self::WRAP_S), $baS, $baS];
     $firstObj = true;
     foreach ($objs as $obj) {
       $title = $obj["title"];
-      $ects = null;
       if ($firstObj) {
         $firstObj = false;
-        $code = "Note";
-        $title = "Résultat";
-        $ects = "ECTS";
-        $hrow1_styles[] = cl::merge(self::BOLD_S, self::BLT_S, self::NOTE_S);
-        $hrow1_styles[] = cl::merge(self::BOLD_S, self::BTR_S, self::CAP_S);
-        $hrow2_styles[] = cl::merge(self::BOLD_S, self::BLB_S, self::RES_S);
-        $hrow2_styles[] = cl::merge(self::BOLD_S, self::BBR_S, self::ECTS_S);
-      } elseif (!self::split_code_title($title, $code)) {
-        $code = $title;
-        $title = null;
-        $hrow1_styles[] = cl::merge(self::BOLD_S, self::BLT_S);
-        $hrow1_styles[] = cl::merge(self::BOLD_S, self::BTR_S);
-        $hrow2_styles[] = cl::merge(self::BOLD_S, self::BLB_S);
-        $hrow2_styles[] = cl::merge(self::BOLD_S, self::BBR_S);
+        $hrow[] = "Note\nRésultat";
+        $hrow_styles[] = cl::merge(self::BOLD_S, self::BA_S, self::RES_S);
+        $hrow[] = "ECTS";
+        $hrow_styles[] = cl::merge(self::BOLD_S, self::BA_S, self::ECTS_S);
+      } elseif (self::split_code_title($title, $code)) {
+        $hrow[] = $code;
+        $hrow_styles[] = cl::merge(self::BOLD_S, self::BL_S, self::ROTATE_S, self::RIGHT_S);
+        $hrow[] = $title;
+        $hrow_styles[] = cl::merge(self::BOLD_S, self::BR_S, self::WRAP_S, self::ROTATE_S, self::LEFT_S);
       } else {
-        $hrow1_styles[] = cl::merge(self::BOLD_S, self::BLT_S);
-        $hrow1_styles[] = cl::merge(self::BOLD_S, self::BTR_S);
-        $hrow2_styles[] = cl::merge(self::BOLD_S, self::BLB_S);
-        $hrow2_styles[] = cl::merge(self::BOLD_S, self::BBR_S);
+        $hrow[] = $title;
+        $hrow_styles[] = cl::merge(self::BOLD_S, self::BL_S, self::ROTATE_S, self::RIGHT_S);
+        $hrow[] = null;
+        $hrow_styles[] = cl::merge(self::BOLD_S, self::BR_S, self::WRAP_S, self::ROTATE_S, self::LEFT_S);
       }
-      $hrow1[] = $code;
-      $hrow1[] = null;
-      $hrow2[] = $title;
-      $hrow2[] = $ects;
     }
-    $Spv["headers"] = [$hrow1, $hrow2];
-    $Spv["headers_styles"] = [$hrow1_styles, $hrow2_styles];
+    $Spv["headers"] = [$hrow];
+    $Spv["headers_styles"] = [$hrow_styles];
   }
 
   function getAcq(array $row, array $acq): array {
