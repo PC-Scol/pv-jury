@@ -196,7 +196,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "7495c10a2dad6f09ef19ba28379c5cf28e1336d0"
+                "reference": "7e9bcfef00b3ab24a9dc950241bb91344a665c4e"
             },
             "require": {
                 "ext-json": "*",
@@ -212,7 +212,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "7.4.x-dev",
+                    "dev-php74": "7.4.x-dev",
                     "dev-php82": "8.2.x-dev"
                 }
             },
@@ -341,7 +341,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-ture.git",
-                "reference": "0b6e16cfe412831e0e422899339e595b74e635cd"
+                "reference": "e71693fae319d461b802d6cf14d66218eaefcdc4"
             },
             "require": {
                 "php": "^8.2"
@@ -354,7 +354,7 @@
                 "nur/m-pgsql": "dev-wip",
                 "nur/mapper": "dev-wip",
                 "nur/passwd": "dev-wip",
-                "nur/sery": "dev-master",
+                "nur/sery": "*",
                 "nur/tests": "dev-master",
                 "nur/v-bs3": "dev-wip"
             },
@@ -395,7 +395,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "7.4.x-dev",
+                    "dev-php74": "7.4.x-dev",
                     "dev-php82": "8.2.x-dev"
                 }
             },
