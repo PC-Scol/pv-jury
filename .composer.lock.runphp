@@ -241,7 +241,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-phpss.git",
-                "reference": "c8b10dcc6d995549b0ba4c5ed91613ec1fe7615b"
+                "reference": "c4afd896c40e80443c2ff3f11762925464b89568"
             },
             "require": {
                 "nulib/php": "^8.2-dev",
@@ -254,7 +254,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "7.4.x-dev",
+                    "dev-php74": "7.4.x-dev",
                     "dev-php82": "8.2.x-dev"
                 }
             },
@@ -283,7 +283,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "3aeff0a6c38f5142d2c07be1fa1108073fd51ba2"
+                "reference": "956e50f59190c2bc5258a9b0f0ad8d0e26957e4d"
             },
             "require": {
                 "ext-dom": "*",
@@ -311,7 +311,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "7.4.x-dev",
+                    "dev-php74": "7.4.x-dev",
                     "dev-php82": "8.2.x-dev"
                 }
             },
@@ -333,7 +333,7 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2025-01-23T12:08:57+00:00"
+            "time": "2025-01-24T13:17:26+00:00"
         },
         {
             "name": "nur/ture",

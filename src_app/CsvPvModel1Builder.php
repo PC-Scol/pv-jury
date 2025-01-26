@@ -8,7 +8,6 @@ use nulib\ext\spout\SpoutBuilder;
 use nulib\str;
 use nulib\ValueException;
 use nur\v\vo;
-use OpenSpout\Common\Entity\Style\CellVerticalAlignment;
 use OpenSpout\Writer\XLSX\Options\HeaderFooter;
 use OpenSpout\Writer\XLSX\Options\PageMargin;
 use OpenSpout\Writer\XLSX\Options\PageOrder;
@@ -143,6 +142,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
   ];
 
   private static function split_code_title(string &$title, ?string &$code=null): bool {
+    $code = null;
     if (preg_match('/^(.*?) - (.*)/', $title, $ms)) {
       $code = $ms[1];
       $title = $ms[2];
@@ -155,6 +155,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     "font" => ["bold" => true],
   ];
   const WRAP_S = ["wrap" => true];
+  const NOWRAP_S = ["wrap" => false];
   const ROTATE_S = ["rotation" => 45];
   const LEFT_S = ["align" => "left"];
   const CENTER_S = ["align" => "center"];
@@ -179,31 +180,35 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $Spv =& $ws["sheet_pv"];
 
     $baS = cl::merge(self::BOLD_S, self::BA_S);
+    $rotateS = cl::merge(self::ROTATE_S, self::LEFT_S, [
+      "valign" => "bottom",
+      "wrap" => true,
+    ]);
+
     $hrow = ["Code apprenant", "Nom", "Prénom"];
-    $hrow_styles = [cl::merge($baS, self::CENTER_S, self::WRAP_S), $baS, $baS];
+    $hrow_colsStyles = [cl::merge($baS, self::CENTER_S, self::WRAP_S), $baS, $baS];
     $firstObj = true;
     foreach ($objs as $obj) {
       $title = $obj["title"];
       if ($firstObj) {
         $firstObj = false;
         $hrow[] = "Note\nRésultat";
-        $hrow_styles[] = cl::merge(self::BOLD_S, self::BA_S, self::RES_S);
+        $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::RES_S);
         $hrow[] = "ECTS";
-        $hrow_styles[] = cl::merge(self::BOLD_S, self::BA_S, self::ECTS_S);
-      } elseif (self::split_code_title($title, $code)) {
-        $hrow[] = $code;
-        $hrow_styles[] = cl::merge(self::BOLD_S, self::BL_S, self::ROTATE_S, self::RIGHT_S);
-        $hrow[] = $title;
-        $hrow_styles[] = cl::merge(self::BOLD_S, self::BR_S, self::WRAP_S, self::ROTATE_S, self::LEFT_S);
+        $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::ECTS_S);
       } else {
+        if (!self::split_code_title($title, $code)) {
+          $code = $title;
+          $title = null;
+        }
+        $hrow[] = $code;
+        $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BL_S, self::ROTATE_S, self::RIGHT_S, self::NOWRAP_S);
         $hrow[] = $title;
-        $hrow_styles[] = cl::merge(self::BOLD_S, self::BL_S, self::ROTATE_S, self::RIGHT_S);
-        $hrow[] = null;
-        $hrow_styles[] = cl::merge(self::BOLD_S, self::BR_S, self::WRAP_S, self::ROTATE_S, self::LEFT_S);
+        $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BR_S, self::ROTATE_S, self::LEFT_S, self::WRAP_S);
       }
     }
     $Spv["headers"] = [$hrow];
-    $Spv["headers_styles"] = [$hrow_styles];
+    $Spv["headers_cols_styles"] = [$hrow_colsStyles];
   }
 
   function getAcq(array $row, array $acq): array {
@@ -341,14 +346,14 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       $firstObj = false;
     }
     $Spv["body"][] = $brow1;
-    $Spv["body_styles"][] = $brow1Styles;
+    $Spv["body_cols_styles"][] = $brow1Styles;
     $Spv["body"][] = $brow2;
-    $Spv["body_styles"][] = $brow2Styles;
+    $Spv["body_cols_styles"][] = $brow2Styles;
   }
 
-  private static function add_stat_brow(string $label, array $notes, ?array &$footer, ?array &$footerStyles): void {
+  private static function add_stat_brow(string $label, array $notes, ?array &$footer, ?array &$footer_cols_styles): void {
     $frow = [null, null, $label];
-    $frowStyles = [null, null, self::BA_S];
+    $frow_cols_styles = [null, null, self::BA_S];
     $noteS = cl::merge(self::BL_S, [
       "format" => "0.000",
     ]);
@@ -356,12 +361,12 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       /** @var bcnumber $note */
       if ($note !== null) $note = $note->floatval(3);
       $frow[] = $note;
-      $frowStyles[] = $noteS;
+      $frow_cols_styles[] = $noteS;
       $frow[] = null;
-      $frowStyles[] = self::BR_S;
+      $frow_cols_styles[] = self::BR_S;
     }
     $footer[] = $frow;
-    $footerStyles[] = $frowStyles;
+    $footer_cols_styles[] = $frow_cols_styles;
   }
 
   function computeStats(): void {
@@ -393,11 +398,11 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       $stats["avg_stdev"][] = $avg_stdev;
     }
 
-    self::add_stat_brow("Note min", $stats["notes_min"], $Spv["footer"], $Spv["footer_styles"]);
-    self::add_stat_brow("Note max", $stats["notes_max"], $Spv["footer"], $Spv["footer_styles"]);
-    self::add_stat_brow("Note moy", $stats["notes_avg"], $Spv["footer"], $Spv["footer_styles"]);
-    self::add_stat_brow("écart-type", $stats["stdev"], $Spv["footer"], $Spv["footer_styles"]);
-    self::add_stat_brow("moy - écart-type", $stats["avg_stdev"], $Spv["footer"], $Spv["footer_styles"]);
+    self::add_stat_brow("Note min", $stats["notes_min"], $Spv["footer"], $Spv["footer_cols_styles"]);
+    self::add_stat_brow("Note max", $stats["notes_max"], $Spv["footer"], $Spv["footer_cols_styles"]);
+    self::add_stat_brow("Note moy", $stats["notes_avg"], $Spv["footer"], $Spv["footer_cols_styles"]);
+    self::add_stat_brow("écart-type", $stats["stdev"], $Spv["footer"], $Spv["footer_cols_styles"]);
+    self::add_stat_brow("moy - écart-type", $stats["avg_stdev"], $Spv["footer"], $Spv["footer_cols_styles"]);
 
     $resultats = $ws["resultats"];
     if ($resultats !== null) {
@@ -442,7 +447,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $Stotals["headers"] = [
       [null, "Nombre", "Pourcentage"],
     ];
-    $Stotals["headers_styles"] = [
+    $Stotals["headers_cols_styles"] = [
       [null, $nbS, $nbS],
     ];
     $Stotals["body"] = [
@@ -454,7 +459,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $perS = cl::merge(self::BA_S, [
       "format" => "0.00\\ %",
     ]);
-    $Stotals["body_styles"] = [
+    $Stotals["body_cols_styles"] = [
       [self::BA_S, $nbS, $perS],
       [self::BA_S, $nbS, $perS],
       [self::BA_S, $nbS, $perS],
@@ -468,17 +473,17 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     A::merge($pvData->ws, [
       "sheet_pv" => [
         "headers" => null,
-        "headers_styles" => null,
+        "headers_cols_styles" => null,
         "body" => null,
-        "body_styles" => null,
+        "body_cols_styles" => null,
         "footer" => null,
-        "footer_styles" => null,
+        "footer_cols_styles" => null,
       ],
       "sheet_totals" => [
         "headers" => null,
-        "headers_styles" => null,
+        "headers_cols_styles" => null,
         "body" => null,
-        "body_styles" => null,
+        "body_cols_styles" => null,
       ],
     ]);
     $this->prepareLayout();
@@ -513,39 +518,52 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $Spv = $ws["sheet_pv"];
     $builder->write([]);
     $prefix = [null];
-    $sectionStyles = $Spv["headers_styles"] ?? null;
+    $section_colsStyles = $Spv["headers_cols_styles"] ?? null;
+    $section_rowStyles = $Spv["headers_row_styles"] ?? null;
     foreach ($Spv["headers"] as $key => $row) {
-      $colStyles = $sectionStyles[$key] ?? null;
-      if ($colStyles !== null) $colStyles = cl::merge($prefix, $colStyles);
-      $builder->write(cl::merge($prefix, $row), $colStyles);
+      $colsStyle = $section_colsStyles[$key] ?? null;
+      if ($colsStyle !== null) $colsStyle = cl::merge($prefix, $colsStyle);
+      $rowStyle = $section_rowStyles[$key] ?? null;
+      if (($rowStyle["merge_cells"] ?? null) !== null) {
+        $rowStyle["merge_offset"] = count($prefix);
+      }
+      $builder->write(cl::merge($prefix, $row), $colsStyle, $rowStyle);
     }
-    $sectionStyles = $Spv["body_styles"] ?? null;
+    $section_colsStyles = $Spv["body_cols_styles"] ?? null;
+    $section_rowStyles = $Spv["body_row_styles"] ?? null;
     foreach ($Spv["body"] as $key => $row) {
-      $colStyles = $sectionStyles[$key] ?? null;
-      if ($colStyles !== null) $colStyles = cl::merge($prefix, $colStyles);
-      $builder->write(cl::merge($prefix, $row), $colStyles);
+      $colsStyle = $section_colsStyles[$key] ?? null;
+      if ($colsStyle !== null) $colsStyle = cl::merge($prefix, $colsStyle);
+      $rowStyle = $section_rowStyles[$key] ?? null;
+      $builder->write(cl::merge($prefix, $row), $colsStyle, $rowStyle);
     }
-    $sectionStyles = $Spv["footer_styles"] ?? null;
+    $section_colsStyles = $Spv["footer_cols_styles"] ?? null;
+    $section_rowStyles = $Spv["footer_row_styles"] ?? null;
     foreach ($Spv["footer"] as $key => $row) {
-      $colStyles = $sectionStyles[$key] ?? null;
-      if ($colStyles !== null) $colStyles = cl::merge($prefix, $colStyles);
-      $builder->write(cl::merge($prefix, $row), $colStyles);
+      $colsStyle = $section_colsStyles[$key] ?? null;
+      if ($colsStyle !== null) $colsStyle = cl::merge($prefix, $colsStyle);
+      $rowStyle = $section_rowStyles[$key] ?? null;
+      $builder->write(cl::merge($prefix, $row), $colsStyle, $rowStyle);
     }
 
     $Stotals = $ws["sheet_totals"];
     $builder->write([]);
     $prefix = [null, null, null];
-    $sectionStyles = $Stotals["headers_styles"] ?? null;
+    $section_colsStyles = $Stotals["headers_cols_styles"] ?? null;
+    $section_rowStyles = $Spv["headers_row_styles"] ?? null;
     foreach ($Stotals["headers"] as $key => $row) {
-      $colStyles = $sectionStyles[$key] ?? null;
-      if ($colStyles !== null) $colStyles = cl::merge($prefix, $colStyles);
-      $builder->write(cl::merge($prefix, $row), $colStyles);
+      $colsStyle = $section_colsStyles[$key] ?? null;
+      if ($colsStyle !== null) $colsStyle = cl::merge($prefix, $colsStyle);
+      $rowStyle = $section_rowStyles[$key] ?? null;
+      $builder->write(cl::merge($prefix, $row), $colsStyle, $rowStyle);
     }
-    $sectionStyles = $Stotals["body_styles"] ?? null;
+    $section_colsStyles = $Stotals["body_cols_styles"] ?? null;
+    $section_rowStyles = $Spv["body_row_styles"] ?? null;
     foreach ($Stotals["body"] as $key => $row) {
-      $colStyles = $sectionStyles[$key] ?? null;
-      if ($colStyles !== null) $colStyles = cl::merge($prefix, $colStyles);
-      $builder->write(cl::merge($prefix, $row), $colStyles);
+      $colsStyle = $section_colsStyles[$key] ?? null;
+      if ($colsStyle !== null) $colsStyle = cl::merge($prefix, $colsStyle);
+      $rowStyle = $section_rowStyles[$key] ?? null;
+      $builder->write(cl::merge($prefix, $row), $colsStyle, $rowStyle);
     }
 
     $rowStyle = ["->setHeight" => 30];
