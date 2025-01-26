@@ -11,6 +11,7 @@ use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormBasic;
 use nur\v\icon;
 use nur\v\page;
+use nur\v\prefix;
 use nur\v\v;
 use nur\v\vo;
 use web\init\APvPage;
@@ -97,6 +98,25 @@ class ConvertPage extends APvPage {
     page::redirect(true);
   }
 
+  const HAVE_JQUERY = true;
+
+  function printJquery(): void {
+    ?>
+<script type="text/javascript">
+  jQuery.noConflict()(function($) {
+    $("#copy-link").click(function() {
+      var $this = $(this);
+      navigator.clipboard.writeText($("#view-link").attr("href"));
+      $this.addClass("btn-success").text("Lien copié!");
+      window.setTimeout(function() {
+        $this.removeClass("btn-success").text("Copier le lien");
+      }, 1000);
+      return false;
+    });
+  });
+</script>
+<?php
+  }
   function print(): void {
     $pvData = $this->pvData;
     $title = array_filter($pvData->title);
@@ -119,24 +139,34 @@ class ConvertPage extends APvPage {
       ]),
       v::li([
         v::a([
+          "href" => page::bu("", [
+            "action" => "download",
+            "n" => $this->name,
+          ]),
           "Télécharger ",
           icon::download("au format Excel"),
-        ], page::bu("", [
-          "action" => "download",
-          "n" => $this->name,
-        ])),
+        ]),
         " (convertir le fichier CSV au format Excel <em>sans modifications du contenu</em>)"
       ]),
       v::li([
         v::a([
-          "href" => page::bu(ViewPage::class, [
+          "id" => "view-link",
+          "href" => getenv("BASE_URL").page::bu(ViewPage::class, [
             "n" => $this->name,
           ]),
           "target" => "_blank",
           "Afficher ",
           icon::eye_open("le détail des dossiers étudiants"),
         ]),
-        " (consultation en ligne des résultats, par étudiant)"
+        " (consultation en ligne des résultats, par étudiant)",
+        "<br/>",
+        v::a([
+          "id" => "copy-link",
+          "class" => "btn btn-default",
+          "href" => "#",
+          "Copier le lien"
+        ]),
+        " (pour partager avec les enseignants)",
       ]),
     ]);
 
