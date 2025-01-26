@@ -180,11 +180,6 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $Spv =& $ws["sheet_pv"];
 
     $baS = cl::merge(self::BOLD_S, self::BA_S);
-    $rotateS = cl::merge(self::ROTATE_S, self::LEFT_S, [
-      "valign" => "bottom",
-      "wrap" => true,
-    ]);
-
     $hrow = ["Code apprenant", "Nom", "Prénom"];
     $hrow_colsStyles = [cl::merge($baS, self::CENTER_S, self::WRAP_S), $baS, $baS];
     $firstObj = true;

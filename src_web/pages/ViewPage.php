@@ -17,6 +17,9 @@ class ViewPage extends APvPage {
   const PLUGINS = [
     [CDatatable::class, null, ["dtauto" => true]],
   ];
+  const MENU = [
+    "brand" => ["&nbsp;Consultation PV Jury"],
+  ];
 
   function setup(): void {
     parent::setup();
@@ -73,6 +76,11 @@ class ViewPage extends APvPage {
 
   function print(): void {
     ly::row(); ly::col(12);
+    $pvData = $this->pvData;
+    vo::h4([
+      join("<br/>", array_filter($pvData->title)),
+    ]);
+
     vo::p([
       "Saisissez un numéro d'étudiant pour lequel vous voulez afficher le dossier:"
     ]);

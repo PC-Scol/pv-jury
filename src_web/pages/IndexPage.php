@@ -109,12 +109,19 @@ class IndexPage extends APvPage {
             return v::a($icons->getIcon("print", $row["origname"]), page::bu(ConvertPage::class, ["n" => $name]));
           } elseif ($col === null) {
             return [
-              v::a($icons->getIcon("eye-open", "Afficher"), page::bu(ViewPage::class, ["n" => $name])),
+              v::a([
+                "href" => page::bu(ViewPage::class, ["n" => $name]),
+                "target" => "_blank",
+                $icons->getIcon("eye-open", "Afficher")
+              ]),
               "&nbsp;&nbsp;|&nbsp;&nbsp;",
-              v::a($icons->getIcon("download", "Télécharger"), page::bu("", [
-                "action" => "download",
-                "n" => $name,
-              ])),
+              v::a([
+                "href" => page::bu("", [
+                  "action" => "download",
+                  "n" => $name,
+                ]),
+                $icons->getIcon("download", "Télécharger")
+              ]),
             ];
           }
           return $vs;

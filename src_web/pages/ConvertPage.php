@@ -129,11 +129,13 @@ class ConvertPage extends APvPage {
       ]),
       v::li([
         v::a([
+          "href" => page::bu(ViewPage::class, [
+            "n" => $this->name,
+          ]),
+          "target" => "_blank",
           "Afficher ",
           icon::eye_open("le détail des dossiers étudiants"),
-        ], page::bu(ViewPage::class, [
-          "n" => $this->name,
-        ])),
+        ]),
         " (consultation en ligne des résultats, par étudiant)"
       ]),
     ]);
