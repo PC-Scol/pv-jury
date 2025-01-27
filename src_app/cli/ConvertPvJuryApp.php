@@ -27,7 +27,7 @@ class ConvertPvJuryApp extends Application {
       "help" => "spécifier l'identifiant de session pour le modèle n°1",
     ],
     ["-2", "--model2", "name" => "model", "value" => 2,
-      "help" => "Sélectionner le modèle n°1",
+      "help" => "Sélectionner le modèle n°2 (c'est la valeur par défaut)",
     ],
     ["-d", "--dump-yaml", "value" => true,
       "help" => "Afficher les données au format YAML",
