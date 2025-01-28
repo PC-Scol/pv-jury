@@ -31,6 +31,7 @@ class ConvertPage extends APvPage {
       "schema" => [
         "ises" => ["?int", null, "Session"],
         "order" => ["string", null, "Ordre"],
+        "nic" => ["bool", null, "NE PAS inclure les controles"],
       ],
       "params" => [
         "convert" => ["control" => "hidden", "value" => 1],
@@ -41,6 +42,10 @@ class ConvertPage extends APvPage {
           "no_item_value" => "",
           "no_item_text" => "-- Veuillez choisir la session --",
         ]: null),
+        "nic" => [
+          "control" => "checkbox",
+          "value" => 1,
+        ],
         "order" => [
           "control" => "select",
           "items" => [
@@ -87,6 +92,7 @@ class ConvertPage extends APvPage {
     $convertfo = $this->convertfo;
     $builder->setIses($convertfo["ises"]);
     $builder->setOrder($convertfo["order"]);
+    $builder->setIncludeControles(!$convertfo["nic"]);
     $suffix = $builder->getSuffix();
     $output = path::filename($this->pvData->origname);
     $output = path::ensure_ext($output, "-$suffix.xlsx", ".csv");

@@ -24,7 +24,10 @@ class cdefaults {
     "menu" => [
       "brand" => ["&nbsp;PV Jury"],
       "items" => [
-        [[Bs3IconManager::UPLOAD[0]." Importer"], IndexPage::class, "accesskey" => "a"],
+        [[Bs3IconManager::UPLOAD[0]." Importer"], IndexPage::class, "accesskey" => "h"],
+        [[Bs3IconManager::REFRESH[0]." Rafraichir"], "", "accesskey" => "a",
+          "perm" => "*",
+        ],
       ],
     ],
   ];

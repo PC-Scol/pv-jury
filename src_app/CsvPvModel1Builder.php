@@ -92,6 +92,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $ses = $this->pvData->sesCols[$ises] ?? null;
     ValueException::check_null($ses);
     $this->ises = $ises;
+    $this->pvData->verifixed = false;
   }
 
   function getSuffix(): string {
@@ -104,6 +105,12 @@ class CsvPvModel1Builder extends CsvPvBuilder {
 
   function setOrder(string $order): void {
     $this->order = $order;
+  }
+
+  private bool $includeControles = true;
+
+  function setIncludeControles(bool $includeControles): void {
+    $this->includeControles = $includeControles;
   }
 
   protected function getBuilderParams(): ?array {
@@ -200,6 +207,14 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BL_S, self::ROTATE_S, self::RIGHT_S, self::NOWRAP_S);
         $hrow[] = $title;
         $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BR_S, self::ROTATE_S, self::LEFT_S, self::WRAP_S);
+
+        if ($this->includeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
+          foreach ($obj["ses"]["ctls"] as $ctl) {
+            $title = $ctl["title"];
+            $hrow[] = $title;
+            $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::ROTATE_S, self::RIGHT_S, self::WRAP_S);
+          }
+        }
       }
     }
     $Spv["headers"] = [$hrow];
@@ -284,6 +299,70 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     else return $this->compareNom($rowa, $rowb);
   }
 
+  function addAcqNoteResEcts(
+    array  $row, array $obj,
+    array  &$brow1, array &$brow1Styles,
+    array  &$brow2, array &$brow2Styles,
+  ): array {
+    [
+      "acquis" => $acquis,
+      "note" => $note,
+      "res" => $res,
+      "ects" => $ects,
+    ] = $this->getAcqNoteResEcts($row, $obj);
+
+    $nses = $ses["nses"] ?? null;
+    if ($acquis !== null && $res === "AJ" && $nses !== null) {
+      # bug: au 20/11/2024, PEGASE ne remonte pas les capitalisations des
+      # années antérieures sur la bonne session
+      [
+        "note" => $nnote,
+        "res" => $nres,
+        "ects" => $nects,
+      ] = $this->getNoteResEcts($row, $nses);
+      if (str::starts_with("ADM", $nres)) {
+        [$note, $res, $ects] = [$nnote, $nres, $nects];
+      }
+    }
+
+    $brow1[] = $note;
+    $brow1Styles[] = cl::merge(self::BLT_S, self::NOTE_S);
+    $brow1[] = $acquis;
+    $brow1Styles[] = cl::merge(self::BTR_S, self::CAP_S);
+    $brow2[] = $res;
+    $brow2Styles[] = cl::merge(self::BLB_S, self::RES_S);
+    $brow2[] = $ects;
+    $brow2Styles[] = cl::merge(self::BBR_S, self::ECTS_S);
+
+    return [
+      "acquis" => $acquis,
+      "note" => $note,
+      "res" => $res,
+      "ects" => $ects,
+    ];
+  }
+
+  function addNoteRes(
+    array  $row, array $ctl,
+    array  &$brow1, array &$brow1Styles,
+    array  &$brow2, array &$brow2Styles,
+  ): array {
+    [
+      "note" => $note,
+      "res" => $res,
+    ] = $this->getNoteResEcts($row, $ctl);
+
+    $brow1[] = $note;
+    $brow1Styles[] = cl::merge(self::BT_S, self::NOTE_S);
+    $brow2[] = $res;
+    $brow2Styles[] = cl::merge(self::BB_S, self::RES_S);
+
+    return [
+      "note" => $note,
+      "res" => $res,
+    ];
+  }
+
   function parseRow(array $row): void {
     $ws =& $this->pvData->ws;
     $objs = $ws["objs"];
@@ -303,42 +382,22 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $firstObj = true;
     foreach ($objs as $iobj => $obj) {
       [
-        "acquis" => $acquis,
         "note" => $note,
         "res" => $res,
-        "ects" => $ects,
-      ] = $this->getAcqNoteResEcts($row, $obj);
+      ] = $this->addAcqNoteResEcts($row, $obj, $brow1, $brow1Styles, $brow2, $brow2Styles);
 
-      $nses = $obj["ses"]["nses"] ?? null;
-      if ($acquis !== null && $res === "AJ" && $nses !== null) {
-        # bug: au 20/11/2024, PEGASE ne remonte pas les capitalisations des
-        # années antérieures sur la bonne session
-        [
-          "note" => $nnote,
-          "res" => $nres,
-          "ects" => $nects,
-        ] = $this->getNoteResEcts($row, $nses);
-        if (str::starts_with("ADM", $nres)) {
-          [$note, $res, $ects] = [$nnote, $nres, $ects];
+      if ($note !== null) $notes[$iobj][$codApr] = $note;
+      if ($firstObj && $res !== null) $resultats[$codApr] = $res;
+      $firstObj = false;
+
+      if ($this->includeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
+        foreach ($obj["ses"]["ctls"] as $ictl => $ctl) {
+          [
+            "note" => $note,
+          ] = $this->addNoteRes($row, $ctl, $brow1, $brow1Styles, $brow2, $brow2Styles);
+          if ($note !== null) $notes["$iobj+$ictl"][$codApr] = $note;
         }
       }
-
-      $brow1[] = $note;
-      $brow1Styles[] = cl::merge(self::BLT_S, self::NOTE_S);
-      $brow1[] = $acquis;
-      $brow1Styles[] = cl::merge(self::BTR_S, self::CAP_S);
-      $brow2[] = $res;
-      $brow2Styles[] = cl::merge(self::BLB_S, self::RES_S);
-      $brow2[] = $ects;
-      $brow2Styles[] = cl::merge(self::BBR_S, self::ECTS_S);
-
-      if ($note !== null) {
-        $notes[$iobj][$codApr] = $note;
-      }
-      if ($firstObj && $res !== null) {
-        $resultats[$codApr] = $res;
-      }
-      $firstObj = false;
     }
     $Spv["body"][] = $brow1;
     $Spv["body_cols_styles"][] = $brow1Styles;
@@ -346,22 +405,44 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $Spv["body_cols_styles"][] = $brow2Styles;
   }
 
-  private static function add_stat_brow(string $label, array $notes, ?array &$footer, ?array &$footer_cols_styles): void {
+  private static function add_stat_brow(string $label, array $spans, array $notes, ?array &$footer, ?array &$footer_cols_styles): void {
     $frow = [null, null, $label];
     $frow_cols_styles = [null, null, self::BA_S];
     $noteS = cl::merge(self::BL_S, [
       "format" => "0.000",
     ]);
-    foreach ($notes as $note) {
+    foreach ($notes as $key => $note) {
+      $span = $spans[$key];
       /** @var bcnumber $note */
       if ($note !== null) $note = $note->floatval(3);
-      $frow[] = $note;
-      $frow_cols_styles[] = $noteS;
-      $frow[] = null;
-      $frow_cols_styles[] = self::BR_S;
+      if ($span == 1) {
+        $frow[] = $note;
+        $frow_cols_styles[] = cl::merge($noteS, self::BA_S);
+      } else {
+        $frow[] = $note;
+        $frow_cols_styles[] = $noteS;
+        $frow[] = null;
+        $frow_cols_styles[] = self::BR_S;
+      }
     }
     $footer[] = $frow;
     $footer_cols_styles[] = $frow_cols_styles;
+  }
+
+  protected function addStat(?array $onotes, array &$stats, int $span): void {
+    if ($onotes !== null) {
+      [$min, $max, $avg] = bcnumber::min_max_avg($onotes, true);
+      $stdev = bcnumber::stdev($onotes, true);
+      $avg_stdev = $avg->sub($stdev);
+    } else {
+      $min = $max = $avg = $stdev = $avg_stdev = null;
+    }
+    $stats["spans"][] = $span;
+    $stats["notes_min"][] = $min;
+    $stats["notes_max"][] = $max;
+    $stats["notes_avg"][] = $avg;
+    $stats["stdev"][] = $stdev;
+    $stats["avg_stdev"][] = $avg_stdev;
   }
 
   function computeStats(): void {
@@ -370,6 +451,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $Spv =& $ws["sheet_pv"];
 
     $stats = [
+      "spans" => [],
       "notes_min" => [],
       "notes_max" => [],
       "notes_avg" => [],
@@ -379,25 +461,21 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $notes = $ws["notes"];
     foreach ($objs as $iobj => $obj) {
       $onotes = $notes[$iobj] ?? null;
-      if ($onotes !== null) {
-        [$min, $max, $avg] = bcnumber::min_max_avg($onotes, true);
-        $stdev = bcnumber::stdev($onotes, true);
-        $avg_stdev = $avg->sub($stdev);
-      } else {
-        $min = $max = $avg = $stdev = $avg_stdev = null;
+      $this->addStat($onotes, $stats, 2);
+
+      if ($this->includeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
+        foreach ($obj["ses"]["ctls"] as $ictl => $ctl) {
+          $onotes = $notes["$iobj+$ictl"] ?? null;
+          $this->addStat($onotes, $stats, 1);
+        }
       }
-      $stats["notes_min"][] = $min;
-      $stats["notes_max"][] = $max;
-      $stats["notes_avg"][] = $avg;
-      $stats["stdev"][] = $stdev;
-      $stats["avg_stdev"][] = $avg_stdev;
     }
 
-    self::add_stat_brow("Note min", $stats["notes_min"], $Spv["footer"], $Spv["footer_cols_styles"]);
-    self::add_stat_brow("Note max", $stats["notes_max"], $Spv["footer"], $Spv["footer_cols_styles"]);
-    self::add_stat_brow("Note moy", $stats["notes_avg"], $Spv["footer"], $Spv["footer_cols_styles"]);
-    self::add_stat_brow("écart-type", $stats["stdev"], $Spv["footer"], $Spv["footer_cols_styles"]);
-    self::add_stat_brow("moy - écart-type", $stats["avg_stdev"], $Spv["footer"], $Spv["footer_cols_styles"]);
+    self::add_stat_brow("Note min", $stats["spans"], $stats["notes_min"], $Spv["footer"], $Spv["footer_cols_styles"]);
+    self::add_stat_brow("Note max", $stats["spans"], $stats["notes_max"], $Spv["footer"], $Spv["footer_cols_styles"]);
+    self::add_stat_brow("Note moy", $stats["spans"], $stats["notes_avg"], $Spv["footer"], $Spv["footer_cols_styles"]);
+    self::add_stat_brow("écart-type", $stats["spans"], $stats["stdev"], $Spv["footer"], $Spv["footer_cols_styles"]);
+    self::add_stat_brow("moy - écart-type", $stats["spans"], $stats["avg_stdev"], $Spv["footer"], $Spv["footer_cols_styles"]);
 
     $resultats = $ws["resultats"];
     if ($resultats !== null) {
