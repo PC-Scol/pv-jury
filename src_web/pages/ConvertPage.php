@@ -43,8 +43,10 @@ class ConvertPage extends APvPage {
           "no_item_text" => "-- Veuillez choisir la session --",
         ]: null),
         "nic" => [
-          "control" => "checkbox",
-          "value" => 1,
+          "control" => "hidden",
+          "value" => false,
+          //"control" => "checkbox",
+          //"value" => 1,
         ],
         "order" => [
           "control" => "select",
