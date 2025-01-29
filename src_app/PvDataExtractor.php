@@ -280,7 +280,7 @@ class PvDataExtractor {
       function addCol($col, int $colIndex): void {
         if (str::starts_with("Amngt/Acquis", $col)) {
           $this->ses["acquis_col"] = $col;
-        } elseif ($col === "Note" || $col === "Note Retenue") {
+        } elseif ($col === "Note" || $col === "Note Retenue" || $col === "Note Finale") {
           $this->ses["note_col"] = $col;
         } elseif ($col === "Résultat" || $col === "Résultat Final") {
           $this->ses["res_col"] = $col;
