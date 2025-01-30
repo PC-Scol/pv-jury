@@ -99,7 +99,7 @@ class ConvertPage extends APvPage {
     $builder->setIses($convertfo["ises"]);
     $builder->setOrder($convertfo["order"]);
     $builder->setExcludeControles(boolval($convertfo["xc"]));
-    $builder->setExcludeUnlessHaveNoteRes(boolval($convertfo["xe"]));
+    $builder->setExcludeUnlessHaveValue(boolval($convertfo["xe"]));
     $suffix = $builder->getSuffix();
     $output = path::filename($this->pvData->origname);
     $output = path::ensure_ext($output, "-$suffix.xlsx", ".csv");
@@ -188,7 +188,7 @@ class ConvertPage extends APvPage {
     $this->convertfo->print();
 
     $builder = $this->builder;
-    $builder->setExcludeUnlessHaveNoteRes(true);
+    $builder->setExcludeUnlessHaveValue(true);
     foreach ($this->sessions as [$ises, $session]) {
       vo::h2($session);
       $builder->setIses($ises);

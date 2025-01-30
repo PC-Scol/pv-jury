@@ -47,10 +47,10 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $this->excludeControles = $excludeControles;
   }
 
-  private bool $excludeUnlessHaveNoteRes = false;
+  private bool $excludeUnlessHaveValue = false;
 
-  function setExcludeUnlessHaveNoteRes(bool $excludeUnlessHaveNoteRes): void {
-    $this->excludeUnlessHaveNoteRes = $excludeUnlessHaveNoteRes;
+  function setExcludeUnlessHaveValue(bool $excludeUnlessHaveValue): void {
+    $this->excludeUnlessHaveValue = $excludeUnlessHaveValue;
   }
 
   protected function verifixPvData(PVData $pvData): void {
@@ -89,8 +89,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         unset($obj["sess"]);
         # filtrer ceux qui n'ont pas de données
         if ($firstObj || $obj["ses"] !== null) {
-          $haveNoteRes = $obj["ses"]["have_note"] || $obj["ses"]["have_res"];
-          if ($haveNoteRes || !$this->excludeUnlessHaveNoteRes) {
+          if ($obj["ses"]["have_value"] || !$this->excludeUnlessHaveValue) {
             $objs[] = $obj;
           }
         }

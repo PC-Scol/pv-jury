@@ -335,8 +335,11 @@ class PvDataExtractor {
           $resCol = $ses["res_col"];
           foreach ($ses["cols"] as $col) {
             $value = $row[$sindex];
-            $isValue = $value !== null && $value !== "-";
-            if (!$isValue) $row[$sindex] = $value = null;
+            if ($value === "-") $row[$sindex] = $value = null;
+            # ne pas considérer Barème quand il s'agit de décider s'il y a une
+            # valeur
+            if ($col === "Barème") $isValue = false;
+            else $isValue = $value !== null;
             $ses["have_value"] = $ses["have_value"] || $isValue;
             $haveNote = $col === $noteCol && $isValue;
             $ses["have_note"] = $ses["have_note"] || $haveNote;
