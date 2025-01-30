@@ -15,6 +15,7 @@ use nur\v\bs3\vc\CTable;
 use nur\v\icon;
 use nur\v\ly;
 use nur\v\page;
+use nur\v\plugins\autosubmitSelectPlugin;
 use nur\v\v;
 use nur\v\vo;
 use web\init\APvPage;
@@ -54,14 +55,49 @@ class IndexPage extends APvPage {
         al::error($e->getMessage());
       }
     } else {
+      $pvChannel = pvs::channel();
       $codUsr = authz::get()->getUsername();
-      $this->pvs = cl::all(pvs::channel()->all(null, [
+      $mineCol = "iif(cod_usr = '$codUsr', 0, 1)";
+
+      $usrs = cl::all($pvChannel->getCapacitor()->db()->all([
+        "select distinct",
+        "cols" => [
+          "cod_usr" => "coalesce(cod_usr, '')",
+          "lib_usr",
+          "mine" => $mineCol,
+        ],
+        "from" => $pvChannel->getTableName(),
+        "order by" => "mine, lib_usr",
+      ]));
+      $usrfo = $this->usrfo = new FormInline([
+        "schema" => [
+          "sel_usr" => ["?string"],
+        ],
+        "params" => [
+          "sel_usr" => [
+            "control" => "select",
+            "label" => "Afficher les fichiers importés par",
+            "items" => $usrs,
+            "item_value_key" => "cod_usr",
+            "item_text_key" => "lib_usr",
+            "default" => $codUsr,
+          ],
+        ],
+        "autoadd_submit" => false,
+        "autoload_params" => true,
+      ]);
+      $this->addPlugin(new autosubmitSelectPlugin("#sel_usr"));
+      $selUsr = $usrfo->get("sel_usr", false);
+
+      $this->pvs = cl::all($pvChannel->all(null, [
         "cols" => [
           "*",
-          "mine" => "iif(cod_usr = '$codUsr', 1, 0)",
+          "mine" => $mineCol,
         ],
-        "order by" => "mine desc, date desc, name",
-        "suffix" => "limit 100",
+        "where" => [
+          "cod_usr" => $selUsr,
+        ],
+        "order by" => "mine, date desc, name",
       ]));
     }
   }
@@ -71,6 +107,9 @@ class IndexPage extends APvPage {
 
   /** @var Upload */
   protected $file;
+
+  /** @var Form */
+  protected $usrfo;
 
   /** @var array */
   protected $pvs;
@@ -98,10 +137,11 @@ class IndexPage extends APvPage {
       ly::row(["class" => "gap-row"]);
       ly::col(12);
       vo::p("Vous pouvez aussi sélectionner un PV dans la liste des fichiers qui ont déjà été importés");
+      $this->usrfo->print();
       new CTable($pvs, [
         "table_class" => "table-bordered table-auto",
-        "cols" => ["name", null, "title", "date", "lib_usr"],
-        "headers" => ["Nom", "Action", "Type", "Date édition", "Importé par"],
+        "cols" => ["name", null, "title", "date"],
+        "headers" => ["Nom", "Action", "Type", "Date édition"],
         "col_func" => function($vs, $value, $col, $index, $row) {
           $icons = icon::manager();
           $name = $row["name"];
