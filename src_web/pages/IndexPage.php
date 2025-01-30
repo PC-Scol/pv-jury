@@ -69,6 +69,10 @@ class IndexPage extends APvPage {
         "from" => $pvChannel->getTableName(),
         "order by" => "mine, lib_usr",
       ]));
+      $usrs[] = [
+        "cod_usr" => "-ALL-",
+        "lib_usr" => "(tout le monde)",
+      ];
       $usrfo = $this->usrfo = new FormInline([
         "schema" => [
           "sel_usr" => ["?string"],
@@ -80,15 +84,19 @@ class IndexPage extends APvPage {
             "items" => $usrs,
             "item_value_key" => "cod_usr",
             "item_text_key" => "lib_usr",
-            "default" => $codUsr,
+            "default" => cl::first($usrs)["cod_usr"],
           ],
         ],
         "autoadd_submit" => false,
         "autoload_params" => true,
       ]);
       $this->addPlugin(new autosubmitSelectPlugin("#sel_usr"));
-      $selUsr = $usrfo->get("sel_usr", false);
 
+      $selUsr = $usrfo->get("sel_usr", false);
+      if ($selUsr === "-ALL-") $selUsr = false;
+
+      $this->pvCount = $pvChannel->count();
+      $this->selUsr = $selUsr;
       $this->pvs = cl::all($pvChannel->all(null, [
         "cols" => [
           "*",
@@ -111,6 +119,12 @@ class IndexPage extends APvPage {
   /** @var Form */
   protected $usrfo;
 
+  /** @var int */
+  protected $pvCount;
+
+  /** @var ?string|false */
+  protected $selUsr;
+
   /** @var array */
   protected $pvs;
 
@@ -132,16 +146,23 @@ class IndexPage extends APvPage {
     al::print();
     $this->importfo->print();
 
-    $pvs = $this->pvs;
-    if ($pvs) {
+    if ($this->pvCount) {
       ly::row(["class" => "gap-row"]);
       ly::col(12);
       vo::p("Vous pouvez aussi sélectionner un PV dans la liste des fichiers qui ont déjà été importés");
       $this->usrfo->print();
-      new CTable($pvs, [
+
+      $cols = ["name", null, "title", "date"];
+      $headers = ["Nom", "Action", "Type", "Date édition"];
+      if ($this->selUsr === false) {
+        $cols[] = "lib_usr";
+        $headers[] = "Importé par";
+      }
+
+      new CTable($this->pvs, [
         "table_class" => "table-bordered table-auto",
-        "cols" => ["name", null, "title", "date"],
-        "headers" => ["Nom", "Action", "Type", "Date édition"],
+        "cols" => $cols,
+        "headers" => $headers,
         "col_func" => function($vs, $value, $col, $index, $row) {
           $icons = icon::manager();
           $name = $row["name"];
