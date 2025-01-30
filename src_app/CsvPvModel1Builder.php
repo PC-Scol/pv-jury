@@ -20,72 +20,6 @@ use OpenSpout\Writer\XLSX\Options\PaperSize;
  * délibération: sélection par session, et affichage en colonnes
  */
 class CsvPvModel1Builder extends CsvPvBuilder {
-  protected function verifixPvData(PVData $pvData): void {
-    $data = $pvData->data;
-    $pvData->ws = [
-      "document" => null,
-      "sheet_pv" => null,
-      "sheet_totals" => null,
-    ];
-    $ws =& $pvData->ws;
-
-    $haveGpt = false;
-    $firstObj = true;
-    $titleObj = null;
-    $titleSes = null;
-    $tmpObjs = [];
-    # construire la liste des objets
-    foreach ($data["gpts"] as $gpt) {
-      if ($gpt["title"] !== null) $haveGpt = true;
-      foreach ($gpt["objs"] as $obj) {
-        if ($firstObj) {
-          $titleObj = $obj["title"];
-          self::split_code_title($titleObj);
-          $firstObj = false;
-        }
-        $obj["acq"] = null;
-        $obj["ses"] = null;
-        foreach ($obj["sess"] as $ises => $ses) {
-          if ($obj["acq"] === null && $ses["is_acquis"]) {
-            $obj["acq"] = $ses;
-          }
-          if ($obj["ses"] === null && $ises === $this->ises) {
-            $titleSes ??= $ses["title"];
-            $obj["ses"] = $ses;
-          }
-        }
-        unset($obj["sess"]);
-        $tmpObjs[] = $obj;
-      }
-    }
-    # puis filtrer ceux qui n'ont pas de données
-    $objs = [];
-    foreach ($tmpObjs as $obj) {
-      if ($obj["ses"] === null) continue;
-      if (!$obj["ses"]["have_value"]) continue;
-      $objs[] = $obj;
-    }
-    $ws["have_gpt"] = $haveGpt;
-    $ws["objs"] = $objs;
-
-    $ws["document"]["title"] = [
-      cl::first($data["title"]),
-      $titleObj,
-      $titleSes,
-      cl::last($data["title"]),
-    ];
-  }
-
-  function getSessions(): array {
-    $sessions = [];
-    foreach ($this->pvData->sesCols as $ises => $ses) {
-      if ($ses["is_session"]) {
-        $sessions[$ises] = [$ises, $ses["title"]];
-      }
-    }
-    return $sessions;
-  }
-
   private ?int $ises = null;
 
   function setIses(int $ises): void {
@@ -107,10 +41,81 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $this->order = $order;
   }
 
-  private bool $includeControles = true;
+  private bool $excludeControles = false;
 
-  function setIncludeControles(bool $includeControles): void {
-    $this->includeControles = $includeControles;
+  function setExcludeControles(bool $excludeControles): void {
+    $this->excludeControles = $excludeControles;
+  }
+
+  private bool $excludeUnlessHaveNoteRes = false;
+
+  function setExcludeUnlessHaveNoteRes(bool $excludeUnlessHaveNoteRes): void {
+    $this->excludeUnlessHaveNoteRes = $excludeUnlessHaveNoteRes;
+  }
+
+  protected function verifixPvData(PVData $pvData): void {
+    $data = $pvData->data;
+    $pvData->ws = [
+      "document" => null,
+      "sheet_pv" => null,
+      "sheet_totals" => null,
+    ];
+    $ws =& $pvData->ws;
+
+    $haveGpt = false;
+    $firstObj = true;
+    $titleObj = null;
+    $titleSes = null;
+    $objs = [];
+    # construire la liste des objets
+    foreach ($data["gpts"] as $gpt) {
+      if ($gpt["title"] !== null) $haveGpt = true;
+      foreach ($gpt["objs"] as $obj) {
+        if ($firstObj) {
+          $titleObj = $obj["title"];
+          self::split_code_title($titleObj);
+        }
+        $obj["acq"] = null;
+        $obj["ses"] = null;
+        foreach ($obj["sess"] as $ises => $ses) {
+          if ($obj["acq"] === null && $ses["is_acquis"]) {
+            $obj["acq"] = $ses;
+          }
+          if ($obj["ses"] === null && $ises === $this->ises) {
+            $titleSes ??= $ses["title"];
+            $obj["ses"] = $ses;
+          }
+        }
+        unset($obj["sess"]);
+        # filtrer ceux qui n'ont pas de données
+        if ($firstObj || $obj["ses"] !== null) {
+          $haveNoteRes = $obj["ses"]["have_note"] || $obj["ses"]["have_res"];
+          if ($haveNoteRes || !$this->excludeUnlessHaveNoteRes) {
+            $objs[] = $obj;
+          }
+        }
+        $firstObj = false;
+      }
+    }
+    $ws["have_gpt"] = $haveGpt;
+    $ws["objs"] = $objs;
+
+    $ws["document"]["title"] = [
+      cl::first($data["title"]),
+      $titleObj,
+      $titleSes,
+      cl::last($data["title"]),
+    ];
+  }
+
+  function getSessions(): array {
+    $sessions = [];
+    foreach ($this->pvData->sesCols as $ises => $ses) {
+      if ($ses["is_session"]) {
+        $sessions[$ises] = [$ises, $ses["title"]];
+      }
+    }
+    return $sessions;
   }
 
   protected function getBuilderParams(): ?array {
@@ -143,7 +148,8 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     "EN ATTENTE" => "ATT",
     "NEUTRALISE" => "NEU",
     "ACQUIS" => "ACQ",
-    "NON ACQUIS" => "NACQ",
+    "NON ACQUIS" => "NON ACQ",
+    "EN COURS D'ACQUISITION" => "ENC ACQ",
     "ABS. INJ." => "ABI",
     "ABS. JUS." => "ABS",
   ];
@@ -208,7 +214,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         $hrow[] = $title;
         $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BR_S, self::ROTATE_S, self::LEFT_S, self::WRAP_S);
 
-        if ($this->includeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
+        if (!$this->excludeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
           foreach ($obj["ses"]["ctls"] as $ctl) {
             $title = $ctl["title"];
             $hrow[] = $title;
@@ -390,7 +396,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       if ($firstObj && $res !== null) $resultats[$codApr] = $res;
       $firstObj = false;
 
-      if ($this->includeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
+      if (!$this->excludeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
         foreach ($obj["ses"]["ctls"] as $ictl => $ctl) {
           [
             "note" => $note,
@@ -463,7 +469,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       $onotes = $notes[$iobj] ?? null;
       $this->addStat($onotes, $stats, 2);
 
-      if ($this->includeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
+      if (!$this->excludeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
         foreach ($obj["ses"]["ctls"] as $ictl => $ctl) {
           $onotes = $notes["$iobj+$ictl"] ?? null;
           $this->addStat($onotes, $stats, 1);

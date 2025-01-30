@@ -11,7 +11,6 @@ use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormBasic;
 use nur\v\icon;
 use nur\v\page;
-use nur\v\prefix;
 use nur\v\v;
 use nur\v\vo;
 use web\init\APvPage;
@@ -31,7 +30,8 @@ class ConvertPage extends APvPage {
       "schema" => [
         "ises" => ["?int", null, "Session"],
         "order" => ["string", null, "Ordre"],
-        "nic" => ["bool", null, "NE PAS inclure les controles"],
+        "xc" => ["bool", null, "NE PAS inclure les controles"],
+        "xe" => ["bool", null, "NE PAS inclure les éléments pour lesquels il n'y a ni note ni résultat"],
       ],
       "params" => [
         "convert" => ["control" => "hidden", "value" => 1],
@@ -42,7 +42,7 @@ class ConvertPage extends APvPage {
           "no_item_value" => "",
           "no_item_text" => "-- Veuillez choisir la session --",
         ]: null),
-        "nic" => [
+        "xc" => [
           "control" => "hidden",
           "value" => false,
           //"control" => "checkbox",
@@ -54,6 +54,10 @@ class ConvertPage extends APvPage {
             [CsvPvModel1Builder::ORDER_MERITE, "Classer par mérite (note)"],
             [CsvPvModel1Builder::ORDER_ALPHA, "Classer par ordre alphabétique (nom)"],
           ],
+        ],
+        "xe" => [
+          "control" => "checkbox",
+          "value" => 1,
         ],
       ],
       "submit" => [
@@ -94,7 +98,8 @@ class ConvertPage extends APvPage {
     $convertfo = $this->convertfo;
     $builder->setIses($convertfo["ises"]);
     $builder->setOrder($convertfo["order"]);
-    $builder->setIncludeControles(!$convertfo["nic"]);
+    $builder->setExcludeControles(boolval($convertfo["xc"]));
+    $builder->setExcludeUnlessHaveNoteRes(boolval($convertfo["xe"]));
     $suffix = $builder->getSuffix();
     $output = path::filename($this->pvData->origname);
     $output = path::ensure_ext($output, "-$suffix.xlsx", ".csv");
@@ -183,6 +188,7 @@ class ConvertPage extends APvPage {
     $this->convertfo->print();
 
     $builder = $this->builder;
+    $builder->setExcludeUnlessHaveNoteRes(true);
     foreach ($this->sessions as [$ises, $session]) {
       vo::h2($session);
       $builder->setIses($ises);
