@@ -88,6 +88,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         }
         unset($obj["sess"]);
         # filtrer ceux qui n'ont pas de données
+        #XXX que faire si $firstObj && $obj["ses"] === null ???
         if ($firstObj || $obj["ses"] !== null) {
           if ($obj["ses"]["have_value"] || !$this->excludeUnlessHaveValue) {
             $objs[] = $obj;
@@ -181,6 +182,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
   const BLB_S = ["border" => "left bottom thin"];
   const BTR_S = ["border" => "top right thin"];
   const BBR_S = ["border" => "right bottom thin"];
+  const NUMBER_S = [
+    "format" => "0.000",
+  ];
   const NOTE_S = self::RIGHT_S;
   const CAP_S = self::CENTER_S;
   const RES_S = self::RIGHT_S;
@@ -201,7 +205,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         $firstObj = false;
         $hrow[] = "Note\nRésultat";
         $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::RES_S);
-        $hrow[] = "ECTS";
+        $hrow[] = "PointsJury\nECTS";
         $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::ECTS_S);
       } else {
         if (!self::split_code_title($title, $code)) {
@@ -280,10 +284,20 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     ];
   }
 
-  function getAcqNoteResEcts(array $row, array $obj): array {
-    $acq = $this->getAcq($row, $obj["acq"]);
-    $noteResEcts = $this->getNoteResEcts($row, $obj["ses"]);
-    return cl::merge($acq, $noteResEcts);
+  function getAcqNoteResEcts(array $row, array $obj, bool $pjInsteadOfAcq=false): array {
+    $ses = $obj["ses"];
+    $acq = ["acquis" => null];
+    $pj = ["pj" => null];
+    if ($pjInsteadOfAcq) {
+      $pjCol = $ses["pj_col"];
+      $pj = [
+        "pj" => $pjCol !== null? $row[$ses["col_indexes"][$pjCol]]: null,
+      ];
+    } else {
+      $acq = $this->getAcq($row, $obj["acq"]);
+    }
+    $noteResEcts = $this->getNoteResEcts($row, $ses);
+    return cl::merge($acq, $noteResEcts, $pj);
   }
 
   function compareNom(array $a, array $b) {
@@ -305,16 +319,17 @@ class CsvPvModel1Builder extends CsvPvBuilder {
   }
 
   function addAcqNoteResEcts(
-    array  $row, array $obj,
-    array  &$brow1, array &$brow1Styles,
-    array  &$brow2, array &$brow2Styles,
+    array $row, array $obj, bool $pjInsteadOfAcq,
+    array &$brow1, array &$brow1Styles,
+    array &$brow2, array &$brow2Styles,
   ): array {
     [
       "acquis" => $acquis,
       "note" => $note,
       "res" => $res,
       "ects" => $ects,
-    ] = $this->getAcqNoteResEcts($row, $obj);
+      "pj" => $pj,
+    ] = $this->getAcqNoteResEcts($row, $obj, $pjInsteadOfAcq);
 
     $nses = $ses["nses"] ?? null;
     if ($acquis !== null && $res === "AJ" && $nses !== null) {
@@ -331,9 +346,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     }
 
     $brow1[] = $note;
-    $brow1Styles[] = cl::merge(self::BLT_S, self::NOTE_S);
-    $brow1[] = $acquis;
-    $brow1Styles[] = cl::merge(self::BTR_S, self::CAP_S);
+    $brow1Styles[] = cl::merge(self::BLT_S, self::NOTE_S, self::NUMBER_S);
+    $brow1[] = $pjInsteadOfAcq? $pj: $acquis;
+    $brow1Styles[] = cl::merge(self::BTR_S, self::CAP_S, $pjInsteadOfAcq? self::NUMBER_S: null);
     $brow2[] = $res;
     $brow2Styles[] = cl::merge(self::BLB_S, self::RES_S);
     $brow2[] = $ects;
@@ -358,7 +373,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     ] = $this->getNoteResEcts($row, $ctl);
 
     $brow1[] = $note;
-    $brow1Styles[] = cl::merge(self::BT_S, self::NOTE_S);
+    $brow1Styles[] = cl::merge(self::BT_S, self::NOTE_S, self::NUMBER_S);
     $brow2[] = $res;
     $brow2Styles[] = cl::merge(self::BB_S, self::RES_S);
 
@@ -389,7 +404,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       [
         "note" => $note,
         "res" => $res,
-      ] = $this->addAcqNoteResEcts($row, $obj, $brow1, $brow1Styles, $brow2, $brow2Styles);
+      ] = $this->addAcqNoteResEcts($row, $obj, $firstObj, $brow1, $brow1Styles, $brow2, $brow2Styles);
 
       if ($note !== null) $notes[$iobj][$codApr] = $note;
       if ($firstObj && $res !== null) $resultats[$codApr] = $res;

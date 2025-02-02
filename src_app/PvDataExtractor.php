@@ -286,7 +286,7 @@ class PvDataExtractor {
           $this->ses["res_col"] = $col;
         } elseif ($col === "ECTS" || $col === "ECTS Finaux") {
           $this->ses["ects_col"] = $col;
-        } elseif ($col === "Points Jury") {
+        } elseif ($col === "Points Jury" || $col === "Points Jury Retenus") {
           $this->ses["pj_col"] = $col;
         }
         $cols =& $this->ses["cols"];
