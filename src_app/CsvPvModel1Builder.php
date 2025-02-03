@@ -656,7 +656,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $builder->write([]);
     $prefix = [null, null, null];
     $section_colsStyles = $Stotals["headers_cols_styles"] ?? null;
-    $section_rowStyles = $Spv["headers_row_styles"] ?? null;
+    $section_rowStyles = $Stotals["headers_row_styles"] ?? null;
     foreach ($Stotals["headers"] as $key => $row) {
       $colsStyle = $section_colsStyles[$key] ?? null;
       if ($colsStyle !== null) $colsStyle = cl::merge($prefix, $colsStyle);
@@ -664,7 +664,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       $builder->write(cl::merge($prefix, $row), $colsStyle, $rowStyle);
     }
     $section_colsStyles = $Stotals["body_cols_styles"] ?? null;
-    $section_rowStyles = $Spv["body_row_styles"] ?? null;
+    $section_rowStyles = $Stotals["body_row_styles"] ?? null;
     foreach ($Stotals["body"] as $key => $row) {
       $colsStyle = $section_colsStyles[$key] ?? null;
       if ($colsStyle !== null) $colsStyle = cl::merge($prefix, $colsStyle);
