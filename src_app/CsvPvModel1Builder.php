@@ -33,9 +33,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     return $this->pvData->sesCols[$this->ises]["title"] ?? "";
   }
 
-  const ORDER_MERITE = "note", ORDER_ALPHA = "nom";
+  const ORDER_CODAPR = "codapr", ORDER_ALPHA = "nom", ORDER_MERITE = "note";
 
-  private string $order = self::ORDER_ALPHA;
+  private string $order = self::ORDER_MERITE;
 
   function setOrder(string $order): void {
     $this->order = $order;
@@ -88,8 +88,10 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         }
         unset($obj["sess"]);
         # filtrer ceux qui n'ont pas de données
-        #XXX que faire si $firstObj && $obj["ses"] === null ???
-        if ($firstObj || $obj["ses"] !== null) {
+        if ($firstObj) {
+          # toujours inclure le premier objet
+          $objs[] = $obj;
+        } elseif ($obj["ses"] !== null) {
           if ($obj["ses"]["have_value"] || !$this->excludeUnlessHaveValue) {
             $objs[] = $obj;
           }
@@ -148,8 +150,8 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     "EN ATTENTE" => "ATT",
     "NEUTRALISE" => "NEU",
     "ACQUIS" => "ACQ",
-    "NON ACQUIS" => "NON ACQ",
-    "EN COURS D'ACQUISITION" => "ENC ACQ",
+    "NON ACQUIS" => "NON_ACQ",
+    "EN COURS D'ACQUISITION" => "ENC_ACQ",
     "ABS. INJ." => "ABI",
     "ABS. JUS." => "ABS",
   ];
@@ -169,7 +171,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
   ];
   const WRAP_S = ["wrap" => true];
   const NOWRAP_S = ["wrap" => false];
-  const ROTATE_S = ["rotation" => 45];
+  const ROTATE_S = ["rotation" => 70];
   const LEFT_S = ["align" => "left"];
   const CENTER_S = ["align" => "center"];
   const RIGHT_S = ["align" => "right"];
@@ -228,6 +230,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     }
     $Spv["headers"] = [$hrow];
     $Spv["headers_cols_styles"] = [$hrow_colsStyles];
+    $Spv["headers_row_styles"] = [[
+      "->setHeight" => 170, # 6cm
+    ]];
   }
 
   function getAcq(array $row, array $acq): array {
@@ -298,6 +303,11 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     }
     $noteResEcts = $this->getNoteResEcts($row, $ses);
     return cl::merge($acq, $noteResEcts, $pj);
+  }
+
+  function compareCodApr(array $a, array $b) {
+    $comparator = cl::compare(["+0", "+1", "+2"]);
+    return $comparator($a, $b);
   }
 
   function compareNom(array $a, array $b) {
@@ -583,11 +593,14 @@ class CsvPvModel1Builder extends CsvPvBuilder {
 
     $rows = $pvData->rows;
     switch ($this->order) {
-    case self::ORDER_MERITE:
-      usort($rows, [self::class, "compareNote"]);
+    case self::ORDER_CODAPR:
+      usort($rows, [self::class, "compareCodApr"]);
       break;
     case self::ORDER_ALPHA:
       usort($rows, [self::class, "compareNom"]);
+      break;
+    case self::ORDER_MERITE:
+      usort($rows, [self::class, "compareNote"]);
       break;
     }
     foreach ($rows as $row) {

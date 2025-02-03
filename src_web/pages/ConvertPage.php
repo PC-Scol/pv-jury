@@ -53,6 +53,7 @@ class ConvertPage extends APvPage {
           "items" => [
             [CsvPvModel1Builder::ORDER_MERITE, "Classer par mérite (note)"],
             [CsvPvModel1Builder::ORDER_ALPHA, "Classer par ordre alphabétique (nom)"],
+            [CsvPvModel1Builder::ORDER_CODAPR, "Classer par numéro apprenant"],
           ],
         ],
         "xe" => [
