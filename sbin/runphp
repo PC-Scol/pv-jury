@@ -259,7 +259,7 @@ if [ "$RUNPHP_MODE" != docker ]; then
     [ -n "$SEC_MIRROR" ] || SEC_MIRROR=default
     [ -n "$TIMEZONE" ] || TIMEZONE=Europe/Paris
     [ -n "$PRIVAREG" ] || PRIVAREG=
-    [ -n "$REGISTRY" ] || REGISTRY=pubdocker.univ-reunion.fr
+    [ -n "$REGISTRY" ] || REGISTRY=pubdocker.univ-reunion.fr/dist
 
     ## Charger la configuration
 
