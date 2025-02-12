@@ -6,6 +6,7 @@ use Exception;
 use nulib\cl;
 use nulib\os\path;
 use nulib\text\words;
+use nur\authz;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormBasic;
@@ -160,7 +161,19 @@ class ConvertPage extends APvPage {
           "Télécharger ",
           icon::download("au format Excel"),
         ]),
-        " (convertir le fichier CSV au format Excel <em>sans modifications du contenu</em>)"
+        " (convertir le fichier CSV au format Excel <em>sans modifications du contenu</em>)",
+        v::if(authz::get()->isPerm("*"), [
+          ", ou ",
+          v::a([
+            "href" => page::bu("", [
+              "action" => "download",
+              "n" => $this->name,
+              "format" => "csv",
+            ]),
+            "télécharger ",
+            icon::download("le fichier original"),
+          ]),
+        ]),
       ]),
       v::li([
         v::a([
