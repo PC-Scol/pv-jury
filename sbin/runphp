@@ -219,7 +219,6 @@ function host_check_projdir() {
         install=1
     fi
     if [ -n "$install" ]; then
-        eecho "== bootstrapping runphp"
         [ -n "$Composer" ] || Composer=ci
     fi
 }
@@ -314,6 +313,7 @@ function host_init_env() {
 
     Chdir=
     Verbose="$RUNPHP_VERBOSE"
+    Exec=
 }
 
 function host_docker_build() {
@@ -359,7 +359,7 @@ OPTIONS
         paramètres pour la consruction de l'image
     --ci
     --cu
-        lancer composer install (resp. update) après bootstrap
+        lancer composer install (resp. update) s'il y a eu bootstrap
     --no-use-rslave
         paramètre montage des volumes"
             exit 0
@@ -404,7 +404,7 @@ OPTIONS
     host_check_image && exists=1 || exists=
 
     if [ -z "$UnlessExists" -o -z "$exists" ]; then
-        eecho "== Building $Image"
+        eecho "== bootstrapping $Image"
         args=(
             -f "$Dockerfile"
             ${Pull:+--pull}
@@ -428,6 +428,9 @@ OPTIONS
             eecho "== Pushing $Image"
             docker push "$Image" || exit 1
         fi
+    else
+        # s'il n'y a pas eu bootstrap, alors ne pas lancer la commande composer
+        Composer=
     fi
 }
 
@@ -445,8 +448,13 @@ function host_docker_run() {
 runphp: lancer une commande dans un environnement PHP déterminé
 
 USAGE
+    $MYNAME --bs ...
     $MYNAME ci|cu|composer
     $MYNAME [options] command [args...]
+
+COMMANDES SPECIALES
+    --bs
+        faire un bootstrap de l'image runphp
 
 COMMANDES COMPOSER
     ci
@@ -529,7 +537,7 @@ OPTIONS
         exec "$0" ${Chdir:+-w "$Chdir"}
     )
     [ -n "$Verbose" ] && eecho "\$ docker ${args[*]} $*"
-    docker "${args[@]}" "$@"
+    ${Exec:+exec} docker "${args[@]}" "$@"
 }
 
 function container_exec() {
@@ -605,12 +613,10 @@ if [ "$RUNPHP_MODE" != docker ]; then
     fi
 
     if [ ${#Cmd[*]} -gt 0 ]; then
-        host_docker_run "${Cmd[@]}" || exit $?
+        Exec=1 host_docker_run "${Cmd[@]}"
     fi
 
 else
     # Lancement depuis l'intérieur du container
     container_exec "$@"
 fi
-
-exit 0

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 mode: sh -*- vim:sw=4:sts=4:et:ai:si:sta:fenc=utf-8
 MYDIR="$(cd "$(dirname -- "$0")"; pwd)"
 RUNPHP="$MYDIR/runphp"
-"$RUNPHP" --bs --ue || exit 1
+"$RUNPHP" --bs --ue --ci || exit 1
 RUNPHP_STANDALONE=
 PROJDIR=; COMPOSERDIR=; COMPOSERPHAR=; VENDORDIR=; BUILDENV0=; BUILDENV=
 BUILD_IMAGES=(php-apache mariadb10); export BUILD_FLAVOUR=; DIST=; IMAGENAME=
