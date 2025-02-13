@@ -47,6 +47,10 @@ DIST=
 # Nom de base de l'image (sans le registry), e.g prefix/
 IMAGENAME=
 
+# Liste de fichiers (ou de répertoirs à considérer). Pour chaque répertoire, les
+# fichiers .*.dist dans l'arborescence du répertoire sont recherchés
+DISTFILES=(_web)
+
 #EOF:runphp.userconf:ne pas modifier cette ligne
 ################################################################################
 
