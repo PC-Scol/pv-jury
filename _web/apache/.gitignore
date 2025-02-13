@@ -1,3 +1,2 @@
-/setup.conf
-/authnz.conf
+/auth_cas.conf
 /ssl.conf

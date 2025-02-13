@@ -4,7 +4,12 @@ namespace app\config;
 use nur\v\bs3\Bs3IconManager;
 use web\pages\IndexPage;
 
+define("AUTH_CAS", boolval(getenv("AUTH_CAS")));
+
 class cdefaults {
+  # l'accès à l'application doit-il être authentifié par CAS?
+  const AUTH_CAS = \AUTH_CAS;
+
   const APP = [
     "debug" => false,
     "trace_sql" => false,

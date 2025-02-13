@@ -42,6 +42,8 @@ services:
       APACHE_DEVUSER: 1
       APP_PROFILE: devel
       BASE_URL: http://localhost:7081
+      AUTH_CAS: $AUTH_CAS
+      CAS_URL: $CAS_URL
       PV_JURY_DATADIR: /data/pv-jury
       TAIL_LOGFILES: >
         /data/pv-jury/log/pv-jury*.log

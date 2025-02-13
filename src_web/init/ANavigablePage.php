@@ -1,7 +1,7 @@
 <?php
 namespace web\init;
 
-use app\config\pvjury;
+use app\config\cdefaults;
 use nur\config;
 use nur\v\bs3\plugins\navbarProfilePlugin;
 use nur\v\vp\NavigablePage;
@@ -12,7 +12,7 @@ class ANavigablePage extends NavigablePage {
     "container" => "fluid",
   ];
 
-  const REQUIRE_AUTH = pvjury::ACCES_AUTHENTIFIE;
+  const REQUIRE_AUTH = cdefaults::AUTH_CAS;
 
   const PLUGINS = [navbarProfilePlugin::class];
 
