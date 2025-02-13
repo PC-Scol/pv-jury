@@ -106,11 +106,11 @@ function build_check_env() {
 /^DEVUSER_GROUPENT=/s/=.*/=${groupent//\//\\\/}/
 " "$PROJDIR/$BUILDENV"
             fi
-            enote "\
+            einfo "\
 Veuillez vérifier le fichier $BUILDENV
     ${EDITOR:-nano} $BUILDENV"
         fi
-        [ ${#updatedfiles[*]} -gt 0 ] && enote "\
+        [ ${#updatedfiles[*]} -gt 0 ] && einfo "\
 Le cas échéant, veuillez vérifier ce(s) fichier(s)
     ${EDITOR:-nano} $(qvals "${updatedfiles[@]}")"
         enote "ENSUITE, vous pourrez relancer la commande"
