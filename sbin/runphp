@@ -594,17 +594,23 @@ if [ "$RUNPHP_MODE" != docker ]; then
         host_check_image && Bootstrap= || Bootstrap=1
     fi
     if [ -n "$Bootstrap" ]; then
-        host_docker_build "${Cmd[@]}"
+        host_docker_build "${Cmd[@]}" || exit $?
     else
         host_ensure_image
     fi
 
     host_check_projdir
-    [ -n "$Composer" ] && host_docker_run "$Composer"
+    if [ -n "$Composer" ]; then
+        host_docker_run "$Composer" || exit $?
+    fi
 
-    [ ${#Cmd[*]} -gt 0 ] && host_docker_run "${Cmd[@]}"
+    if [ ${#Cmd[*]} -gt 0 ]; then
+        host_docker_run "${Cmd[@]}" || exit $?
+    fi
 
 else
     # Lancement depuis l'intérieur du container
     container_exec "$@"
 fi
+
+exit 0
