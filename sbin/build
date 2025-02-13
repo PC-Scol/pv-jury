@@ -95,7 +95,7 @@ function build_check_env() {
     if [ -n "$updated" ]; then
         enote "IMPORTANT: vous devez paramétrer certains fichiers avant de pouvoir construire les images"
         if [ -n "$updatedenv" ]; then
-            if [ -a $(id -u) -ne 0 ]; then
+            if [ $(id -u) -ne 0 ]; then
                 setx userent=getent passwd "$(id -un)"
                 setx userent=qval "$userent"
                 setx groupent=getent group "$(id -gn)"
