@@ -5,6 +5,7 @@
 
 # Modules à activer
 ENMODS=(
+    -auth_cas
     #remoteip
     rewrite
     proxy_http
