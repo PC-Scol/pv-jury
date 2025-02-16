@@ -20,7 +20,7 @@ class ANavigablePage extends NavigablePage {
     return [
       "class" => config::get_profile(),
       "container" => "fluid",
-      "brand" => "<img src='nur-v-bs3/brand.png' width='50' height='50' alt='PV Jury'/>",
+      "brand" => "<img src='logo.png' width='50' height='50' alt='PV Jury'/>",
       "show_brand" => "asis",
     ];
   }

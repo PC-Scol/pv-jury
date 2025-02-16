@@ -4,7 +4,6 @@ services:
   web:
     build: &build-web
       context: .
-      dockerfile: Dockerfile.web
       args:
         PRIVAREG: ${PRIVAREG:-docker.io}/
         XDEBUG: 1
@@ -27,6 +26,7 @@ services:
       - ./devel:/data/pv-jury
     ports:
       - ${LSN_ADDR}:80
+    restart: always
 
   cron:
     build: *build-web
