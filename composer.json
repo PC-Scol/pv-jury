@@ -9,12 +9,12 @@
 		}
 	],
 	"require": {
-		"oulib/php": "dev-master",
-		"our/sery": "dev-master",
-		"lib/spout": "^4-dev",
-		"phpoffice/phpspreadsheet": "^3.3.0",
+		"nulib/php": "^8.2-dev",
+		"nulib/spout": "^8.2-dev",
+		"nulib/phpss": "^8.2-dev",
+		"nur/ture": "^8.2-dev",
 		"ext-bcmath": "*",
-		"php": ">=8.2"
+		"php": "^8.2"
 	},
 	"autoload": {
 		"psr-4": {

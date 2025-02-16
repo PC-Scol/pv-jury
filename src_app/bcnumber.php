@@ -12,6 +12,13 @@ class bcnumber {
     $value = str_replace(",", ".", $value);
   }
 
+  static function is_valid($value): bool {
+    if ($value === null) return false;
+    if ($value instanceof self) return true;
+    if (is_string($value)) self::verifix($value);
+    return is_numeric($value);
+  }
+
   static function with($value): static {
     if ($value instanceof static) return $value;
     elseif ($value instanceof self) return new static($value->value, false);
@@ -116,8 +123,8 @@ class bcnumber {
     return new self(bcsqrt($this->value, static::PRECISION), false);
   }
 
-  static function min(array $values): ?self {
-    $min = null;
+  static function min(array $values, bool $ensureNotNull=false): ?self {
+    $min = $ensureNotNull? new static(): null;
     foreach ($values as $value) {
       $value = new static($value);
       if ($min === null) $min = $value;
@@ -126,8 +133,8 @@ class bcnumber {
     return $min;
   }
 
-  static function max(array $values): ?self {
-    $max = null;
+  static function max(array $values, bool $ensureNotNull=false): ?self {
+    $max = $ensureNotNull? new static(): null;
     foreach ($values as $value) {
       $value = new static($value);
       if ($max === null) $max = $value;
@@ -136,44 +143,56 @@ class bcnumber {
     return $max;
   }
 
-  static function avg(array $values): self {
-    $count = count($values);
-    $total = new static();
+  static function avg(array $values, bool $ensureNotNull=false): ?self {
+    $count = 0;
+    $avg = $ensureNotNull? new static(): null;
     foreach ($values as $value) {
-      $total->_add($value);
+      if (!self::is_valid($value)) continue;
+      $count++;
+      $avg ??= new static();
+      $avg->_add($value);
     }
-    return $total->_div($count);
+    if ($count > 0) $avg->_div($count);
+    return $avg;
   }
 
-  static function min_max_avg(array $values): array {
+  static function min_max_avg(array $values, bool $ensureNotNull=false): array {
     $min = null;
     $max = null;
-    $count = count($values);
-    $avg = new static();
+    $count = 0;
+    $avg = $ensureNotNull? new static(): null;
     foreach ($values as $value) {
+      if (!self::is_valid($value)) continue;
+      $count++;
       $value = new static($value);
-      $avg->_add($value);
       if ($min === null) $min = $value;
       elseif ($min->gt($value)) $min = $value;
       if ($max === null) $max = $value;
       elseif ($max->lt($value)) $max = $value;
+      $avg ??= new static();
+      $avg->_add($value);
     }
-    $avg->_div($count);
+    if ($count > 0) $avg->_div($count);
     return [$min, $max, $avg];
   }
 
-  static function stdev(array $values): self {
-    $count = count($values);
+  static function stdev(array $values, bool $ensureNotNull=false): ?self {
+    $count = 0;
     $avg = self::avg($values);
-    $stdev = new static();
+    $stdev = $ensureNotNull? new static(): null;
     foreach ($values as $value) {
+      if (!self::is_valid($value)) continue;
+      $count++;
       $term = new static($value);
       $term->_sub($avg);
       $term->_pow(2);
+      $stdev ??= new static();
       $stdev->_add($term);
     }
-    $stdev->_div($count);
-    $stdev->_sqrt();
+    if ($count > 0) {
+      $stdev->_div($count);
+      $stdev->_sqrt();
+    }
     return $stdev;
   }
 

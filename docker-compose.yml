@@ -4,9 +4,8 @@ services:
   web:
     build: &build-web
       context: .
-      dockerfile: Dockerfile.web
       args:
-        REGISTRY: ${PRIVAREG:-docker.io}/
+        PRIVAREG: ${PRIVAREG:-docker.io}/
         XDEBUG: 1
     environment: &environment-web
       DEVEL: 1
@@ -14,7 +13,9 @@ services:
       DEVUSER_GROUPENT: ${DEVUSER_GROUPENT:-}
       APACHE_DEVUSER: 1
       APP_PROFILE: devel
-      BASE_URL: http://localhost:7081
+      BASE_URL: $APP_URL
+      AUTH_CAS: $AUTH_CAS
+      CAS_URL: $CAS_URL
       PV_JURY_DATADIR: /data/pv-jury
       TAIL_LOGFILES: >
         /data/pv-jury/log/pv-jury*.log
@@ -23,12 +24,9 @@ services:
       - session-data:/var/lib/php/sessions
       - .:/var/www/app
       - ./devel:/data/pv-jury
-      # cf la clé "require" dans composer.json
     ports:
-      - 7081:80
-      #- 7444:443
-    extra_hosts:
-      - "smtp.univ.run:10.82.70.46"
+      - ${LSN_ADDR}:80
+    restart: always
 
   cron:
     build: *build-web

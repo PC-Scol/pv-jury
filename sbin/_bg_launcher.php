@@ -2,8 +2,8 @@
 require __DIR__.'/../vendor/autoload.php';
 # Lancer une application en tâche de fond
 
-use nur\sery\tools\BgLauncherApp;
-use nur\sery\app;
+use nulib\app;
+use nulib\tools\BgLauncherApp;
 
 # chemin vers le lanceur PHP
 const NULIB_APP_app_launcher = __DIR__.'/../_cli/.launcher.php';

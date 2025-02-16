@@ -1,19 +1,25 @@
 <?php
 namespace app\config;
 
+use nur\authz;
+use nur\b\authnz\CasAuthzManager;
 use nur\config;
 use nur\config\ArrayConfig;
 use nur\config\EnvConfig;
 use nur\msg;
 use nur\sery\app;
-use nur\sery\output\log as nlog;
-use nur\sery\output\msg as nmsg;
-use nur\sery\output\std\StdMessenger;
+use nulib\output\log as nlog;
+use nulib\output\msg as nmsg;
+use nulib\output\std\StdMessenger;
 use nur\session;
 use nur\v\bs3\Bs3Messenger;
 use nur\v\route;
+use nur\v\vp\AppCasauthPage;
+use nur\v\vp\AppDevauthPage;
 use nur\v\vp\AppHealthcheckPage;
+use nur\v\vp\AppLogoutPage;
 use web\pages\IndexPage;
+use web\pages\LoginPage;
 
 class bootstrap {
   const APPCODE = "pv-jury";
@@ -49,9 +55,17 @@ class bootstrap {
     }
   }
 
+  function configure__authnz() {
+    authz::set_manager_class(CasAuthzManager::class);
+  }
+
   function configure__routes() {
     route::add(["_hk.php", AppHealthcheckPage::class]);
+    route::add(["_casauth.php", AppCasauthPage::class]);
+    route::add(["_devauth.php", AppDevauthPage::class]);
+    route::add(["_logout.php", AppLogoutPage::class]);
     route::add(["index.php", IndexPage::class]);
+    route::add(["login.php", LoginPage::class]);
     route::add(["", IndexPage::class, route::MODE_PACKAGE]);
   }
 

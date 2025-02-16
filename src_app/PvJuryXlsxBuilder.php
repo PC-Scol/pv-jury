@@ -1,18 +1,14 @@
 <?php
 namespace app;
 
-use nur\sery\ext\spreadsheet\SsBuilder;
-use nur\sery\file;
-use nur\sery\file\csv\IBuilder;
-
-use nur\sery\file\TempStream;
-use nur\sery\file\TmpfileWriter;
-use nur\sery\os\path;
-use nur\sery\ref\web\ref_mimetypes;
-use nur\sery\web\http;
+use nulib\file\tab\IBuilder;
+use nulib\file\TmpfileWriter;
+use nulib\os\path;
+use nulib\ref\web\ref_mimetypes;
+use nulib\web\http;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 
 
 //Créer un object avec les styles de cellule
@@ -507,7 +503,6 @@ class PvJuryXlsxBuilder
 
   function write(): void
   {
-    //$this->builder->copyTo(file::writer($this->output, "w+b"), true);
     $writer = new Xlsx($this->spreadsheet);
     $writer->save($this->output);
 
