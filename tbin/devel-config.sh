@@ -2,4 +2,4 @@
 # -*- coding: utf-8 mode: sh -*- vim:sw=4:sts=4:et:ai:si:sta:fenc=utf-8
 source /etc/nulib.sh || exit 1
 
-rsync -rltpv "$MYDIR/ur-config.d/" "$MYDIR/../"
+rsync -rltpv "$MYDIR/${MYNAME%.sh}.d/" "$MYDIR/../"
