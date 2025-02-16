@@ -20,7 +20,7 @@ Les fonctionnalités suivantes sont prévues dans le futur:
 > [!INFO]
 > **Obtenir de l'aide**
 > Envoyez un message sur le [forum PC-SCOL](https://forum.pc-scol.fr)
-> en mentionnant @jclain
+> en mentionnant `@jclain`
 
 ## Faire l'installation initiale
 
