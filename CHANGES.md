@@ -1,3 +1,7 @@
+## Version 0.1.6 du 17/02/2025-07:36
+
+* `770a224` maj doc
+
 ## Version 0.1.5 du 17/02/2025-07:32
 
 * `a9986f7` supprimer images inutiles
