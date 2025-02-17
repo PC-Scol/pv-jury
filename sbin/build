@@ -81,9 +81,17 @@ function build_check_env() {
                     updated=1
                     setx distname=basename -- "$distfile"
                     distname="${distname#.}"; distname="${distname%.dist}"
-                    setx distfile=dirname -- "$distfile"
-                    distfile="$distfile/$distname"
-                    updatedfiles+=("${distfile#$PROJDIR/}")
+                    # ignorer les fichiers binaires
+                    #XXX remplacer par un code plus robuste, peut-être à
+                    # intégrer directement dans template:
+                    case "$distname" in
+                    *.png|*.jpg) ;;
+                    *)
+                        setx distfile=dirname -- "$distfile"
+                        distfile="$distfile/$distname"
+                        updatedfiles+=("${distfile#$PROJDIR/}")
+                        ;;
+                    esac
                 fi
             done
         else
