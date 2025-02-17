@@ -114,7 +114,6 @@ Veuillez vérifier le fichier $BUILDENV
 Le cas échéant, veuillez vérifier ce(s) fichier(s)
     ${EDITOR:-nano} $(qvals "${updatedfiles[@]}")"
         enote "ENSUITE, vous pourrez relancer la commande"
-    else
         return 1
     fi
 }
