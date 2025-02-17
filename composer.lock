@@ -276,7 +276,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "eb8684275ea0bb631b7fba8559d0111ac4ff2135"
+                "reference": "8740e48151e116125fc58d060556b5be9be2c82d"
             },
             "require": {
                 "ext-json": "*",

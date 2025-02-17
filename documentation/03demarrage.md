@@ -18,8 +18,8 @@ suivante:
 docker compose up -d
 ~~~
 
-Avec le paramétrage par défaut, l'application est alors accessible *depuis
-l'hôte local uniquement* à l'adresse <http://localhost:8080>
+Avec le paramétrage par défaut, l'application est alors accessible à l'adresse
+<http://localhost:8080>
 
 En cas de modification de la configuration, il suffit de relancer la commande
 ci-dessus pour relancer les services le cas échéant
@@ -69,8 +69,7 @@ L'image DOIT avoir une hauteur de 50 pixel. La largeur importe peu.
 
 ## Mettre l'application en production
 
-La configuration par défaut n'autorise l'accès à l'application que depuis l'hôte
-local est n'est approprié que pour le développement.
+La configuration par défaut n'est appropriée que pour le développement.
 
 Pour rendre l'application disponible à tous les agents concernés, il faut
 modifier les paramètres `LSN_ADDR` et `APP_URL`
