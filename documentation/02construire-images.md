@@ -32,7 +32,7 @@ variables suivantes doivent être configurées le cas échéant:
 
 Une fois le fichier configuré, les images peuvent être construites
 ~~~sh
-./build
+./sbin/build
 ~~~
 
 --
