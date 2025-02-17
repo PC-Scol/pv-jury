@@ -1,3 +1,11 @@
+## Version 0.1.4 du 17/02/2025-07:27
+
+* `b6f4970` simplifier le démarrage rapide
+* `10856c8` maj build
+* `46c860b` bug
+* `55d46e8` maj deps
+* `393332b` maj doc
+
 ## Version 0.1.3 du 17/02/2025-06:55
 
 * `61ffc16` maj doc
