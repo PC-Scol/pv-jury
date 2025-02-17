@@ -7,12 +7,14 @@ ou [pour windows/WSL](00prerequis-wsl.md) puis [cloner le dépôt](01cloner-depo
 Avant de pouvoir utiliser pv-jury, il faut construire les images docker
 utilisées par l'application
 
-Commencer en faisant une copie du fichier `..env.dist` nommée `.env`
+Lancer une première fois la commande `sbin/build` pour générer les fichiers de
+configuration
 ~~~sh
-cp ..env.dist .env
+./sbin/build
 ~~~
-Il FAUT consulter `.env` et l'éditer AVANT de continuer. Notamment, les
-variables suivantes doivent être configurées le cas échéant:
+Le fichier `.env`, entre autres, est généré. Il FAUT consulter ce fichier et
+l'éditer **AVANT** de continuer. Notamment, les variables suivantes doivent être
+configurées le cas échéant:
 
 `APT_PROXY`
 : proxy pour l'installation des paquets Debian, e.g `http://monproxy.tld:3142`
@@ -30,7 +32,8 @@ variables suivantes doivent être configurées le cas échéant:
 : nom d'un registry docker interne vers lequel les images pourraient être
   poussées. Il n'est pas nécessaire de modifier ce paramètre.
 
-Une fois le fichier configuré, les images peuvent être construites
+Une fois le fichier configuré, les images peuvent être construites en relançant
+une deuxième fois la commande `sbin/build`
 ~~~sh
 ./sbin/build
 ~~~
