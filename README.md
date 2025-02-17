@@ -17,7 +17,7 @@ Les fonctionnalités suivantes sont prévues dans le futur:
   d'exclure les éléments pédagogiques du second semestre si l'édition concerne
   uniquement le premier semestre
 
-> [!INFO]
+> [!TIP]
 > **Obtenir de l'aide**
 > Envoyez un message sur le [forum PC-SCOL](https://forum.pc-scol.fr)
 > en mentionnant `@jclain`
