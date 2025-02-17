@@ -2,11 +2,14 @@
 namespace web\pages;
 
 use app\CsvPvModel1Builder;
+use app\PvChannel;
+use app\pvs;
 use Exception;
 use nulib\cl;
 use nulib\os\path;
 use nulib\text\words;
 use nur\authz;
+use nur\b\authnz\IAuthzUser;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormBasic;
@@ -21,8 +24,14 @@ class ConvertPage extends APvPage {
 
   function setup(): void {
     parent::setup();
+
     $pvData = $this->pvData;
     $this->count = count($pvData->rows);
+
+    $pvChannel = $this->pvChannel = pvs::channel();
+    $pv = $pvChannel->one(["name" => $this->name]);
+    $user = authz::get();
+    $this->canDelete = $pv !== null && ($pv["cod_usr"] === $user->getUsername() || $user->isPerm("*"));
 
     $builder = $this->builder = new CsvPvModel1Builder($pvData);
     $sessions = $this->sessions = $builder->getSessions();
@@ -67,21 +76,40 @@ class ConvertPage extends APvPage {
         "name" => "action",
         "value" => "convert",
         "accesskey" => "s",
+        "class" => "btn-primary"
       ],
       "submitted_key" => "convert",
       "autoload_params" => true,
     ]);
-    $action = false;
+
+    $deletefo = $this->deletefo = new FormBasic([
+      "method" => "post",
+      "params" => [
+        "delete" => ["control" => "hidden", "value" => 1],
+      ],
+      "submit" => [
+        "Supprimer cet import",
+        "name" => "action",
+        "value" => "delete",
+        "class" => "btn-danger"
+      ],
+      "submitted_key" => "delete",
+      "autoload_params" => true,
+    ]);
+
+
     if ($convertfo->isSubmitted()) {
       al::reset();
-      if ($convertfo["ises"] !== null) {
-        $action = true;
-      } else {
+      if ($convertfo["ises"] === null) {
         al::error("Vous devez choisir la session");
         $this->dispatchAction(false);
       }
     }
   }
+
+  private PvChannel $pvChannel;
+
+  private bool $canDelete;
 
   private int $count;
 
@@ -91,7 +119,9 @@ class ConvertPage extends APvPage {
 
   private Form $convertfo;
 
-  const VALID_ACTIONS = ["download", "convert"];
+  private Form $deletefo;
+
+  const VALID_ACTIONS = ["download", "convert", "delete"];
   const ACTION_PARAM = "action";
 
   function convertAction() {
@@ -111,6 +141,14 @@ class ConvertPage extends APvPage {
       al::error($e->getMessage());
     }
     page::redirect(true);
+  }
+
+  function deleteAction() {
+    if ($this->canDelete) {
+      $pvChannel = $this->pvChannel;
+      $pvChannel->delete(["name" => $this->name]);
+    }
+    page::redirect(IndexPage::class);
   }
 
   const HAVE_JQUERY = true;
@@ -200,6 +238,13 @@ class ConvertPage extends APvPage {
     vo::p(["<b>Edition du PV</b> (met en forme les données du fichier CSV pour impression. inclure aussi les statistiques)"]);
     al::print();
     $this->convertfo->print();
+
+    if ($this->canDelete) {
+      vo::p([
+        "<b>Suppression de l'import</b> Si ce fichier a été importé par erreur, vous pouvez le supprimer",
+      ]);
+      $this->deletefo->print();
+    }
 
     $builder = $this->builder;
     $builder->setExcludeUnlessHaveValue(true);
