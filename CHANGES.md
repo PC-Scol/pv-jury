@@ -1,3 +1,7 @@
+## Version 0.1.5 du 17/02/2025-07:32
+
+* `a9986f7` supprimer images inutiles
+
 ## Version 0.1.4 du 17/02/2025-07:27
 
 * `b6f4970` simplifier le démarrage rapide
