@@ -16,6 +16,7 @@ services:
       BASE_URL: $APP_URL
       AUTH_CAS: $AUTH_CAS
       CAS_URL: $CAS_URL
+      AUTH_BASIC: $AUTH_BASIC
       PV_JURY_DATADIR: /data/pv-jury
       TAIL_LOGFILES: >
         /data/pv-jury/log/pv-jury*.log
