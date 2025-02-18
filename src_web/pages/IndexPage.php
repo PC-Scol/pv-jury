@@ -35,6 +35,7 @@ class IndexPage extends APvPage {
         "file" => ["control" => "file",
           "label" => [],
           "btn_label" => "Importer un fichier",
+          "btn_class" => "btn-primary",
           "accept" => ".csv",
           "accesskey" => "q",
         ],
