@@ -35,6 +35,7 @@ class IndexPage extends APvPage {
         "file" => ["control" => "file",
           "label" => [],
           "btn_label" => "Importer un fichier",
+          "btn_class" => "btn-primary",
           "accept" => ".csv",
           "accesskey" => "q",
         ],
@@ -83,7 +84,17 @@ class IndexPage extends APvPage {
             "label" => "Afficher les fichiers importés par",
             "items" => $usrs,
             "item_value_key" => "cod_usr",
-            "item_text_key" => "lib_usr",
+            "item_text_func" => function($usr) {
+              $codUsr = $usr["cod_usr"];
+              $libUsr = $usr["lib_usr"];
+              if ($codUsr === "-ALL-") {
+                return $libUsr;
+              } elseif ($codUsr === "INCONNU" || !$libUsr) {
+                return $codUsr;
+              } else {
+                return "$libUsr ($codUsr)";
+              }
+            },
             "default" => cl::first($usrs)["cod_usr"],
           ],
         ],

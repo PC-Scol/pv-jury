@@ -1,2 +1,3 @@
 /auth_cas.conf
+/auth_basic.auth
 /ssl.conf

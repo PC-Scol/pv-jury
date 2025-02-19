@@ -10,7 +10,7 @@ use nulib\str;
  * @property-read string name
  * @property-read string date
  * @property-read array gpts
- * @property-read array gptsObjs
+ * @property-read array gptObjs
  * @property-read array sesCols
  * @property-read array title
  * @property-read array headers

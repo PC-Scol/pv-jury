@@ -53,6 +53,24 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $this->excludeUnlessHaveValue = $excludeUnlessHaveValue;
   }
 
+  private ?array $excludeObjs = null;
+
+  function setExcludeObjs(?array $excludeObjs): void {
+    if ($excludeObjs !== null) {
+      $xobjs = [];
+      foreach ($excludeObjs as &$excludeObj) {
+        [$igpt, $iobj] = str::split_pair($excludeObj, ".");
+        $xobjs[$igpt][$iobj] = true;
+      }
+      $excludeObjs = $xobjs;
+    }
+    $this->excludeObjs = $excludeObjs;
+  }
+
+  protected function shouldExcludeObj(array $obj): bool {
+    return $this->excludeObjs[$obj["igpt"]][$obj["iobj"]] ?? false;
+  }
+
   protected function verifixPvData(PVData $pvData): void {
     $data = $pvData->data;
     $pvData->ws = [
@@ -68,13 +86,15 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $titleSes = null;
     $objs = [];
     # construire la liste des objets
-    foreach ($data["gpts"] as $gpt) {
+    foreach ($data["gpts"] as $igpt => $gpt) {
       if ($gpt["title"] !== null) $haveGpt = true;
-      foreach ($gpt["objs"] as $obj) {
+      foreach ($gpt["objs"] as $iobj => $obj) {
         if ($firstObj) {
           $titleObj = $obj["title"];
           self::split_code_title($titleObj);
         }
+        $obj["igpt"] = $igpt;
+        $obj["iobj"] = $iobj;
         $obj["acq"] = null;
         $obj["ses"] = null;
         foreach ($obj["sess"] as $ises => $ses) {
@@ -202,6 +222,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $hrow_colsStyles = [cl::merge($baS, self::CENTER_S, self::WRAP_S), $baS, $baS];
     $firstObj = true;
     foreach ($objs as $obj) {
+      if ($this->shouldExcludeObj($obj)) continue;
       $title = $obj["title"];
       if ($firstObj) {
         $firstObj = false;
@@ -407,10 +428,17 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       self::BT_S,
       self::BT_S,
     ];
-    $brow2 = [null, null, null];
-    $brow2Styles = [self::BB_S, self::BB_S, self::BB_S];
+    // forcer une valeur pour que la ligne ne soit jamais vide
+    // la mettre en blanc sur blanc pour qu'elle soit invisible
+    $brow2 = [null, null, "."];
+    $brow2Styles = [self::BB_S, self::BB_S, cl::merge(self::BB_S, [
+      "align" => "right",
+      "font" => ["color" => "white"],
+      "bg_color" => "white",
+    ])];
     $firstObj = true;
     foreach ($objs as $iobj => $obj) {
+      if ($this->shouldExcludeObj($obj)) continue;
       [
         "note" => $note,
         "res" => $res,
@@ -490,6 +518,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     ];
     $notes = $ws["notes"];
     foreach ($objs as $iobj => $obj) {
+      if ($this->shouldExcludeObj($obj)) continue;
       $onotes = $notes[$iobj] ?? null;
       $this->addStat($onotes, $stats, 2);
 
