@@ -275,7 +275,7 @@ class ConvertPage extends APvPage {
     vo::p([
       "<em>Exclusion d'objets maquettes</em> : ",
       "vous pouvez exclure certains objets de l'édition du PV. ",
-      $sm->invite("Afficher la liste..."),
+      $sm->invite("Afficher la liste des objets maquettes..."),
     ]);
     $sm->printStartp();
     $convertfo->printControl("xe");
