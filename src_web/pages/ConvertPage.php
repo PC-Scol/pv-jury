@@ -15,6 +15,7 @@ use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormBasic;
 use nur\v\icon;
 use nur\v\page;
+use nur\v\plugins\showmorePlugin;
 use nur\v\v;
 use nur\v\vo;
 use web\init\APvPage;
@@ -27,6 +28,21 @@ class ConvertPage extends APvPage {
 
     $pvData = $this->pvData;
     $this->count = count($pvData->rows);
+
+    $gptsObjs = $pvData->gptObjs;
+    $xobjs = [];
+    foreach ($gptsObjs as $igpt => $gpt) {
+      $gptTitle = $gpt["title"];
+      if ($gptTitle !== null) {
+        $xobjs["$igpt"] = $gptTitle;
+      }
+      foreach ($gpt["objs"] as $iobj => $obj) {
+        if ($igpt !== 0 || $iobj !== 0) {
+          $xobjs["$igpt.$iobj"] = $obj;
+        }
+      }
+    }
+    $this->xobjs = $xobjs;
 
     $pvChannel = $this->pvChannel = pvs::channel();
     $pv = $pvChannel->one(["name" => $this->name]);
@@ -41,7 +57,8 @@ class ConvertPage extends APvPage {
         "ises" => ["?int", null, "Session"],
         "order" => ["string", null, "Ordre"],
         "xc" => ["bool", null, "NE PAS inclure les controles"],
-        "xe" => ["bool", null, "NE PAS inclure les éléments pour lesquels il n'y a ni note ni résultat"],
+        "xe" => ["bool", null, "Exclure les objets pour lesquels il n'y a ni note ni résultat"],
+        "xobjs" => ["?array", null, "Objets à exclure de l'édition"],
       ],
       "params" => [
         "convert" => ["control" => "hidden", "value" => 1],
@@ -70,6 +87,7 @@ class ConvertPage extends APvPage {
           "control" => "checkbox",
           "value" => 1,
         ],
+        "xobjs" => false,
       ],
       "submit" => [
         "Editer le PV",
@@ -97,7 +115,6 @@ class ConvertPage extends APvPage {
       "autoload_params" => true,
     ]);
 
-
     if ($convertfo->isSubmitted()) {
       al::reset();
       if ($convertfo["ises"] === null) {
@@ -105,7 +122,11 @@ class ConvertPage extends APvPage {
         $this->dispatchAction(false);
       }
     }
+
+    $this->sm = $this->addPlugin(new showmorePlugin());
   }
+
+  private ?array $xobjs;
 
   private PvChannel $pvChannel;
 
@@ -121,6 +142,8 @@ class ConvertPage extends APvPage {
 
   private Form $deletefo;
 
+  private showmorePlugin $sm;
+
   const VALID_ACTIONS = ["download", "convert", "delete"];
   const ACTION_PARAM = "action";
 
@@ -132,6 +155,7 @@ class ConvertPage extends APvPage {
     $builder->setOrder($convertfo["order"]);
     $builder->setExcludeControles(boolval($convertfo["xc"]));
     $builder->setExcludeUnlessHaveValue(boolval($convertfo["xe"]));
+    $builder->setExcludeObjs($convertfo["xobjs"]);
     $suffix = $builder->getSuffix();
     $output = path::filename($this->pvData->origname);
     $output = path::ensure_ext($output, "-$suffix.xlsx", ".csv");
@@ -237,7 +261,40 @@ class ConvertPage extends APvPage {
 
     vo::p(["<b>Edition du PV</b> (met en forme les données du fichier CSV pour impression. inclure aussi les statistiques)"]);
     al::print();
-    $this->convertfo->print();
+    $convertfo = $this->convertfo;
+    $convertfo->autoloadParams();
+    $convertfo->printAlert();
+    $convertfo->printStart();
+    $convertfo->printControl("convert");
+    $convertfo->printControl("ises");
+    $convertfo->printControl("xc");
+    $convertfo->printControl("order");
+
+    $sm = $this->sm;
+    $sm->printStartc();
+    vo::p([
+      "<em>Exclusion d'objets maquettes</em> : ",
+      "vous pouvez exclure certains objets de l'édition du PV. ",
+      $sm->invite("Afficher la liste..."),
+    ]);
+    $sm->printStartp();
+    $convertfo->printControl("xe");
+    vo::sdiv(["class" => "form-group"]);
+    foreach ($this->xobjs as $iobj => $xobj) {
+      if (str_contains($iobj, ".")) {
+        $convertfo->printCheckbox("Exclure $xobj", "xobjs[]", $iobj, null, [
+          "naked" => true,
+          "naked_label" => true,
+        ]);
+      } else {
+        vo::p(v::b($xobj));
+      }
+    }
+    vo::ediv();
+    $sm->printEnd();
+
+    $convertfo->printControl("");
+    $convertfo->printEnd();
 
     if ($this->canDelete) {
       vo::p([
