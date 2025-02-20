@@ -27,7 +27,7 @@ class ConvertPage extends APvPage {
     parent::setup();
 
     $pvData = $this->pvData;
-    $this->count = count($pvData->rows);
+    $this->count = count($pvData->rows ?? []);
 
     $gptsObjs = $pvData->gptObjs;
     $xobjs = [];
