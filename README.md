@@ -8,14 +8,12 @@ Les fonctionnalités principales sont les suivantes:
   aux notes. Aucune autre donnée n'est rajoutée.
 - mettre en forme le PV pour impression, sous une forme se rapprochant de
   l'édition sous APOGEE. Rajouter les statistiques par élément pédagogique
-- obtenir un lien à partager aux enseignants ou aux membres du jury permettant
-  de consulter le détail du PV par étudiant
-
-Les fonctionnalités suivantes sont prévues dans le futur:
-- exclusion de certains éléments pédagogiques de l'édition du PV.
+- possibilité d'exclusion de certains objets maquettes de l'édition du PV.
   C'est utile quand la maquette est modélisée par blocs de compétences, afin
   d'exclure les éléments pédagogiques du second semestre si l'édition concerne
   uniquement le premier semestre
+- obtenir un lien à partager aux enseignants ou aux membres du jury permettant
+  de consulter le détail du PV par étudiant
 
 > [!TIP]
 > **Obtenir de l'aide**
@@ -32,6 +30,14 @@ ainsi fonctionner sur n'importe quel système Linux, Windows ou MacOS X
     et autres distributions Linux. Ce mode d'installation est celui à
     sélectionner pour la production, mais peut aussi être utilisé pour les tests
     ou le développement, notamment si le poste de l'utilisateur est sous Linux.
+    ~~~sh
+    sudo apt update && sudo apt install git curl rsync tar unzip python3 gawk
+
+    curl -fsSL https://get.docker.com | sudo sh
+
+    [ -n "$(getent group docker)" ] || sudo groupadd docker
+    sudo usermod -aG docker $USER
+    ~~~
   * Installation des [pré-requis pour WSL](documentation/00prerequis-wsl.md), le
     sous-système Linux pour Windows. Ce mode d'installation est approprié pour
     les tests ou le développement.
@@ -44,8 +50,16 @@ ainsi fonctionner sur n'importe quel système Linux, Windows ou MacOS X
   ~~~
 * Ensuite, il faut construire les images docker nécessaires.
   [Construire les images](documentation/02construire-images.md)
+  ~~~sh
+  ./sbin/build
+  ~~~
 * Enfin, il faut démarrer l'application.
   [Démarrer pv-jury](documentation/03demarrage.md)
+  ~~~sh
+  docker compose up -d
+  ~~~
+  Si le paramétrage par défaut n'est pas modifié, l'application est maintenant
+  accessible à l'adresse <http://localhost:8080>
 
 ## Installer une mise à jour
 

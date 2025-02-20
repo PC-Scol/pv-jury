@@ -29,20 +29,17 @@ class ConvertPage extends APvPage {
     $pvData = $this->pvData;
     $this->count = count($pvData->rows ?? []);
 
-    $gptsObjs = $pvData->gptObjs;
-    $xobjs = [];
-    foreach ($gptsObjs as $igpt => $gpt) {
+    $objs = [];
+    foreach ($pvData->gptObjs as $igpt => $gpt) {
       $gptTitle = $gpt["title"];
-      if ($gptTitle !== null) {
-        $xobjs["$igpt"] = $gptTitle;
-      }
+      if ($gptTitle !== null) $objs["$igpt"] = $gptTitle;
       foreach ($gpt["objs"] as $iobj => $obj) {
         if ($igpt !== 0 || $iobj !== 0) {
-          $xobjs["$igpt.$iobj"] = $obj;
+          $objs["$igpt.$iobj"] = $obj;
         }
       }
     }
-    $this->xobjs = $xobjs;
+    $this->objs = $objs;
 
     $pvChannel = $this->pvChannel = pvs::channel();
     $pv = $pvChannel->one(["name" => $this->name]);
@@ -58,7 +55,7 @@ class ConvertPage extends APvPage {
         "order" => ["string", null, "Ordre"],
         "xc" => ["bool", null, "NE PAS inclure les controles"],
         "xe" => ["bool", null, "Exclure les objets pour lesquels il n'y a ni note ni résultat"],
-        "xobjs" => ["?array", null, "Objets à exclure de l'édition"],
+        "objs" => ["array", [], "Objets à inclure dans l'édition"],
       ],
       "params" => [
         "convert" => ["control" => "hidden", "value" => 1],
@@ -87,7 +84,7 @@ class ConvertPage extends APvPage {
           "control" => "checkbox",
           "value" => 1,
         ],
-        "xobjs" => false,
+        "objs" => false,
       ],
       "submit" => [
         "Editer le PV",
@@ -126,7 +123,7 @@ class ConvertPage extends APvPage {
     $this->sm = $this->addPlugin(new showmorePlugin());
   }
 
-  private ?array $xobjs;
+  private ?array $objs;
 
   private PvChannel $pvChannel;
 
@@ -155,7 +152,7 @@ class ConvertPage extends APvPage {
     $builder->setOrder($convertfo["order"]);
     $builder->setExcludeControles(boolval($convertfo["xc"]));
     $builder->setExcludeUnlessHaveValue(boolval($convertfo["xe"]));
-    $builder->setExcludeObjs($convertfo["xobjs"]);
+    $builder->setIncludeObjs($convertfo["objs"] ?? []);
     $suffix = $builder->getSuffix();
     $output = path::filename($this->pvData->origname);
     $output = path::ensure_ext($output, "-$suffix.xlsx", ".csv");
@@ -280,14 +277,14 @@ class ConvertPage extends APvPage {
     $sm->printStartp();
     $convertfo->printControl("xe");
     vo::sdiv(["class" => "form-group"]);
-    foreach ($this->xobjs as $iobj => $xobj) {
+    foreach ($this->objs as $iobj => $obj) {
       if (str_contains($iobj, ".")) {
-        $convertfo->printCheckbox("Exclure $xobj", "xobjs[]", $iobj, null, [
+        $convertfo->printCheckbox("Inclure $obj", "objs[]", $iobj, true, [
           "naked" => true,
           "naked_label" => true,
         ]);
       } else {
-        vo::p(v::b($xobj));
+        vo::p(v::b($obj));
       }
     }
     vo::ediv();

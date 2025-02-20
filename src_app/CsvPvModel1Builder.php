@@ -53,22 +53,24 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $this->excludeUnlessHaveValue = $excludeUnlessHaveValue;
   }
 
-  private ?array $excludeObjs = null;
+  private ?array $includeObjs = null;
 
-  function setExcludeObjs(?array $excludeObjs): void {
-    if ($excludeObjs !== null) {
-      $xobjs = [];
-      foreach ($excludeObjs as &$excludeObj) {
+  function setIncludeObjs(?array $includeObjs): void {
+    if ($includeObjs !== null) {
+      $objs = [[true]]; // toujours inclure 0.0
+      foreach ($includeObjs as &$excludeObj) {
         [$igpt, $iobj] = str::split_pair($excludeObj, ".");
-        $xobjs[$igpt][$iobj] = true;
+        $objs[$igpt][$iobj] = true;
       }
-      $excludeObjs = $xobjs;
+      $includeObjs = $objs;
     }
-    $this->excludeObjs = $excludeObjs;
+    $this->includeObjs = $includeObjs;
   }
 
   protected function shouldExcludeObj(array $obj): bool {
-    return $this->excludeObjs[$obj["igpt"]][$obj["iobj"]] ?? false;
+    if ($this->includeObjs === null) return false;
+    $includeObjet = $this->includeObjs[$obj["igpt"]][$obj["iobj"]] ?? false;
+    return !$includeObjet;
   }
 
   protected function verifixPvData(PVData $pvData): void {
@@ -227,9 +229,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       if ($firstObj) {
         $firstObj = false;
         $hrow[] = "Note\nRésultat";
-        $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::RES_S);
+        $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::RES_S, self::WRAP_S);
         $hrow[] = "PointsJury\nECTS";
-        $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::ECTS_S);
+        $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::ECTS_S, self::WRAP_S);
       } else {
         if (!self::split_code_title($title, $code)) {
           $code = $title;
