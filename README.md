@@ -25,6 +25,10 @@ Les fonctionnalités principales sont les suivantes:
 pv-jury est conçu pour fonctionner en tant que container sous docker. il peut
 ainsi fonctionner sur n'importe quel système Linux, Windows ou MacOS X
 
+Les commandes listées ci-dessous sont pour un démarrage rapide si vous savez ce
+que vous faites. Si c'est la première fois, il est conseillée de cliquer sur les
+liens pour avoir des détails sur la procédure.
+
 * Installez d'abord les pré-requis
   * Installation des [pré-requis pour Debian](documentation/00prerequis-linux.md)
     et autres distributions Linux. Ce mode d'installation est celui à
@@ -55,7 +59,13 @@ ainsi fonctionner sur n'importe quel système Linux, Windows ou MacOS X
   ~~~sh
   ./sbin/build
   ~~~
-* Enfin, il faut démarrer l'application.
+  ~~~sh
+  nano .env
+  ~~~
+  ~~~sh
+  ./sbin/build
+  ~~~
+* Enfin, on peut démarrer l'application.
   [Démarrer pv-jury](documentation/03demarrage.md)
   ~~~sh
   docker compose up -d
