@@ -2,16 +2,20 @@
 namespace web\pages;
 
 use app\CsvPvModel1Builder;
+use app\PvChannel;
+use app\pvs;
 use Exception;
 use nulib\cl;
 use nulib\os\path;
 use nulib\text\words;
 use nur\authz;
+use nur\b\authnz\IAuthzUser;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormBasic;
 use nur\v\icon;
 use nur\v\page;
+use nur\v\plugins\showmorePlugin;
 use nur\v\v;
 use nur\v\vo;
 use web\init\APvPage;
@@ -21,8 +25,26 @@ class ConvertPage extends APvPage {
 
   function setup(): void {
     parent::setup();
+
     $pvData = $this->pvData;
-    $this->count = count($pvData->rows);
+    $this->count = count($pvData->rows ?? []);
+
+    $objs = [];
+    foreach ($pvData->gptObjs as $igpt => $gpt) {
+      $gptTitle = $gpt["title"];
+      if ($gptTitle !== null) $objs["$igpt"] = $gptTitle;
+      foreach ($gpt["objs"] as $iobj => $obj) {
+        if ($igpt !== 0 || $iobj !== 0) {
+          $objs["$igpt.$iobj"] = $obj;
+        }
+      }
+    }
+    $this->objs = $objs;
+
+    $pvChannel = $this->pvChannel = pvs::channel();
+    $pv = $pvChannel->one(["name" => $this->name]);
+    $user = authz::get();
+    $this->canDelete = $pv !== null && ($pv["cod_usr"] === $user->getUsername() || $user->isPerm("*"));
 
     $builder = $this->builder = new CsvPvModel1Builder($pvData);
     $sessions = $this->sessions = $builder->getSessions();
@@ -32,7 +54,8 @@ class ConvertPage extends APvPage {
         "ises" => ["?int", null, "Session"],
         "order" => ["string", null, "Ordre"],
         "xc" => ["bool", null, "NE PAS inclure les controles"],
-        "xe" => ["bool", null, "NE PAS inclure les éléments pour lesquels il n'y a ni note ni résultat"],
+        "xe" => ["bool", null, "Exclure les objets pour lesquels il n'y a ni note ni résultat"],
+        "objs" => ["array", [], "Objets à inclure dans l'édition"],
       ],
       "params" => [
         "convert" => ["control" => "hidden", "value" => 1],
@@ -61,27 +84,50 @@ class ConvertPage extends APvPage {
           "control" => "checkbox",
           "value" => 1,
         ],
+        "objs" => false,
       ],
       "submit" => [
         "Editer le PV",
         "name" => "action",
         "value" => "convert",
         "accesskey" => "s",
+        "class" => "btn-primary"
       ],
       "submitted_key" => "convert",
       "autoload_params" => true,
     ]);
-    $action = false;
+
+    $deletefo = $this->deletefo = new FormBasic([
+      "method" => "post",
+      "params" => [
+        "delete" => ["control" => "hidden", "value" => 1],
+      ],
+      "submit" => [
+        "Supprimer cet import",
+        "name" => "action",
+        "value" => "delete",
+        "class" => "btn-danger"
+      ],
+      "submitted_key" => "delete",
+      "autoload_params" => true,
+    ]);
+
     if ($convertfo->isSubmitted()) {
       al::reset();
-      if ($convertfo["ises"] !== null) {
-        $action = true;
-      } else {
+      if ($convertfo["ises"] === null) {
         al::error("Vous devez choisir la session");
         $this->dispatchAction(false);
       }
     }
+
+    $this->sm = $this->addPlugin(new showmorePlugin());
   }
+
+  private ?array $objs;
+
+  private PvChannel $pvChannel;
+
+  private bool $canDelete;
 
   private int $count;
 
@@ -91,7 +137,11 @@ class ConvertPage extends APvPage {
 
   private Form $convertfo;
 
-  const VALID_ACTIONS = ["download", "convert"];
+  private Form $deletefo;
+
+  private showmorePlugin $sm;
+
+  const VALID_ACTIONS = ["download", "convert", "delete"];
   const ACTION_PARAM = "action";
 
   function convertAction() {
@@ -102,6 +152,7 @@ class ConvertPage extends APvPage {
     $builder->setOrder($convertfo["order"]);
     $builder->setExcludeControles(boolval($convertfo["xc"]));
     $builder->setExcludeUnlessHaveValue(boolval($convertfo["xe"]));
+    $builder->setIncludeObjs($convertfo["objs"] ?? []);
     $suffix = $builder->getSuffix();
     $output = path::filename($this->pvData->origname);
     $output = path::ensure_ext($output, "-$suffix.xlsx", ".csv");
@@ -111,6 +162,14 @@ class ConvertPage extends APvPage {
       al::error($e->getMessage());
     }
     page::redirect(true);
+  }
+
+  function deleteAction() {
+    if ($this->canDelete) {
+      $pvChannel = $this->pvChannel;
+      $pvChannel->delete(["name" => $this->name]);
+    }
+    page::redirect(IndexPage::class);
   }
 
   const HAVE_JQUERY = true;
@@ -199,7 +258,47 @@ class ConvertPage extends APvPage {
 
     vo::p(["<b>Edition du PV</b> (met en forme les données du fichier CSV pour impression. inclure aussi les statistiques)"]);
     al::print();
-    $this->convertfo->print();
+    $convertfo = $this->convertfo;
+    $convertfo->autoloadParams();
+    $convertfo->printAlert();
+    $convertfo->printStart();
+    $convertfo->printControl("convert");
+    $convertfo->printControl("ises");
+    $convertfo->printControl("xc");
+    $convertfo->printControl("order");
+
+    $sm = $this->sm;
+    $sm->printStartc();
+    vo::p([
+      "<em>Exclusion d'objets maquettes</em> : ",
+      "vous pouvez exclure certains objets de l'édition du PV. ",
+      $sm->invite("Afficher la liste des objets maquettes..."),
+    ]);
+    $sm->printStartp();
+    $convertfo->printControl("xe");
+    vo::sdiv(["class" => "form-group"]);
+    foreach ($this->objs as $iobj => $obj) {
+      if (str_contains($iobj, ".")) {
+        $convertfo->printCheckbox("Inclure $obj", "objs[]", $iobj, true, [
+          "naked" => true,
+          "naked_label" => true,
+        ]);
+      } else {
+        vo::p(v::b($obj));
+      }
+    }
+    vo::ediv();
+    $sm->printEnd();
+
+    $convertfo->printControl("");
+    $convertfo->printEnd();
+
+    if ($this->canDelete) {
+      vo::p([
+        "<b>Suppression de l'import</b> Si ce fichier a été importé par erreur, vous pouvez le supprimer",
+      ]);
+      $this->deletefo->print();
+    }
 
     $builder = $this->builder;
     $builder->setExcludeUnlessHaveValue(true);

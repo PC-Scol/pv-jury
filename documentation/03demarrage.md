@@ -51,7 +51,7 @@ authentifiés, ce qui inclue aussi généralement les étudiants.
 Si le serveur CAS fournit les attributs nécessaires, il est possible de filtrer
 par exemple sur l'affiliation pour n'autoriser que les personnels.
 
-Ensuite relancer la serveur avec la commande suivante:
+Ensuite relancer le serveur avec la commande suivante:
 ~~~sh
 docker compose up -d
 ~~~
@@ -82,7 +82,7 @@ LSN_ADDR=80
 APP_URL=http://pv-jury.univ.tld
 ~~~
 
-Ensuite relancer la serveur avec la commande suivante:
+Ensuite relancer le serveur avec la commande suivante:
 ~~~sh
 docker compose up -d
 ~~~

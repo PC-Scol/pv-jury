@@ -35,6 +35,7 @@ class IndexPage extends APvPage {
         "file" => ["control" => "file",
           "label" => [],
           "btn_label" => "Importer un fichier",
+          "btn_class" => "btn-primary",
           "accept" => ".csv",
           "accesskey" => "q",
         ],
@@ -83,7 +84,17 @@ class IndexPage extends APvPage {
             "label" => "Afficher les fichiers importés par",
             "items" => $usrs,
             "item_value_key" => "cod_usr",
-            "item_text_key" => "lib_usr",
+            "item_text_func" => function($usr) {
+              $codUsr = $usr["cod_usr"];
+              $libUsr = $usr["lib_usr"];
+              if ($codUsr === "-ALL-") {
+                return $libUsr;
+              } elseif ($codUsr === "INCONNU" || !$libUsr) {
+                return $codUsr;
+              } else {
+                return "$libUsr ($codUsr)";
+              }
+            },
             "default" => cl::first($usrs)["cod_usr"],
           ],
         ],
@@ -141,7 +152,10 @@ class IndexPage extends APvPage {
     ly::row();
     ly::col(12);
     vo::h1(self::TITLE);
-    vo::p("Veuillez déposer le fichier édité depuis PEGASE. Les options seront affichées une fois le fichier importé");
+    vo::p([
+      "Veuillez déposer le fichier édité depuis PEGASE. Les options seront affichées une fois le fichier importé",
+      "<br/>NB: le fichier ne doit <em>PAS être modifié</em> avant le dépôt. Notamment, il ne faut pas modifier l'encodage original",
+    ]);
 
     al::print();
     $this->importfo->print();
