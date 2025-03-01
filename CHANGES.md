@@ -1,3 +1,8 @@
+## Release 0.3.1 du 01/03/2025-15:25
+
+* `c1902ac` maj doc
+* `391d8e5` ajout config de demo
+
 ## Release 0.3.0 du 01/03/2025-14:08
 
 * `72304da` configuration pman

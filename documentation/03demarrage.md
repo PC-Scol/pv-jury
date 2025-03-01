@@ -59,7 +59,7 @@ docker compose up -d
 ## Modification du logo
 
 Pour remplacer le logo par celui de votre université dans l'application web, il
-faut remplacer le fichier `public/brand.png` par votre propre image au format
+faut remplacer le fichier `public/logo.png` par votre propre image au format
 PNG (il faut garder le même nom)
 ~~~sh
 cp ~/path/to/monlogo public/logo.png
