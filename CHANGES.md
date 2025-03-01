@@ -1,3 +1,7 @@
+## Release 0.3.2 du 01/03/2025-16:26
+
+* `ca9f8bb` maj doc
+
 ## Release 0.3.1 du 01/03/2025-15:25
 
 * `c1902ac` maj doc
