@@ -32,9 +32,11 @@ ainsi fonctionner sur n'importe quel système Linux, Windows ou MacOS X
     ou le développement, notamment si le poste de l'utilisateur est sous Linux.
     ~~~sh
     sudo apt update && sudo apt install git curl rsync tar unzip python3 gawk
-
+    ~~~
+    ~~~sh
     curl -fsSL https://get.docker.com | sudo sh
-
+    ~~~
+    ~~~sh
     [ -n "$(getent group docker)" ] || sudo groupadd docker
     sudo usermod -aG docker $USER
     ~~~

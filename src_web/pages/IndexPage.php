@@ -152,7 +152,10 @@ class IndexPage extends APvPage {
     ly::row();
     ly::col(12);
     vo::h1(self::TITLE);
-    vo::p("Veuillez déposer le fichier édité depuis PEGASE. Les options seront affichées une fois le fichier importé");
+    vo::p([
+      "Veuillez déposer le fichier édité depuis PEGASE. Les options seront affichées une fois le fichier importé",
+      "<br/>NB: le fichier ne doit <em>PAS être modifié</em> avant le dépôt. Notamment, il ne faut pas modifier l'encodage original",
+    ]);
 
     al::print();
     $this->importfo->print();
