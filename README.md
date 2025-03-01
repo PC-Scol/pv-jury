@@ -59,7 +59,13 @@ liens pour avoir des détails sur la procédure.
   ~~~sh
   ./sbin/build
   ~~~
-* Enfin, il faut démarrer l'application.
+  ~~~sh
+  nano .env
+  ~~~
+  ~~~sh
+  ./sbin/build
+  ~~~
+* Enfin, on peut démarrer l'application.
   [Démarrer pv-jury](documentation/03demarrage.md)
   ~~~sh
   docker compose up -d
