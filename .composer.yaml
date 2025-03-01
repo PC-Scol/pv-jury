@@ -1,7 +1,0 @@
-# -*- coding: utf-8 mode: yaml -*- vim:sw=2:sts=2:et:ai:si:sta:fenc=utf-8
-require:
-  nulib/php: dev-wip
-  nur/sery: dev-master
-branch:
-  develop:
-  master:
