@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "897562152f57fd93b49532e1599d4220",
+    "content-hash": "333ea667914ff748d7f892cf595ad2ea",
     "packages": [
         {
             "name": "composer/pcre",
@@ -272,11 +272,11 @@
         },
         {
             "name": "nulib/php",
-            "version": "0.3.4p82",
+            "version": "dev-dev82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "cb86dd93bd494b407425b5205e70411e1331ce65"
+                "reference": "829caf41a457092bf9872eddaba807b9b69b0c88"
             },
             "require": {
                 "ext-json": "*",
@@ -318,14 +318,14 @@
         },
         {
             "name": "nulib/phpss",
-            "version": "0.3.0p82",
+            "version": "dev-dev82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-phpss.git",
-                "reference": "f8929f0bc386030d629294a72f91cff49b53e35e"
+                "reference": "3dad20558a6b64aa7b879aba56ce837781e6b2ac"
             },
             "require": {
-                "nulib/php": "^0.3.0p82",
+                "nulib/php": "^8.2-dev",
                 "php": "^8.2",
                 "phpoffice/phpspreadsheet": "^3.3.0"
             },
@@ -356,15 +356,15 @@
                 }
             ],
             "description": "wrapper pour phpoffice/phpspreadsheet",
-            "time": "2025-03-01T09:25:12+00:00"
+            "time": "2025-03-01T09:26:41+00:00"
         },
         {
             "name": "nulib/spout",
-            "version": "0.3.0p82",
+            "version": "dev-dev82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "9d4ca3955dc5ace20c1cb773a004a3e76fbee131"
+                "reference": "4ce497c065c83d28e7e8216069e680ef368063b6"
             },
             "require": {
                 "ext-dom": "*",
@@ -373,7 +373,7 @@
                 "ext-libxml": "*",
                 "ext-xmlreader": "*",
                 "ext-zip": "*",
-                "nulib/php": "^0.3.0p82",
+                "nulib/php": "^8.2-dev",
                 "php": "^8.2"
             },
             "replace": {
@@ -414,15 +414,15 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2025-03-01T05:29:43+00:00"
+            "time": "2025-03-01T05:30:30+00:00"
         },
         {
             "name": "nur/ture",
-            "version": "0.3.0p82",
+            "version": "dev-dev82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-ture.git",
-                "reference": "02b3b9f9933d446fb15616ad797ac44f4b9cdf12"
+                "reference": "191f6a8a5b6749e390eb25f92309cb5b3c7ea676"
             },
             "require": {
                 "php": "^8.2"
@@ -455,9 +455,9 @@
                 "ext-sqlite3": "*",
                 "ext-tidy": "*",
                 "ext-zip": "*",
-                "nulib/php": "^0.3.0p82",
-                "nulib/phpss": "^0.3.0p82",
-                "nulib/spout": "^0.3.0p82",
+                "nulib/php": "^8.2-dev",
+                "nulib/phpss": "^8.2-dev",
+                "nulib/spout": "^8.2-dev",
                 "nulib/tests": "^8.2"
             },
             "bin": [
@@ -510,7 +510,7 @@
                 }
             ],
             "description": "espace de maturation pour les librairies",
-            "time": "2025-03-01T09:50:12+00:00"
+            "time": "2025-03-01T09:50:53+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",
@@ -1050,7 +1050,12 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "nulib/php": 20,
+        "nulib/spout": 20,
+        "nulib/phpss": 20,
+        "nur/ture": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
