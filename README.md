@@ -76,7 +76,7 @@ git pull
 ./sbin/build -r
 
 # redémarrer les services concernés
-docker compose up -d
+docker compose up --build -d
 ~~~
 
 -*- coding: utf-8 mode: markdown -*- vim:sw=4:sts=4:et:ai:si:sta:fenc=utf-8:noeol:binary
