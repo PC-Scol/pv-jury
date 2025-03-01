@@ -272,11 +272,11 @@
         },
         {
             "name": "nulib/php",
-            "version": "dev-php82",
+            "version": "dev-dev82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "8740e48151e116125fc58d060556b5be9be2c82d"
+                "reference": "829caf41a457092bf9872eddaba807b9b69b0c88"
             },
             "require": {
                 "ext-json": "*",
@@ -287,13 +287,14 @@
                 "ext-curl": "*",
                 "ext-pcntl": "*",
                 "ext-posix": "*",
+                "ext-sqlite3": "*",
                 "nulib/tests": "^8.2"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-php74": "7.4.x-dev",
-                    "dev-php82": "8.2.x-dev"
+                    "dev-dev74": "7.4.x-dev",
+                    "dev-dev82": "8.2.x-dev"
                 }
             },
             "autoload": {
@@ -313,15 +314,15 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2025-02-13T07:57:43+00:00"
+            "time": "2025-03-01T02:24:30+00:00"
         },
         {
             "name": "nulib/phpss",
-            "version": "dev-php82",
+            "version": "dev-dev82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-phpss.git",
-                "reference": "c4afd896c40e80443c2ff3f11762925464b89568"
+                "reference": "3dad20558a6b64aa7b879aba56ce837781e6b2ac"
             },
             "require": {
                 "nulib/php": "^8.2-dev",
@@ -334,8 +335,8 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-php74": "7.4.x-dev",
-                    "dev-php82": "8.2.x-dev"
+                    "dev-dev74": "7.4.x-dev",
+                    "dev-dev82": "8.2.x-dev"
                 }
             },
             "autoload": {
@@ -355,15 +356,15 @@
                 }
             ],
             "description": "wrapper pour phpoffice/phpspreadsheet",
-            "time": "2024-11-29T03:37:49+00:00"
+            "time": "2025-03-01T09:26:41+00:00"
         },
         {
             "name": "nulib/spout",
-            "version": "dev-php82",
+            "version": "dev-dev82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "008fad3b69acee8e4679140e285ccd4ca21cc5de"
+                "reference": "4ce497c065c83d28e7e8216069e680ef368063b6"
             },
             "require": {
                 "ext-dom": "*",
@@ -391,14 +392,14 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-php74": "7.4.x-dev",
-                    "dev-php82": "8.2.x-dev"
+                    "dev-dev74": "7.4.x-dev",
+                    "dev-dev82": "8.2.x-dev"
                 }
             },
             "autoload": {
                 "psr-4": {
                     "nulib\\": "src",
-                    "OpenSpout\\": "upstream-4.x/src"
+                    "OpenSpout\\": "openspout4/src"
                 }
             },
             "autoload-dev": {
@@ -413,15 +414,15 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2025-01-24T13:17:26+00:00"
+            "time": "2025-03-01T05:30:30+00:00"
         },
         {
             "name": "nur/ture",
-            "version": "dev-php82",
+            "version": "dev-dev82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-ture.git",
-                "reference": "1db1b7801b28a8f42c98ab19ffea7c1bccff6757"
+                "reference": "191f6a8a5b6749e390eb25f92309cb5b3c7ea676"
             },
             "require": {
                 "php": "^8.2"
@@ -476,8 +477,8 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-php74": "7.4.x-dev",
-                    "dev-php82": "8.2.x-dev"
+                    "dev-dev74": "7.4.x-dev",
+                    "dev-dev82": "8.2.x-dev"
                 }
             },
             "autoload": {
@@ -509,7 +510,7 @@
                 }
             ],
             "description": "espace de maturation pour les librairies",
-            "time": "2024-11-29T13:10:43+00:00"
+            "time": "2025-03-01T09:50:53+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",
