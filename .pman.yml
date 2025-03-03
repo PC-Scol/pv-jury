@@ -1,0 +1,18 @@
+# -*- coding: utf-8 mode: yaml -*- vim:sw=2:sts=2:et:ai:si:sta:fenc=utf-8
+
+composer:
+  profiles: [ dev, dist ]
+  dev:
+    link: false
+    require:
+      nulib/php: ^8.2-dev
+      nulib/spout: ^8.2-dev
+      nulib/phpss: ^8.2-dev
+      nur/ture: ^8.2-dev
+  dist:
+    link: false
+    require:
+      nulib/php: ^0.3.0p82
+      nulib/spout: ^0.3.0p82
+      nulib/phpss: ^0.3.0p82
+      nur/ture: ^0.3.0p82
