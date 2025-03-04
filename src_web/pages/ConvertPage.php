@@ -207,7 +207,9 @@ class ConvertPage extends APvPage {
         ])
       ]);
 
-      vo::p(["<b>Edition du PV</b> (met en forme les données du fichier CSV pour impression. inclure aussi les statistiques)"]);
+      vo::start("fieldset");
+      vo::tag("legend", "Edition du PV");
+      vo::p(["Mettre en forme les données du fichier CSV pour impression. inclure aussi les statistiques"]);
       al::print();
       $convertfo = $this->convertfo;
       $convertfo->autoloadParams();
@@ -243,10 +245,11 @@ class ConvertPage extends APvPage {
 
       $convertfo->printControl("");
       $convertfo->printEnd();
+      vo::end("fieldset");
 
-      vo::p([
-        "<b>Gestion de l'import</b>. Le fichier original était nommé <code>{$pvData->origname}</code>",
-      ]);
+      vo::start("fieldset");
+      vo::tag("legend", "Gestion de l'import");
+      vo::p(["Le fichier original était nommé <code>{$pvData->origname}</code>"]);
 
       vo::ul([
         v::li([
@@ -297,25 +300,24 @@ class ConvertPage extends APvPage {
           " (pour partager avec les enseignants)",
         ]),
       ]);
+      vo::end("fieldset");
     }
 
     if ($this->canDelete) {
+      vo::start("fieldset");
       if ($valid) {
-        vo::p([
-          "<b>Suppression de l'import</b>. Si ce fichier a été importé par erreur, vous pouvez le supprimer",
-        ]);
+        vo::tag("legend", "Suppression de l'import");
+        vo::p(["Si ce fichier a été importé par erreur, vous pouvez le supprimer"]);
       } else {
-        vo::p([
-          "<b>Gestion de l'import</b>. Le fichier original était nommé <code>",
-          $this->pv["origname"],
-          "</code>",
-        ]);
+        vo::tag("legend", "Gestion de l'import");
+        vo::p(["Le fichier original était nommé <code>{$this->pv["origname"]}</code>"]);
         vo::p([
           "class" => "alert alert-danger",
           "Ce fichier est invalide",
         ]);
       }
       $this->deletefo->print();
+      vo::end("fieldset");
     }
 
     if ($valid) {
