@@ -1,3 +1,9 @@
+## Release 0.4.1 du 04/03/2025-16:42
+
+* `2851135` améliorer l'affichage
+* `c5e884d` corriger l'affichage de l'information résultats
+* `7e52355` maj doc
+
 ## Release 0.4.0 du 04/03/2025-16:13
 
 Afficher un avertissement si le fichier ne contient pas de résultats sur l'objet
