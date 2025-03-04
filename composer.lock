@@ -364,7 +364,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "4407af5dcd0a54bc6b5592073957a1d5d3db27e2"
+                "reference": "9bb06dad7c0f140e86eb01299f107dda293db3d1"
             },
             "require": {
                 "ext-dom": "*",
@@ -414,7 +414,7 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2025-03-02T15:20:58+00:00"
+            "time": "2025-03-04T08:22:37+00:00"
         },
         {
             "name": "nur/ture",
