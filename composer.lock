@@ -322,7 +322,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-phpss.git",
-                "reference": "5e337a39671e078d4b6899db7bac3520b22c369b"
+                "reference": "f8929f0bc386030d629294a72f91cff49b53e35e"
             },
             "require": {
                 "nulib/php": "^0.3.0p82",
@@ -356,7 +356,7 @@
                 }
             ],
             "description": "wrapper pour phpoffice/phpspreadsheet",
-            "time": "2025-03-04T08:47:56+00:00"
+            "time": "2025-03-01T09:25:12+00:00"
         },
         {
             "name": "nulib/spout",
@@ -364,7 +364,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "012af051bc555d0fc7606efa0e33ac09b1e53dcc"
+                "reference": "8c0dfded4fb7bf192e92a8dba34a8dcadba36052"
             },
             "require": {
                 "ext-dom": "*",
@@ -414,7 +414,7 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2025-03-04T08:39:31+00:00"
+            "time": "2025-03-04T08:18:20+00:00"
         },
         {
             "name": "nur/ture",
