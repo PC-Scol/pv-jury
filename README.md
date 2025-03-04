@@ -1,3 +1,9 @@
+> [!IMPORTANT]
+> **En cas de livraison d'une nouvelle version de l'application**
+> Prenez le temps de lire [la liste des changements](CHANGES.md) AVANT de
+> commencer à faire quoi que ce soit. Ensuite, vous pourrez consulter la section
+> "Installer une mise à jour" ci-dessous.
+
 # pv-jury
 
 pv-jury est une application servant à mettre en forme les PV de Jury édités
