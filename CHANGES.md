@@ -1,6 +1,6 @@
 ## Release 0.4.0 du 04/03/2025-16:13
 
-Afficher un avertissement si le fichier ne contient pas résultats sur l'objet
+Afficher un avertissement si le fichier ne contient pas de résultats sur l'objet
 délibéré. Dans ce cas, l'encart "nb étudiant/admis/ajournés" est vide
 
 * `3179db9` ne pas planter si le fichier est invalide
