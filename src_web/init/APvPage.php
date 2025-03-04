@@ -3,6 +3,7 @@ namespace web\init;
 
 use app\PvData;
 use app\pvs;
+use Exception;
 use nulib\cl;
 use nulib\ext\spout\SpoutBuilder;
 use nulib\ext\tab\SsBuilder;
@@ -23,15 +24,21 @@ class APvPage extends ANavigablePage {
 
   function setup(): void {
     if (static::AUTOLOAD_PV_DATA) {
-      $name = F::get("n");
-      $data = pvs::json_data($name);
-      if ($data === null) page::redirect(IndexPage::class);
-      $this->name = $name;
-      $this->pvData = new PvData($data);
+      $name = $this->name = F::get("n");
+      try {
+        $data = pvs::json_data($name);
+        if ($data === null) page::redirect(IndexPage::class);
+        $this->pvError = false;
+        $this->pvData = new PvData($data);
+      } catch (Exception $e) {
+        $this->pvError = true;
+      }
     }
   }
 
   protected string $name;
+
+  protected bool $pvError;
 
   protected PvData $pvData;
 
