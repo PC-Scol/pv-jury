@@ -26,6 +26,27 @@ class ConvertPage extends APvPage {
   function setup(): void {
     parent::setup();
 
+    $user = authz::get();
+    $pvChannel = $this->pvChannel = pvs::channel();
+    $this->pv = $pv = $pvChannel->one(["name" => $this->name]);
+    $this->canDelete = $pv !== null && ($pv["cod_usr"] === $user->getUsername() || $user->isPerm("*"));
+
+    $deletefo = $this->deletefo = new FormBasic([
+      "method" => "post",
+      "params" => [
+        "delete" => ["control" => "hidden", "value" => 1],
+      ],
+      "submit" => [
+        "Supprimer cet import",
+        "name" => "action",
+        "value" => "delete",
+        "class" => "btn-danger"
+      ],
+      "submitted_key" => "delete",
+      "autoload_params" => true,
+    ]);
+    if ($this->pvError) return;
+
     $pvData = $this->pvData;
     $this->count = count($pvData->rows ?? []);
 
@@ -40,11 +61,6 @@ class ConvertPage extends APvPage {
       }
     }
     $this->objs = $objs;
-
-    $pvChannel = $this->pvChannel = pvs::channel();
-    $pv = $pvChannel->one(["name" => $this->name]);
-    $user = authz::get();
-    $this->canDelete = $pv !== null && ($pv["cod_usr"] === $user->getUsername() || $user->isPerm("*"));
 
     $builder = $this->builder = new CsvPvModel1Builder($pvData);
     $sessions = $this->sessions = $builder->getSessions();
@@ -97,21 +113,6 @@ class ConvertPage extends APvPage {
       "autoload_params" => true,
     ]);
 
-    $deletefo = $this->deletefo = new FormBasic([
-      "method" => "post",
-      "params" => [
-        "delete" => ["control" => "hidden", "value" => 1],
-      ],
-      "submit" => [
-        "Supprimer cet import",
-        "name" => "action",
-        "value" => "delete",
-        "class" => "btn-danger"
-      ],
-      "submitted_key" => "delete",
-      "autoload_params" => true,
-    ]);
-
     if ($convertfo->isSubmitted()) {
       al::reset();
       if ($convertfo["ises"] === null) {
@@ -122,6 +123,8 @@ class ConvertPage extends APvPage {
 
     $this->sm = $this->addPlugin(new showmorePlugin());
   }
+
+  private array $pv;
 
   private ?array $objs;
 
@@ -192,121 +195,144 @@ class ConvertPage extends APvPage {
 <?php
   }
   function print(): void {
-    $pvData = $this->pvData;
-    $title = array_filter($pvData->title);
-    vo::h1([
-      $title[0],
-      "<br/>",
-      v::tag("small", [
-        join("<br/>", array_slice($title, 1)),
-      ])
-    ]);
-    vo::p([
-      "Cette page permet de gérer l'import du fichier <tt>",
-      $pvData->origname,
-      "</tt>",
-    ]);
-    vo::ul([
-      v::li([
-        "Il y a ",
-        words::q($this->count, "l'étudiant#s dans ce fichier|m"),
-      ]),
-      v::li([
-        v::a([
-          "href" => page::bu("", [
-            "action" => "download",
-            "n" => $this->name,
-          ]),
-          "Télécharger ",
-          icon::download("au format Excel"),
+    $valid = !$this->pvError;
+    if ($valid) {
+      $pvData = $this->pvData;
+      $title = array_filter($pvData->title);
+      vo::h1([
+        $title[0],
+        "<br/>",
+        v::tag("small", [
+          join("<br/>", array_slice($title, 1)),
+        ])
+      ]);
+
+      vo::p(["<b>Edition du PV</b> (met en forme les données du fichier CSV pour impression. inclure aussi les statistiques)"]);
+      if ($pvData->ws["resultats"] === null) {
+        vo::p([
+          "class" => "alert alert-warning",
+          "Pour information, le fichier ne contient pas de résultats sur l'objet délibéré. L'encart 'nb étudiants/admis/ajournés' sera vide lors de l'édition"
+        ]);
+      }
+      al::print();
+      $convertfo = $this->convertfo;
+      $convertfo->autoloadParams();
+      $convertfo->printAlert();
+      $convertfo->printStart();
+      $convertfo->printControl("convert");
+      $convertfo->printControl("ises");
+      $convertfo->printControl("xc");
+      $convertfo->printControl("order");
+
+      $sm = $this->sm;
+      $sm->printStartc();
+      vo::p([
+        "<em>Exclusion d'objets maquettes</em> : ",
+        "vous pouvez exclure certains objets de l'édition du PV. ",
+        $sm->invite("Afficher la liste des objets maquettes..."),
+      ]);
+      $sm->printStartp();
+      $convertfo->printControl("xe");
+      vo::sdiv(["class" => "form-group"]);
+      foreach ($this->objs as $iobj => $obj) {
+        if (str_contains($iobj, ".")) {
+          $convertfo->printCheckbox("Inclure $obj", "objs[]", $iobj, true, [
+            "naked" => true,
+            "naked_label" => true,
+          ]);
+        } else {
+          vo::p(v::b($obj));
+        }
+      }
+      vo::ediv();
+      $sm->printEnd();
+
+      $convertfo->printControl("");
+      $convertfo->printEnd();
+
+      vo::p([
+        "<b>Gestion de l'import</b>. Le fichier original était nommé <code>{$pvData->origname}</code>",
+      ]);
+
+      vo::ul([
+        v::li([
+          "Il y a ",
+          words::q($this->count, "l'étudiant#s dans ce fichier|m"),
         ]),
-        " (convertir le fichier CSV au format Excel <em>sans modifications du contenu</em>)",
-        v::if(authz::get()->isPerm("*"), [
-          ", ou ",
+        v::li([
           v::a([
             "href" => page::bu("", [
               "action" => "download",
               "n" => $this->name,
-              "format" => "csv",
             ]),
-            "télécharger ",
-            icon::download("le fichier original"),
+            "Télécharger ",
+            icon::download("au format Excel"),
+          ]),
+          " (convertir le fichier CSV au format Excel <em>sans modifications du contenu</em>)",
+          v::if(authz::get()->isPerm("*"), [
+            ", ou ",
+            v::a([
+              "href" => page::bu("", [
+                "action" => "download",
+                "n" => $this->name,
+                "format" => "csv",
+              ]),
+              "télécharger ",
+              icon::download("le fichier original"),
+            ]),
           ]),
         ]),
-      ]),
-      v::li([
-        v::a([
-          "id" => "view-link",
-          "href" => getenv("BASE_URL").page::bu(ViewPage::class, [
-            "n" => $this->name,
+        v::li([
+          v::a([
+            "id" => "view-link",
+            "href" => getenv("BASE_URL").page::bu(ViewPage::class, [
+                "n" => $this->name,
+              ]),
+            "target" => "_blank",
+            "Afficher ",
+            icon::eye_open("le détail des dossiers étudiants"),
           ]),
-          "target" => "_blank",
-          "Afficher ",
-          icon::eye_open("le détail des dossiers étudiants"),
+          " (consultation en ligne des résultats, par étudiant)",
+          "<br/>",
+          v::a([
+            "id" => "copy-link",
+            "class" => "btn btn-default",
+            "href" => "#",
+            "Copier le lien"
+          ]),
+          " (pour partager avec les enseignants)",
         ]),
-        " (consultation en ligne des résultats, par étudiant)",
-        "<br/>",
-        v::a([
-          "id" => "copy-link",
-          "class" => "btn btn-default",
-          "href" => "#",
-          "Copier le lien"
-        ]),
-        " (pour partager avec les enseignants)",
-      ]),
-    ]);
-
-    vo::p(["<b>Edition du PV</b> (met en forme les données du fichier CSV pour impression. inclure aussi les statistiques)"]);
-    al::print();
-    $convertfo = $this->convertfo;
-    $convertfo->autoloadParams();
-    $convertfo->printAlert();
-    $convertfo->printStart();
-    $convertfo->printControl("convert");
-    $convertfo->printControl("ises");
-    $convertfo->printControl("xc");
-    $convertfo->printControl("order");
-
-    $sm = $this->sm;
-    $sm->printStartc();
-    vo::p([
-      "<em>Exclusion d'objets maquettes</em> : ",
-      "vous pouvez exclure certains objets de l'édition du PV. ",
-      $sm->invite("Afficher la liste des objets maquettes..."),
-    ]);
-    $sm->printStartp();
-    $convertfo->printControl("xe");
-    vo::sdiv(["class" => "form-group"]);
-    foreach ($this->objs as $iobj => $obj) {
-      if (str_contains($iobj, ".")) {
-        $convertfo->printCheckbox("Inclure $obj", "objs[]", $iobj, true, [
-          "naked" => true,
-          "naked_label" => true,
-        ]);
-      } else {
-        vo::p(v::b($obj));
-      }
+      ]);
     }
-    vo::ediv();
-    $sm->printEnd();
-
-    $convertfo->printControl("");
-    $convertfo->printEnd();
 
     if ($this->canDelete) {
-      vo::p([
-        "<b>Suppression de l'import</b> Si ce fichier a été importé par erreur, vous pouvez le supprimer",
-      ]);
+      if ($valid) {
+        vo::p([
+          "<b>Suppression de l'import</b>. Si ce fichier a été importé par erreur, vous pouvez le supprimer",
+        ]);
+      } else {
+        vo::p([
+          "<b>Gestion de l'import</b>. Le fichier original était nommé <code>",
+          $this->pv["origname"],
+          "</code>",
+        ]);
+        vo::p([
+          "class" => "alert alert-danger",
+          "Ce fichier est invalide",
+        ]);
+      }
       $this->deletefo->print();
     }
 
-    $builder = $this->builder;
-    $builder->setExcludeUnlessHaveValue(true);
-    foreach ($this->sessions as [$ises, $session]) {
-      vo::h2($session);
-      $builder->setIses($ises);
-      $builder->compute();
-      $builder->print();
+    if ($valid) {
+      $builder = $this->builder;
+      $builder->setExcludeUnlessHaveValue(true);
+      foreach ($this->sessions as [$ises, $session]) {
+        vo::h2($session);
+        $builder->setIses($ises);
+        $builder->compute();
+        $builder->print();
+      }
     }
   }
 }
