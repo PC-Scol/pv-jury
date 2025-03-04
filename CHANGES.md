@@ -1,3 +1,7 @@
+## Release 0.3.4 du 04/03/2025-12:27
+
+maj deps: bug dans nulib/spout
+
 ## Release 0.3.3 du 03/03/2025-13:04
 
 maj projet pour dist automatique
