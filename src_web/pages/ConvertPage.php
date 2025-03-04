@@ -208,12 +208,6 @@ class ConvertPage extends APvPage {
       ]);
 
       vo::p(["<b>Edition du PV</b> (met en forme les données du fichier CSV pour impression. inclure aussi les statistiques)"]);
-      if ($pvData->ws["resultats"] === null) {
-        vo::p([
-          "class" => "alert alert-warning",
-          "Pour information, le fichier ne contient pas de résultats sur l'objet délibéré. L'encart 'nb étudiants/admis/ajournés' sera vide lors de l'édition"
-        ]);
-      }
       al::print();
       $convertfo = $this->convertfo;
       $convertfo->autoloadParams();
@@ -331,6 +325,12 @@ class ConvertPage extends APvPage {
         vo::h2($session);
         $builder->setIses($ises);
         $builder->compute();
+        if ($pvData->ws["resultats"] === null) {
+          vo::p([
+            "class" => "alert alert-warning",
+            "Pour information, le fichier ne contient pas de résultats sur l'objet délibéré. L'encart 'nb étudiants/admis/ajournés' sera vide lors de l'édition"
+          ]);
+        }
         $builder->print();
       }
     }
