@@ -6,20 +6,28 @@
 
 # pv-jury
 
-pv-jury est une application servant à mettre en forme les PV de Jury édités
+`pv-jury` est une application servant à mettre en forme les PV de Jury édités
 depuis PEGASE
 
 Les fonctionnalités principales sont les suivantes:
-- enregistrer le fichier CSV au format Excel en appliquant le format numérique
-  aux notes. Aucune autre donnée n'est rajoutée.
 - mettre en forme le PV pour impression, sous une forme se rapprochant de
   l'édition sous APOGEE. Rajouter les statistiques par élément pédagogique
-- possibilité d'exclusion de certains objets maquettes de l'édition du PV.
-  C'est utile quand la maquette est modélisée par blocs de compétences, afin
-  d'exclure les éléments pédagogiques du second semestre si l'édition concerne
-  uniquement le premier semestre
-- obtenir un lien à partager aux enseignants ou aux membres du jury permettant
-  de consulter le détail du PV par étudiant
+  - possibilité d'exclusion de certains objets maquettes de l'édition du PV.
+    C'est utile quand la maquette est modélisée par blocs de compétences, afin
+    d'exclure les éléments pédagogiques du second semestre si l'édition concerne
+    uniquement le premier semestre
+  - obtenir un lien à partager aux enseignants ou aux membres du jury permettant
+    de consulter le détail du PV par étudiant
+- enregistrer le fichier CSV au format Excel en appliquant le format numérique
+  aux notes. Aucune autre donnée n'est rajoutée.
+
+Au 05/04/2025, un bug de PEGASE faisait que les acquis capitalisé en session 2
+l'année antérieure ne remontent pas sur la bonne session. pv-jury pallie ce bug
+en faisant le calcul suivant, pour chaque objet:
+- si l'édition comporte les deux sessions
+- si le résultat est AJOURNE *et*
+  si un acquis capitalisé est présent en session 2
+- alors l'objet est réputé capitalisé en session 1
 
 > [!TIP]
 > **Obtenir de l'aide**
