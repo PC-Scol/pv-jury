@@ -21,9 +21,9 @@ Les fonctionnalités principales sont les suivantes:
 - enregistrer le fichier CSV au format Excel en appliquant le format numérique
   aux notes. Aucune autre donnée n'est rajoutée.
 
-Au 05/03/2025, un bug de PEGASE faisait que les acquis capitalisé en session 2
-l'année antérieure ne remontent pas sur la bonne session. pv-jury pallie ce bug
-en faisant le calcul suivant, pour chaque objet:
+NB: dans certaines circonstances, s'il y a des acquis capitalisés en session 2
+l'année antérieure, PEGASE ne les remonte pas sur la bonne session. `pv-jury`
+pallie ce bug en faisant le calcul suivant, pour chaque objet:
 - si l'édition comporte les deux sessions
 - si le résultat est AJOURNE *et*
   si un acquis capitalisé est présent en session 2
