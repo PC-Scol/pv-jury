@@ -1,3 +1,8 @@
+## Release 0.5.0 du 05/03/2025-08:53
+
+* `51f0d2e` maj doc
+* `ab74d46` afficher les points jury pour tous les objets
+
 ## Release 0.4.1 du 04/03/2025-16:42
 
 * `2851135` améliorer l'affichage
