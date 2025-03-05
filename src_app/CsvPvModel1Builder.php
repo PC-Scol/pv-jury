@@ -312,19 +312,14 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     ];
   }
 
-  function getAcqNoteResEcts(array $row, array $obj, bool $pjInsteadOfAcq=false): array {
+  function getAcqNoteResEcts(array $row, array $obj): array {
     $ses = $obj["ses"];
-    $acq = ["acquis" => null];
-    $pj = ["pj" => null];
-    if ($pjInsteadOfAcq) {
-      $pjCol = $ses["pj_col"];
-      $pj = [
-        "pj" => $pjCol !== null? $row[$ses["col_indexes"][$pjCol]]: null,
-      ];
-    } else {
-      $acq = $this->getAcq($row, $obj["acq"]);
-    }
+    $acq = $this->getAcq($row, $obj["acq"]);
     $noteResEcts = $this->getNoteResEcts($row, $ses);
+    $pjCol = $ses["pj_col"];
+    $pj = [
+      "pj" => $pjCol !== null? $row[$ses["col_indexes"][$pjCol]]: null,
+    ];
     return cl::merge($acq, $noteResEcts, $pj);
   }
 
@@ -362,7 +357,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       "res" => $res,
       "ects" => $ects,
       "pj" => $pj,
-    ] = $this->getAcqNoteResEcts($row, $obj, $pjInsteadOfAcq);
+    ] = $this->getAcqNoteResEcts($row, $obj);
 
     $nses = $ses["nses"] ?? null;
     if ($acquis !== null && $res === "AJ" && $nses !== null) {
@@ -380,8 +375,13 @@ class CsvPvModel1Builder extends CsvPvBuilder {
 
     $brow1[] = $note;
     $brow1Styles[] = cl::merge(self::BLT_S, self::NOTE_S, self::NUMBER_S);
-    $brow1[] = $pjInsteadOfAcq? $pj: $acquis;
-    $brow1Styles[] = cl::merge(self::BTR_S, self::CAP_S, $pjInsteadOfAcq? self::NUMBER_S: null);
+    if ($pjInsteadOfAcq || $acquis === null) {
+      $brow1[] = $pj;
+      $brow1Styles[] = cl::merge(self::BTR_S, self::CAP_S, self::NUMBER_S);
+    } else {
+      $brow1[] = $acquis;
+      $brow1Styles[] = cl::merge(self::BTR_S, self::CAP_S);
+    }
     $brow2[] = $res;
     $brow2Styles[] = cl::merge(self::BLB_S, self::RES_S);
     $brow2[] = $ects;
