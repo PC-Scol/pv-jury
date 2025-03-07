@@ -30,7 +30,7 @@ services:
     labels:
       - "traefik.http.routers.http-pv-jury-web.entryPoints=http"
       - "traefik.http.routers.http-pv-jury-web.rule=Host(`pv-jury.demo.jclain.fr`)"
-      #- "traefik.http.routers.http-pv-jury-web.middlewares=redir2https@file"
+      - "traefik.http.routers.http-pv-jury-web.middlewares=redir2https@file"
       - "traefik.http.routers.http-pv-jury-web.service=pv-jury-web"
       - "traefik.http.routers.https-pv-jury-web.entryPoints=https"
       - "traefik.http.routers.https-pv-jury-web.rule=Host(`pv-jury.demo.jclain.fr`)"
