@@ -8,11 +8,8 @@ services:
         PRIVAREG: ${PRIVAREG:-docker.io}/
         XDEBUG: 1
     environment: &environment-web
-      DEVEL: 1
-      DEVUSER_USERENT: ${DEVUSER_USERENT:-}
-      DEVUSER_GROUPENT: ${DEVUSER_GROUPENT:-}
-      APACHE_DEVUSER: 1
-      APP_PROFILE: devel
+      PROD: 1
+      APP_PROFILE: prod
       BASE_URL: $APP_URL
       AUTH_CAS: $AUTH_CAS
       CAS_URL: $CAS_URL
@@ -23,11 +20,19 @@ services:
       LOGROTATE_STATEFILE: /data/pv-jury/logrotate.state
     volumes: &volumes-web
       - session-data:/var/lib/php/sessions
+      - app-data:/data/pv-jury
       - .:/var/www/app
-      - ./devel:/data/pv-jury
-    ports:
-      - ${LSN_ADDR}:80
+    networks:
+      demolb:
+    #ports:
+    #  - ${LSN_ADDR}:80
     restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.http-pv-jury-web.entryPoints=http"
+      - "traefik.http.routers.http-pv-jury-web.rule=Host(`pv-jury.demo.jclain.fr`)"
+      - "traefik.http.routers.http-pv-jury-web.service=pv-jury-web"
+      - "traefik.http.services.pv-jury-web.loadbalancer.server.port=80"
 
   cron:
     build: *build-web
@@ -42,6 +47,8 @@ services:
 
 volumes:
   session-data:
+  app-data:
 
 networks:
-  default:
+  demolb:
+    external: true
