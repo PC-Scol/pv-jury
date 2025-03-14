@@ -1,3 +1,9 @@
+## Release 0.6.0 du 14/03/2025-15:55
+
+* `fb0bfcb` ajout de la licence
+* `e04f120` configuration demo https
+* `e389269` maj config demo
+
 ## Release 0.5.2 du 05/03/2025-09:20
 
 ## Release 0.5.1 du 05/03/2025-09:01
