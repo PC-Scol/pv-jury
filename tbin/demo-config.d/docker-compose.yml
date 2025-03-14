@@ -22,9 +22,23 @@ services:
       - session-data:/var/lib/php/sessions
       - app-data:/data/pv-jury
       - .:/var/www/app
-    ports:
-      - ${LSN_ADDR}:80
+    networks:
+      demolb:
+    #ports:
+    #  - ${LSN_ADDR}:80
     restart: always
+    labels:
+      - "traefik.http.routers.http-pv-jury-web.entryPoints=http"
+      - "traefik.http.routers.http-pv-jury-web.rule=Host(`pv-jury.demo.jclain.fr`)"
+      - "traefik.http.routers.http-pv-jury-web.middlewares=redir2https@file"
+      - "traefik.http.routers.http-pv-jury-web.service=pv-jury-web"
+      - "traefik.http.routers.https-pv-jury-web.entryPoints=https"
+      - "traefik.http.routers.https-pv-jury-web.rule=Host(`pv-jury.demo.jclain.fr`)"
+      - "traefik.http.routers.https-pv-jury-web.tls=true"
+      - "traefik.http.routers.https-pv-jury-web.tls.certresolver=le"
+      - "traefik.http.routers.https-pv-jury-web.service=pv-jury-web"
+      - "traefik.enable=true"
+      - "traefik.http.services.pv-jury-web.loadbalancer.server.port=80"
 
   cron:
     build: *build-web
@@ -42,4 +56,5 @@ volumes:
   app-data:
 
 networks:
-  default:
+  demolb:
+    external: true
