@@ -1,0 +1,60 @@
+# -*- coding: utf-8 mode: yaml -*- vim:sw=2:sts=2:et:ai:si:sta:fenc=utf-8
+
+services:
+  web:
+    build: &build-web
+      context: .
+      args:
+        PRIVAREG: ${PRIVAREG:-docker.io}/
+        XDEBUG: 1
+    environment: &environment-web
+      PROD: 1
+      APP_PROFILE: prod
+      BASE_URL: $APP_URL
+      AUTH_CAS: $AUTH_CAS
+      CAS_URL: $CAS_URL
+      AUTH_BASIC: $AUTH_BASIC
+      PV_JURY_DATADIR: /data/pv-jury
+      TAIL_LOGFILES: >
+        /data/pv-jury/log/pv-jury*.log
+      LOGROTATE_STATEFILE: /data/pv-jury/logrotate.state
+    volumes: &volumes-web
+      - session-data:/var/lib/php/sessions
+      - app-data:/data/pv-jury
+      - .:/var/www/app
+    networks:
+      demolb:
+    #ports:
+    #  - ${LSN_ADDR}:80
+    restart: always
+    labels:
+      - "traefik.http.routers.http-pv-jury-web.entryPoints=http"
+      - "traefik.http.routers.http-pv-jury-web.rule=Host(`pv-jury.demo.jclain.fr`)"
+      - "traefik.http.routers.http-pv-jury-web.middlewares=redir2https@file"
+      - "traefik.http.routers.http-pv-jury-web.service=pv-jury-web"
+      - "traefik.http.routers.https-pv-jury-web.entryPoints=https"
+      - "traefik.http.routers.https-pv-jury-web.rule=Host(`pv-jury.demo.jclain.fr`)"
+      - "traefik.http.routers.https-pv-jury-web.tls=true"
+      - "traefik.http.routers.https-pv-jury-web.tls.certresolver=le"
+      - "traefik.http.routers.https-pv-jury-web.service=pv-jury-web"
+      - "traefik.enable=true"
+      - "traefik.http.services.pv-jury-web.loadbalancer.server.port=80"
+
+  cron:
+    build: *build-web
+    environment:
+      <<: *environment-web
+      TAIL_LOGFILES: >
+        /data/pv-jury/log/cron*.log
+    command: cron
+    volumes: *volumes-web
+    healthcheck:
+      disable: true
+
+volumes:
+  session-data:
+  app-data:
+
+networks:
+  demolb:
+    external: true

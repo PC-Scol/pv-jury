@@ -310,11 +310,11 @@ class ConvertPage extends APvPage {
         vo::p(["Si ce fichier a été importé par erreur, vous pouvez le supprimer"]);
       } else {
         vo::tag("legend", "Gestion de l'import");
-        vo::p(["Le fichier original était nommé <code>{$this->pv["origname"]}</code>"]);
         vo::p([
           "class" => "alert alert-danger",
           "Ce fichier est invalide",
         ]);
+        vo::p(["Le fichier original était nommé <code>{$this->pv["origname"]}</code>"]);
       }
       $this->deletefo->print();
       vo::end("fieldset");

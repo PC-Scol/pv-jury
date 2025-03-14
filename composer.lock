@@ -276,7 +276,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "f1f033e0e9e2d1207376c68c0201a80bdcc3e529"
+                "reference": "7bcdaef6503220ac26a889187e3f797494c3d33d"
             },
             "require": {
                 "ext-json": "*",
@@ -314,7 +314,7 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2025-03-02T15:24:09+00:00"
+            "time": "2025-03-14T11:24:39+00:00"
         },
         {
             "name": "nulib/phpss",
@@ -322,7 +322,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-phpss.git",
-                "reference": "5e337a39671e078d4b6899db7bac3520b22c369b"
+                "reference": "df916ff29bb6b710cea6f4a0106ef51895daebc9"
             },
             "require": {
                 "nulib/php": "^8.2-dev",
@@ -356,7 +356,7 @@
                 }
             ],
             "description": "wrapper pour phpoffice/phpspreadsheet",
-            "time": "2025-03-04T08:47:56+00:00"
+            "time": "2025-03-14T11:30:22+00:00"
         },
         {
             "name": "nulib/spout",
@@ -364,7 +364,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "012af051bc555d0fc7606efa0e33ac09b1e53dcc"
+                "reference": "6d942c6ebca4d9dbe409f4c436ef932c8fa262b1"
             },
             "require": {
                 "ext-dom": "*",
@@ -414,7 +414,7 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2025-03-04T08:39:31+00:00"
+            "time": "2025-03-14T11:41:05+00:00"
         },
         {
             "name": "nur/ture",
@@ -422,7 +422,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-ture.git",
-                "reference": "cf5da535b3d306cb0195c814330fa39d69c359fe"
+                "reference": "fc795bbfcb11d34271d3dc15a6517a83270d9735"
             },
             "require": {
                 "php": "^8.2"
@@ -510,7 +510,7 @@
                 }
             ],
             "description": "espace de maturation pour les librairies",
-            "time": "2025-03-02T15:22:43+00:00"
+            "time": "2025-03-14T11:46:52+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",
