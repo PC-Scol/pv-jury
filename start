@@ -1,0 +1,105 @@
+#!/bin/bash
+# -*- coding: utf-8 mode: sh -*- vim:sw=4:sts=4:et:ai:si:sta:fenc=utf-8
+MYDIR="$(cd "$(dirname -- "$0")"; pwd)"
+"$MYDIR/sbin/runphp" --bs --ue --ci || exit 1
+PVJURY="$MYDIR"
+source "$PVJURY/vendor/nulib/php/load.sh" || exit 1
+
+function dclsct() {
+    # afficher les containers correspondant à $@ (docker-compose.yml)
+    local composefile; local -a composeargs
+    for composefile in "$@"; do
+        [ -n "$composefile" ] || continue
+        composeargs+=(-f "$composefile")
+    done
+    docker compose "${composeargs[@]}" ps -q
+}
+
+function dcrunning() {
+    # vérifier si les containers correspondant à $@ (docker-compose.yml) tournent
+    # si le premier argument est "-c count", c'est le nombre de service qui doit
+    # tourner
+    local count
+    if [ "$1" == -c ]; then
+        count="$2"; shift; shift
+    elif [[ "$1" == -c* ]]; then
+        count="${1#-c}"; shift
+    fi
+    if [ -n "$count" ]; then
+        [ "$(dclsct "$@" | wc -l)" -eq "$count" ]
+    else
+        [ -n "$(dclsct "$@")" ]
+    fi
+}
+
+function _set_composefiles() {
+    composefile="$PVJURY/docker-compose.yml"
+    composefiles=("$composefile")
+    composeargs=(-f "$composefile")
+    localfile="$PVJURY/docker-compose.local.yml"
+    if [ -f "$localfile" ]; then
+        composefiles+=("$localfile")
+        composeargs+=(-f "$localfile")
+    fi
+}
+
+function start_pvjury() {
+    local composefile localfile; local -a composefiles composeargs
+    _set_composefiles
+
+    [ -f "$composefile" ] || die "$composefile: fichier introuvable"
+    if [ -n "$ForceStart" ]; then
+        :
+    elif dcrunning "${composefiles[@]}"; then
+        enote "Le frontal web DRE est démarré"
+        return
+    fi
+
+    if [ -n "$Build" ]; then
+        "$MYDIR/sbin/build" -r || die
+    fi
+
+    estep "Démarrage de l'application pv-jury"
+    docker compose "${composeargs[@]}" up -d --build || die
+}
+
+function stop_pvjury() {
+    local composefile localfile; local -a composefiles composeargs
+    _set_composefiles
+
+    [ -f "$composefile" ] || return 0
+    if dcrunning "${composefiles[@]}"; then
+        estep "Arrêt de l'application pv-jury"
+        docker compose "${composeargs[@]}" down || die
+    fi
+}
+
+function refresh_pvjury() {
+    local ForceStart=1
+    start_pvjury "$@"
+}
+
+function restart_pvjury() {
+    stop_pvjury "$@"
+    start_pvjury "$@"
+}
+
+action=start
+Build=
+args=(
+    "Contrôler l'application pv-jury"
+    -s,--start action=start "Démarrer l'application si elle ne tourne pas déjà"
+    -k,--stop action=stop "Arrêter l'application"
+    -r,--refresh action=refresh "Redémarrer l'application si nécessaire"
+    -R,--restart action=restart "Forcer l'arrêt puis le démarrage de l'application"
+    -B,--build Build=1 "++Forcer la (re)construction des images avant le démarrage"
+)
+parse_args "$@"; set -- "${args[@]}"
+
+case "$action" in
+start) start_pvjury "$@";;
+stop) stop_pvjury "$@";;
+refresh) refresh_pvjury "$@";;
+restart) restart_pvjury "$@";;
+*) die "$action: action non implémentée";;
+esac
