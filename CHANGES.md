@@ -1,3 +1,9 @@
+## Release 0.7.0 du 17/03/2025-17:47
+
+* `1a408e8` script start pour simplifier le démarrage
+* `9836851` support de fichier compose local
+* `03da6d0` bug: prise en compte du serveur CAS
+
 ## Release 0.6.0 du 14/03/2025-15:55
 
 * `fb0bfcb` ajout de la licence
