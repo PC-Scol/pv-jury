@@ -82,7 +82,7 @@ liens pour avoir des détails sur la procédure.
 * Enfin, on peut démarrer l'application.
   [Démarrer pv-jury](documentation/03demarrage.md)
   ~~~sh
-  docker compose up -d
+  ./start
   ~~~
   Si le paramétrage par défaut n'est pas modifié, l'application est maintenant
   accessible à l'adresse <http://localhost:8080>
@@ -96,11 +96,8 @@ cd pv-jury
 # mettre à jour le dépôt
 git pull
 
-# reconstruire les images
-./sbin/build -r
-
-# redémarrer les services concernés
-docker compose up --build -d
+# reconstruire les images si nécessaire, et redémarrer le cas échéant
+./start -rb
 ~~~
 
 -*- coding: utf-8 mode: markdown -*- vim:sw=4:sts=4:et:ai:si:sta:fenc=utf-8:noeol:binary
