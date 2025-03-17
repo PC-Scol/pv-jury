@@ -422,7 +422,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-ture.git",
-                "reference": "b364e797ea2e44c8260579dee1920655384639be"
+                "reference": "c51809e47670505d28b0a759ff95d1e79b8fadee"
             },
             "require": {
                 "php": "^8.2"
@@ -510,7 +510,7 @@
                 }
             ],
             "description": "espace de maturation pour les librairies",
-            "time": "2025-03-14T11:46:49+00:00"
+            "time": "2025-03-17T12:50:58+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",

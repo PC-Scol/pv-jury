@@ -15,7 +15,7 @@ l'application
 Une fois la configuration effectuée, le démarrage se fait avec la commande
 suivante:
 ~~~sh
-docker compose up -d
+./start
 ~~~
 
 Avec le paramétrage par défaut, l'application est alors accessible à l'adresse
@@ -26,7 +26,7 @@ ci-dessus pour relancer les services le cas échéant
 
 Arrêter l'application avec la commande suivante:
 ~~~sh
-docker compose down
+./start -k
 ~~~
 
 Afficher les logs avec la commande suivante:
@@ -53,8 +53,14 @@ par exemple sur l'affiliation pour n'autoriser que les personnels.
 
 Ensuite relancer le serveur avec la commande suivante:
 ~~~sh
-docker compose up -d
+./start -r
 ~~~
+
+NB: bien entendu, l'application doit être autorisée à utiliser le serveur CAS.
+D'une manière générale, pour un déploiement sur le réseau interne avec un nom
+DNS connu, l'autorisation va de soi. N'hésitez pas à contacter votre
+administrateur système si nécessaire, en donnant la valeur du paramètre
+`APP_URL` qui est le nom de l'application tel que connu du serveur CAS.
 
 ## Modification du logo
 
@@ -84,7 +90,7 @@ APP_URL=http://pv-jury.univ.tld
 
 Ensuite relancer le serveur avec la commande suivante:
 ~~~sh
-docker compose up -d
+./start -r
 ~~~
 
 NB: activer l'accès en https n'est pas documenté ici. envoyer un message sur le
