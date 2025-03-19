@@ -4,7 +4,7 @@ services:
   web:
     networks:
       demolb:
-    ports: []
+    ports: !reset []
     labels:
       - "traefik.http.routers.http-pv-jury-web.entryPoints=http"
       - "traefik.http.routers.http-pv-jury-web.rule=Host(`pv-jury.demo.jclain.fr`)"

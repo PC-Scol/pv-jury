@@ -1,3 +1,10 @@
+## Release 0.7.1 du 19/03/2025-04:48
+
+* `2c4d448` maj doc
+* `a66d7e8` utiliser reset plutôt que override pour la compatibilité
+* `0c8317c` maj config demo
+* `c39d037` maj .gitignore
+
 ## Release 0.7.0 du 17/03/2025-17:47
 
 * `1a408e8` script start pour simplifier le démarrage
