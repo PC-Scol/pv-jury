@@ -143,7 +143,7 @@ cp path/to/mycert.crt path/to/mycert.key _web/ssl
 Si le certificat ne contient pas la chaine autorité, vous devez aussi copier le
 fichier autorité
 ~~~sh
-cp path/to/ca.crt _web/ssl
+cp path/to/myca.crt _web/ssl
 ~~~
 NB: vous pouvez aussi inclure directement l'autorité dans le certificat
 
@@ -166,9 +166,9 @@ Puis relancez le serveur
 
 ## Reverse proxy tournant dans un autre container
 
-Il faut créer le fichier `docker-compose.local.yml` qui permet de définir une
-configuration différente. En l'occurrence, on doit désactiver l'écoute, place
-l'application sur le bon réseau, et ajoute les labels nécessaires
+Il faut créer le fichier `docker-compose.local.yml` qui permet d'augmenter la
+configuration différente. En l'occurrence, on doit désactiver l'écoute, placer
+l'application sur le bon réseau, et ajouter les labels nécessaires
 
 Prenons l'exemple d'un reverse proxy traefik qui tourne sur le réseau `pubnet`
 sur le même serveur docker (ou le même cluster docker swarm) que celui qui fait
