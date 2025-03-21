@@ -3,7 +3,7 @@ ARG PRIVAREG
 FROM ${PRIVAREG}pv-jury-app/php-apache
 
 ARG XDEBUG
-RUN [ -n "$XDEBUG" ] && /g/php-exts/enable-xdebug
+RUN if [ -n "$XDEBUG" ]; then /g/php-exts/enable-xdebug; fi
 
 ENV RUNPHP_MODE=docker
 
