@@ -1,3 +1,24 @@
+## Release 0.8.0 du 21/03/2025-19:19
+
+Cette version ajoute et documente le support https natif
+
+> [!IMPORTANT]
+> La mise à jour *nécessite* le rajout de deux paramètres dans le fichier `.env`
+>
+> Copiez/collez la commande ci-dessous pour vous simplifier la vie
+~~~sh
+sed -i '/^LSN_ADDR=/a\
+\
+# Activer l'\''accès via https\
+ENABLE_SSL=\
+LSN_ADDR_SSL=8443' .env
+~~~
+Puis vous pouvez faire la mise à jour normalement
+
+* `b9de8c4` maj doc
+* `5414fa8` redirection automatique vers https
+* `e6cf97c` support natif https
+
 ## Release 0.7.1 du 19/03/2025-04:48
 
 * `2c4d448` maj doc

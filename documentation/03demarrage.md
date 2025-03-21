@@ -80,12 +80,12 @@ La configuration par défaut n'est appropriée que pour le développement.
 Pour rendre l'application disponible à tous les agents concernés, il faut
 modifier les paramètres `LSN_ADDR` et `APP_URL`
 
-Par exemple, si l'application est installée sur un serveur `pv-jury.univ.tld`,
-elle pourrait être accessible à l'adresse <http://pv-jury.univ.tld>, il faut
-donc faire les modifications suivantes dans le fichier `.env`
+Par exemple, si l'application est installée sur un serveur `pv-jury.int.tld`,
+elle pourrait être accessible à l'adresse <http://pv-jury.int.tld>, il faut donc
+faire les modifications suivantes dans le fichier `.env`
 ~~~sh
 LSN_ADDR=80
-APP_URL=http://pv-jury.univ.tld
+APP_URL=http://pv-jury.int.tld
 ~~~
 
 Ensuite relancer le serveur avec la commande suivante:
@@ -93,7 +93,117 @@ Ensuite relancer le serveur avec la commande suivante:
 ./start -r
 ~~~
 
-NB: activer l'accès en https n'est pas documenté ici. envoyer un message sur le
-forum si vous êtes intéressé
+## Activer l'accès en https
+
+Si vous souhaitez activer l'accès en https, il y a un certain nombre
+d'opérations supplémentaires à effectuer
+
+Cette documentation expose 3 façons de procéder: reverse proxy externe, support
+https natif, reverse proxy tournant dans un autre container sur le même serveur
+docker (ou sur le même cluster docker swarm)
+
+### Reverse proxy externe
+
+C'est la solution la plus simple: si vous avez déjà un reverse proxy partagé, il
+vous suffit de le configurer pour faire reverse proxy depuis une adresse
+publique e.g <https://pv-jury.pub.tld> vers l'adresse interne configurée
+ci-dessus, e.g <http://pv-jury.int.tld>
+
+N'oubliez pas de modifier la configuration pour indiquer la nouvelle adresse
+publique
+~~~sh
+APP_URL=https://pv-jury.pub.tld
+~~~
+
+Puis relancez le serveur
+~~~sh
+./start -r
+~~~
+
+### Support https natif
+
+Si vous n'avez pas de reverse proxy partagé, il est possible d'activer le
+support https natif, géré directement par le serveur apache qui fait tourner
+pv-jury
+
+Modifiez le fichier `.env` pour activer ssl. Modifiez aussi l'adresse de
+l'application pour mentionner l'accès en https:
+~~~sh
+ENABLE_SSL=1
+LSN_ADDR_SSL=443
+APP_URL=https://pv-jury.int.tld
+~~~
+
+Vous devez bien entendu disposer d'un certificat. Copiez le certificat et la clé
+privée dans le répertoire `_web/ssl`
+~~~sh
+cp path/to/mycert.crt path/to/mycert.key _web/ssl
+~~~
+
+Si le certificat ne contient pas la chaine autorité, vous devez aussi copier le
+fichier autorité
+~~~sh
+cp path/to/ca.crt _web/ssl
+~~~
+NB: vous pouvez aussi inclure directement l'autorité dans le certificat
+
+Ensuite, il faut modifier le fichier `_web/apache/ssl.conf` pour mentionner les
+certificats
+~~~conf
+SSLCertificateFile    /etc/ssl/certs/mycert.crt
+SSLCertificateKeyFile /etc/ssl/private/mycert.key
+~~~
+
+Si l'autorité est dans un fichier à part, il faut aussi le mentionner
+~~~conf
+SSLCertificateChainFile /etc/ssl/certs/myca.crt
+~~~
+
+Puis relancez le serveur
+~~~sh
+./start -r
+~~~
+
+## Reverse proxy tournant dans un autre container
+
+Il faut créer le fichier `docker-compose.local.yml` qui permet de définir une
+configuration différente. En l'occurrence, on doit désactiver l'écoute, place
+l'application sur le bon réseau, et ajoute les labels nécessaires
+
+Prenons l'exemple d'un reverse proxy traefik qui tourne sur le réseau `pubnet`
+sur le même serveur docker (ou le même cluster docker swarm) que celui qui fait
+tourner pv-jury. Voici un exemple de fichier `docker-compose.local.yml`:
+~~~yaml
+services:
+  web:
+    networks:
+      pubnet:
+    ports: !reset []
+    labels:
+      - "traefik.http.routers.http-pv-jury-web.entryPoints=http"
+      - "traefik.http.routers.http-pv-jury-web.rule=Host(`pv-jury.pub.tld`)"
+      - "traefik.http.routers.http-pv-jury-web.middlewares=pv-jury-redirect"
+      - "traefik.http.routers.http-pv-jury-web.service=pv-jury-web"
+      - "traefik.http.routers.https-pv-jury-web.entryPoints=https"
+      - "traefik.http.routers.https-pv-jury-web.rule=Host(`pv-jury.pub.tld`)"
+      - "traefik.http.routers.https-pv-jury-web.tls=true"
+      - "traefik.http.routers.https-pv-jury-web.tls.certresolver=myresolver"
+      - "traefik.http.routers.https-pv-jury-web.service=pv-jury-web"
+      - "traefik.enable=true"
+      - "traefik.http.services.pv-jury-web.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.pv-jury-redirect.redirectscheme.scheme=https"
+
+networks:
+  pubnet:
+    external: true
+~~~
+NB: bien entendu, s'il s'agit d'un cluster docker swarm, les labels doivent être
+sous la clé `deploy`
+
+Puis relancez le serveur
+~~~sh
+./start -r
+~~~
+
 
 -*- coding: utf-8 mode: markdown -*- vim:sw=4:sts=4:et:ai:si:sta:fenc=utf-8:noeol:binary

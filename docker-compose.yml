@@ -17,6 +17,7 @@ services:
       AUTH_CAS: $AUTH_CAS
       CAS_URL: $CAS_URL
       CONFIG_ALL_app__cas_url: $CAS_URL
+      ENABLE_SSL: $ENABLE_SSL
       AUTH_BASIC: $AUTH_BASIC
       PV_JURY_DATADIR: /data/pv-jury
       TAIL_LOGFILES: >
@@ -28,6 +29,7 @@ services:
       - .:/var/www/app
     ports:
       - ${LSN_ADDR}:80
+      - ${LSN_ADDR_SSL}:443
     restart: always
 
   cron:
