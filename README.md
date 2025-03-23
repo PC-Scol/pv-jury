@@ -58,6 +58,7 @@ liens pour avoir des détails sur la procédure.
     [ -n "$(getent group docker)" ] || sudo groupadd docker
     sudo usermod -aG docker $USER
     ~~~
+
     > [!IMPORTANT]
     > **Configuration du proxy**
     > Si vous utilisez un proxy, veuillez consulter la page
