@@ -1,3 +1,7 @@
+## Release 0.8.2 du 23/03/2025-13:35
+
+* `10631fb` maj doc
+
 ## Release 0.8.1 du 23/03/2025-12:42
 
 Cette version corrige et documente la prise en compte du proxy
