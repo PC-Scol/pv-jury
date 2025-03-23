@@ -1,3 +1,11 @@
+## Release 0.8.1 du 23/03/2025-12:42
+
+Cette version corrige et documente la prise en compte du proxy
+
+* `bf5de20` documenter la configuration du proxy
+* `ace311f` maj runphp pour utiliser le proxy
+* `67d6dc7` maj doc
+
 ## Release 0.8.0 du 21/03/2025-19:19
 
 Cette version ajoute et documente le support https natif
