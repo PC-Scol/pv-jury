@@ -7,6 +7,11 @@ use nulib\cv;
 use nulib\str;
 use nur\v\vo;
 
+/**
+ * Class CsvPvModel2Builder: construire un document pouvant servir à la
+ * consultation individuelle des notes et résultats pour un étudiant: affichage
+ * exhaustif et en lignes
+ */
 class CsvPvModel2Builder extends CsvPvBuilder {
   protected function verifixPvData(PVData $pvData): void {
     $pvData->ws = [
