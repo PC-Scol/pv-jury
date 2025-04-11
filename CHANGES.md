@@ -1,3 +1,10 @@
+## Release 0.9 du 11/04/2025-12:10
+
+* `5310c77` possibilité d'activer l'affichage des coefficients
+* `aee7431` utiliser des styles explicites plutôt que des constantes
+* `5a09b05` ajouter la colonne coefficient
+* `ef2f2f6` maj doc
+
 ## Release 0.8.2 du 23/03/2025-13:35
 
 * `10631fb` maj doc
