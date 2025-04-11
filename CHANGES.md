@@ -1,4 +1,8 @@
-## Release 0.9 du 11/04/2025-12:10
+## Release 0.9.1 du 11/04/2025-22:02
+
+* `8f34045` renommer 'modèle APOGEE' en 'modèle classique'
+
+## Release 0.9.0 du 11/04/2025-12:10
 
 * `5310c77` possibilité d'activer l'affichage des coefficients
 * `aee7431` utiliser des styles explicites plutôt que des constantes
