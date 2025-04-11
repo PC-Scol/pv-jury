@@ -74,8 +74,8 @@ class ConvertPage extends APvPage {
           "control" => "select",
           "label" => "Modèle d'édition",
           "items" => [
-            [1, "Modèle APOGEE"],
-            [2, "Modèle APOGEE avec coefficients"],
+            [1, "Modèle classique"],
+            [2, "Modèle classique avec coefficients"],
           ],
           "default" => $modele,
         ],
