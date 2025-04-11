@@ -276,7 +276,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "03338f97f0eba1a54c28492aaba54d7bd4c61dfe"
+                "reference": "33fab8496afcdcffb89c4dc14e4fda37065c3559"
             },
             "require": {
                 "ext-json": "*",
@@ -322,7 +322,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-phpss.git",
-                "reference": "44b6507d02d62451fcf260b9af19ced7083dc674"
+                "reference": "e06fa96a22c04ba5fef8028e18beb5c608388f67"
             },
             "require": {
                 "nulib/php": "^0.4.0p82",
@@ -356,7 +356,7 @@
                 }
             ],
             "description": "wrapper pour phpoffice/phpspreadsheet",
-            "time": "2025-03-14T11:30:18+00:00"
+            "time": "2025-03-23T04:22:50+00:00"
         },
         {
             "name": "nulib/spout",
@@ -364,7 +364,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "2b2af6be95070c1262740ab0242c96c1d86af568"
+                "reference": "d597525b57c21577fd9f41cefdfa5058f5219871"
             },
             "require": {
                 "ext-dom": "*",
@@ -414,7 +414,7 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2025-03-14T11:41:00+00:00"
+            "time": "2025-03-23T04:22:20+00:00"
         },
         {
             "name": "nur/ture",
@@ -422,7 +422,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-ture.git",
-                "reference": "2da0780a56f2dae769019f2901ea68dfef67025f"
+                "reference": "9d7dbd76d17041e4099cdcf3e104268187783927"
             },
             "require": {
                 "php": "^8.2"
@@ -510,7 +510,7 @@
                 }
             ],
             "description": "espace de maturation pour les librairies",
-            "time": "2025-03-17T13:23:56+00:00"
+            "time": "2025-03-23T04:20:26+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",
