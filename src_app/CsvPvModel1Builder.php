@@ -33,6 +33,12 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     return $this->pvData->sesCols[$this->ises]["title"] ?? "";
   }
 
+  private bool $addCoeffCol = false;
+
+  function setAddCoeffCol(bool $addCoeffCol): void {
+    $this->addCoeffCol = $addCoeffCol;
+  }
+
   const ORDER_CODAPR = "codapr", ORDER_ALPHA = "nom", ORDER_MERITE = "note";
 
   private string $order = self::ORDER_MERITE;
@@ -223,6 +229,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $hrow = ["Code apprenant", "Nom", "Prénom"];
     $hrow_colsStyles = [cl::merge($baS, self::CENTER_S, self::WRAP_S), $baS, $baS];
     $firstObj = true;
+    $addCoeffCol = $this->addCoeffCol;
     foreach ($objs as $obj) {
       if ($this->shouldExcludeObj($obj)) continue;
       $title = $obj["title"];
@@ -232,6 +239,10 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::RES_S, self::WRAP_S);
         $hrow[] = "PointsJury\nECTS";
         $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::ECTS_S, self::WRAP_S);
+        if ($addCoeffCol) {
+          $hrow[] = "Coeff";
+          $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::CENTER_S, self::WRAP_S);
+        }
       } else {
         if (!self::split_code_title($title, $code)) {
           $code = $title;
@@ -240,7 +251,13 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         $hrow[] = $code;
         $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BL_S, self::ROTATE_S, self::RIGHT_S, self::NOWRAP_S);
         $hrow[] = $title;
-        $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BR_S, self::ROTATE_S, self::LEFT_S, self::WRAP_S);
+        if ($addCoeffCol) {
+          $hrow_colsStyles[] = cl::merge(self::BOLD_S, ["border" => "top bottom thin"], self::ROTATE_S, self::LEFT_S, self::WRAP_S);
+          $hrow[] = null;
+          $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BR_S, self::ROTATE_S, self::WRAP_S);
+        } else {
+          $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BR_S, self::ROTATE_S, self::LEFT_S, self::WRAP_S);
+        }
 
         if (!$this->excludeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
           foreach ($obj["ses"]["ctls"] as $ctl) {
@@ -316,11 +333,12 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $ses = $obj["ses"];
     $acq = $this->getAcq($row, $obj["acq"]);
     $noteResEcts = $this->getNoteResEcts($row, $ses);
-    $pjCol = $ses["pj_col"];
-    $pj = [
-      "pj" => $pjCol !== null? $row[$ses["col_indexes"][$pjCol]]: null,
-    ];
-    return cl::merge($acq, $noteResEcts, $pj);
+    $pjCol = $ses["col_indexes"][$ses["pj_col"]] ?? null;
+    $coeffCol = $ses["col_indexes"]["Coefficient"] ?? null;
+    return cl::merge($acq, $noteResEcts, [
+      "pj" => $row[$pjCol] ?? null,
+      "coeff" => $row[$coeffCol] ?? null,
+    ]);
   }
 
   function compareCodApr(array $a, array $b) {
@@ -357,6 +375,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       "res" => $res,
       "ects" => $ects,
       "pj" => $pj,
+      "coeff" => $coeff,
     ] = $this->getAcqNoteResEcts($row, $obj);
 
     $nses = $ses["nses"] ?? null;
@@ -382,10 +401,25 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       $brow1[] = $acquis;
       $brow1Styles[] = cl::merge(self::BTR_S, self::CAP_S);
     }
+    $addCoeffCol = $this->addCoeffCol;
+    if ($addCoeffCol) {
+      $brow1[] = $coeff;
+      $brow1Styles[] = [
+        "align" => "center",
+        "format" => "0",
+        "border" => "left top right thin",
+      ];
+    }
     $brow2[] = $res;
     $brow2Styles[] = cl::merge(self::BLB_S, self::RES_S);
     $brow2[] = $ects;
     $brow2Styles[] = cl::merge(self::BBR_S, self::ECTS_S);
+    if ($addCoeffCol) {
+      $brow2[] = null;
+      $brow2Styles[] = [
+        "border" => "left bottom right thin",
+      ];
+    }
 
     return [
       "acquis" => $acquis,
@@ -483,6 +517,10 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         $frow_cols_styles[] = $noteS;
         $frow[] = null;
         $frow_cols_styles[] = self::BR_S;
+        if ($span > 2) {
+          $frow[] = null;
+          $frow_cols_styles[] = self::BA_S;
+        }
       }
     }
     $footer[] = $frow;
@@ -522,7 +560,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     foreach ($objs as $iobj => $obj) {
       if ($this->shouldExcludeObj($obj)) continue;
       $onotes = $notes[$iobj] ?? null;
-      $this->addStat($onotes, $stats, 2);
+      $this->addStat($onotes, $stats, $this->addCoeffCol? 3: 2);
 
       if (!$this->excludeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
         foreach ($obj["ses"]["ctls"] as $ictl => $ctl) {
