@@ -35,7 +35,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
 
   private bool $addCoeffCol = false;
 
-  function setAddCoeffCol(bool $addCoeffCol): void {
+  function setAddCoeffCol(bool $addCoeffCol=true): void {
     $this->addCoeffCol = $addCoeffCol;
   }
 
