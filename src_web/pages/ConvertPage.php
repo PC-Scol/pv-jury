@@ -10,11 +10,14 @@ use nulib\os\path;
 use nulib\text\words;
 use nur\authz;
 use nur\b\authnz\IAuthzUser;
+use nur\session;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormBasic;
+use nur\v\bs3\fo\FormInline;
 use nur\v\icon;
 use nur\v\page;
+use nur\v\plugins\autosubmitSelectPlugin;
 use nur\v\plugins\showmorePlugin;
 use nur\v\v;
 use nur\v\vo;
@@ -61,6 +64,32 @@ class ConvertPage extends APvPage {
       }
     }
     $this->objs = $objs;
+
+    $modele = session::get("modele", 1);
+    $modelefo = $this->modelefo = new FormInline([
+      "method" => "post",
+      "params" => [
+        "set_modele" => ["control" => "hidden", "value" => 1],
+        "modele" => [
+          "control" => "select",
+          "label" => "Modèle d'édition",
+          "items" => [
+            [1, "Modèle APOGEE"],
+            [2, "Modèle APOGEE avec coefficients"],
+          ],
+          "default" => $modele,
+        ],
+      ],
+      "autoadd_submit" => false,
+      "submitted_key" => "set_modele",
+      "autoload_params" => true,
+    ]);
+    if ($modelefo->isSubmitted()) {
+      $modele = $modelefo["modele"];
+      session::set("modele", $modele);
+    }
+    $this->addPlugin(new autosubmitSelectPlugin("#modele"));
+    $this->modele = $modele;
 
     $builder = $this->builder = new CsvPvModel1Builder($pvData);
     $sessions = $this->sessions = $builder->getSessions();
@@ -138,6 +167,10 @@ class ConvertPage extends APvPage {
 
   private CsvPvModel1Builder $builder;
 
+  private Form $modelefo;
+
+  private int $modele;
+
   private Form $convertfo;
 
   private Form $deletefo;
@@ -151,6 +184,7 @@ class ConvertPage extends APvPage {
     page::more_time();
     $builder = $this->builder;
     $convertfo = $this->convertfo;
+    if ($this->modele == 2) $builder->setAddCoeffCol();
     $builder->setIses($convertfo["ises"]);
     $builder->setOrder($convertfo["order"]);
     $builder->setExcludeControles(boolval($convertfo["xc"]));
@@ -210,6 +244,7 @@ class ConvertPage extends APvPage {
       vo::start("fieldset");
       vo::tag("legend", "Edition du PV");
       vo::p(["Mettre en forme les données du fichier CSV pour impression. inclure aussi les statistiques"]);
+      $this->modelefo->print();
       al::print();
       $convertfo = $this->convertfo;
       $convertfo->autoloadParams();
@@ -323,6 +358,7 @@ class ConvertPage extends APvPage {
     if ($valid) {
       $builder = $this->builder;
       $builder->setExcludeUnlessHaveValue(true);
+      if ($this->modele == 2) $builder->setAddCoeffCol();
       foreach ($this->sessions as [$ises, $session]) {
         vo::h2($session);
         $builder->setIses($ises);

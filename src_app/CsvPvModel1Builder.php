@@ -33,6 +33,12 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     return $this->pvData->sesCols[$this->ises]["title"] ?? "";
   }
 
+  private bool $addCoeffCol = false;
+
+  function setAddCoeffCol(bool $addCoeffCol=true): void {
+    $this->addCoeffCol = $addCoeffCol;
+  }
+
   const ORDER_CODAPR = "codapr", ORDER_ALPHA = "nom", ORDER_MERITE = "note";
 
   private string $order = self::ORDER_MERITE;
@@ -188,65 +194,97 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     return false;
   }
 
-  const BOLD_S = [
-    "font" => ["bold" => true],
-  ];
-  const WRAP_S = ["wrap" => true];
-  const NOWRAP_S = ["wrap" => false];
-  const ROTATE_S = ["rotation" => 70];
-  const LEFT_S = ["align" => "left"];
-  const CENTER_S = ["align" => "center"];
-  const RIGHT_S = ["align" => "right"];
-  const BA_S = ["border" => "all thin"];
-  const BL_S = ["border" => "left top bottom thin"];
-  const BT_S = ["border" => "left top right thin"];
-  const BB_S = ["border" => "right bottom left thin"];
-  const BR_S = ["border" => "top right bottom thin"];
-  const BLT_S = ["border" => "left top thin"];
-  const BLB_S = ["border" => "left bottom thin"];
-  const BTR_S = ["border" => "top right thin"];
-  const BBR_S = ["border" => "right bottom thin"];
-  const NUMBER_S = [
-    "format" => "0.000",
-  ];
-  const NOTE_S = self::RIGHT_S;
-  const CAP_S = self::CENTER_S;
-  const RES_S = self::RIGHT_S;
-  const ECTS_S = self::CENTER_S;
-
   function prepareLayout(): void {
     $ws =& $this->pvData->ws;
     $objs = $ws["objs"];
     $Spv =& $ws["sheet_pv"];
 
-    $baS = cl::merge(self::BOLD_S, self::BA_S);
+    $baS = [
+      "font" => ["bold" => true],
+      "border" => "all thin",
+    ];
     $hrow = ["Code apprenant", "Nom", "Prénom"];
-    $hrow_colsStyles = [cl::merge($baS, self::CENTER_S, self::WRAP_S), $baS, $baS];
+    $hrow_colsStyles = [cl::merge($baS, ["align" => "center", "wrap" => true]), $baS, $baS];
     $firstObj = true;
+    $addCoeffCol = $this->addCoeffCol;
     foreach ($objs as $obj) {
       if ($this->shouldExcludeObj($obj)) continue;
       $title = $obj["title"];
       if ($firstObj) {
         $firstObj = false;
         $hrow[] = "Note\nRésultat";
-        $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::RES_S, self::WRAP_S);
+        $hrow_colsStyles[] = [
+          "font" => ["bold" => true],
+          "border" => "all thin",
+          "align" => "right",
+          "wrap" => true,
+        ];
         $hrow[] = "PointsJury\nECTS";
-        $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::ECTS_S, self::WRAP_S);
+        $hrow_colsStyles[] = [
+          "font" => ["bold" => true],
+          "border" => "all thin",
+          "align" => "center",
+          "wrap" => true,
+        ];
+        if ($addCoeffCol) {
+          $hrow[] = "Coeff";
+          $hrow_colsStyles[] = [
+            "font" => ["bold" => true],
+            "border" => "all thin",
+            "align" => "center",
+            "wrap" => true,
+          ];
+        }
       } else {
         if (!self::split_code_title($title, $code)) {
           $code = $title;
           $title = null;
         }
         $hrow[] = $code;
-        $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BL_S, self::ROTATE_S, self::RIGHT_S, self::NOWRAP_S);
+        $hrow_colsStyles[] = [
+          "font" => ["bold" => true],
+          "border" => "left top bottom thin",
+          "rotation" => 70,
+          "align" => "right",
+          "wrap" => false,
+        ];
         $hrow[] = $title;
-        $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BR_S, self::ROTATE_S, self::LEFT_S, self::WRAP_S);
+        if ($addCoeffCol) {
+          $hrow_colsStyles[] = [
+            "font" => ["bold" => true],
+            "border" => "top bottom thin",
+            "rotation" => 70,
+            "align" => "left",
+            "wrap" => true,
+          ];
+          $hrow[] = null;
+          $hrow_colsStyles[] = [
+            "font" => ["bold" => true],
+            "border" => "top right bottom thin",
+            "rotation" => 70,
+            "wrap" => true,
+          ];
+        } else {
+          $hrow_colsStyles[] = [
+            "font" => ["bold" => true],
+            "border" => "top right bottom thin",
+            "rotation" => 70,
+            "align" => "left",
+            "wrap" => true,
+          ];
+        }
 
         if (!$this->excludeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
           foreach ($obj["ses"]["ctls"] as $ctl) {
             $title = $ctl["title"];
             $hrow[] = $title;
-            $hrow_colsStyles[] = cl::merge(self::BOLD_S, self::BA_S, self::ROTATE_S, self::RIGHT_S, self::WRAP_S);
+            $hrow_colsStyles[] = [
+              "font" => ["bold" => true],
+              "border" => "all thin",
+              "rotation" => 70,
+              "align" => "right",
+              "wrap" => true,
+            ];
           }
         }
       }
@@ -316,11 +354,12 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $ses = $obj["ses"];
     $acq = $this->getAcq($row, $obj["acq"]);
     $noteResEcts = $this->getNoteResEcts($row, $ses);
-    $pjCol = $ses["pj_col"];
-    $pj = [
-      "pj" => $pjCol !== null? $row[$ses["col_indexes"][$pjCol]]: null,
-    ];
-    return cl::merge($acq, $noteResEcts, $pj);
+    $pjCol = $ses["col_indexes"][$ses["pj_col"]] ?? null;
+    $coeffCol = $ses["col_indexes"]["Coefficient"] ?? null;
+    return cl::merge($acq, $noteResEcts, [
+      "pj" => $row[$pjCol] ?? null,
+      "coeff" => $row[$coeffCol] ?? null,
+    ]);
   }
 
   function compareCodApr(array $a, array $b) {
@@ -357,6 +396,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       "res" => $res,
       "ects" => $ects,
       "pj" => $pj,
+      "coeff" => $coeff,
     ] = $this->getAcqNoteResEcts($row, $obj);
 
     $nses = $ses["nses"] ?? null;
@@ -374,18 +414,50 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     }
 
     $brow1[] = $note;
-    $brow1Styles[] = cl::merge(self::BLT_S, self::NOTE_S, self::NUMBER_S);
+    $brow1Styles[] = [
+      "border" => "left top thin",
+      "align" => "right",
+      "format" => "0.000",
+    ];
     if ($pjInsteadOfAcq || $acquis === null) {
       $brow1[] = $pj;
-      $brow1Styles[] = cl::merge(self::BTR_S, self::CAP_S, self::NUMBER_S);
+      $brow1Styles[] = [
+        "border" => "top right thin",
+        "align" => "center",
+        "format" => "0.000",
+      ];
     } else {
       $brow1[] = $acquis;
-      $brow1Styles[] = cl::merge(self::BTR_S, self::CAP_S);
+      $brow1Styles[] = [
+        "border" => "top right thin",
+        "align" => "center",
+      ];
+    }
+    $addCoeffCol = $this->addCoeffCol;
+    if ($addCoeffCol) {
+      $brow1[] = $coeff;
+      $brow1Styles[] = [
+        "border" => "left top right thin",
+        "align" => "center",
+        "format" => "0",
+      ];
     }
     $brow2[] = $res;
-    $brow2Styles[] = cl::merge(self::BLB_S, self::RES_S);
+    $brow2Styles[] = [
+      "border" => "left bottom thin",
+      "align" => "right",
+    ];
     $brow2[] = $ects;
-    $brow2Styles[] = cl::merge(self::BBR_S, self::ECTS_S);
+    $brow2Styles[] = [
+      "border" => "right bottom thin",
+      "align" => "center",
+    ];
+    if ($addCoeffCol) {
+      $brow2[] = null;
+      $brow2Styles[] = [
+        "border" => "left bottom right thin",
+      ];
+    }
 
     return [
       "acquis" => $acquis,
@@ -406,9 +478,16 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     ] = $this->getNoteResEcts($row, $ctl);
 
     $brow1[] = $note;
-    $brow1Styles[] = cl::merge(self::BT_S, self::NOTE_S, self::NUMBER_S);
+    $brow1Styles[] = [
+      "border" => "left top right thin",
+      "align" => "right",
+      "format" => "0.000",
+    ];
     $brow2[] = $res;
-    $brow2Styles[] = cl::merge(self::BB_S, self::RES_S);
+    $brow2Styles[] = [
+      "border" => "right bottom left thin",
+      "align" => "right",
+    ];
 
     return [
       "note" => $note,
@@ -426,18 +505,34 @@ class CsvPvModel1Builder extends CsvPvBuilder {
 
     $brow1 = array_slice($row, 0, 3);
     $brow1Styles = [
-      cl::merge(self::BT_S, ["align" => "center"]),
-      self::BT_S,
-      self::BT_S,
+      [
+        "border" => "left top right thin",
+        "align" => "center",
+      ],
+      [
+        "border" => "left top right thin",
+      ],
+      [
+        "border" => "left top right thin",
+      ],
     ];
     // forcer une valeur pour que la ligne ne soit jamais vide
     // la mettre en blanc sur blanc pour qu'elle soit invisible
     $brow2 = [null, null, "."];
-    $brow2Styles = [self::BB_S, self::BB_S, cl::merge(self::BB_S, [
-      "align" => "right",
-      "font" => ["color" => "white"],
-      "bg_color" => "white",
-    ])];
+    $brow2Styles = [
+      [
+        "border" => "right bottom left thin",
+      ],
+      [
+        "border" => "right bottom left thin"
+      ],
+      [
+        "border" => "right bottom left thin",
+        "align" => "right",
+        "font" => ["color" => "white"],
+        "bg_color" => "white",
+      ],
+    ];
     $firstObj = true;
     foreach ($objs as $iobj => $obj) {
       if ($this->shouldExcludeObj($obj)) continue;
@@ -467,22 +562,33 @@ class CsvPvModel1Builder extends CsvPvBuilder {
 
   private static function add_stat_brow(string $label, array $spans, array $notes, ?array &$footer, ?array &$footer_cols_styles): void {
     $frow = [null, null, $label];
-    $frow_cols_styles = [null, null, self::BA_S];
-    $noteS = cl::merge(self::BL_S, [
-      "format" => "0.000",
-    ]);
+    $frow_cols_styles = [null, null, ["border" => "all thin"]];
     foreach ($notes as $key => $note) {
       $span = $spans[$key];
       /** @var bcnumber $note */
       if ($note !== null) $note = $note->floatval(3);
       if ($span == 1) {
         $frow[] = $note;
-        $frow_cols_styles[] = cl::merge($noteS, self::BA_S);
+        $frow_cols_styles[] = [
+          "border" => "all thin",
+          "format" => "0.000",
+        ];
       } else {
         $frow[] = $note;
-        $frow_cols_styles[] = $noteS;
+        $frow_cols_styles[] = [
+          "border" => "left top bottom thin",
+          "format" => "0.000",
+        ];
         $frow[] = null;
-        $frow_cols_styles[] = self::BR_S;
+        $frow_cols_styles[] = [
+          "border" => "top right bottom thin",
+        ];
+        if ($span > 2) {
+          $frow[] = null;
+          $frow_cols_styles[] = [
+            "border" => "all thin",
+          ];
+        }
       }
     }
     $footer[] = $frow;
@@ -522,7 +628,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     foreach ($objs as $iobj => $obj) {
       if ($this->shouldExcludeObj($obj)) continue;
       $onotes = $notes[$iobj] ?? null;
-      $this->addStat($onotes, $stats, 2);
+      $this->addStat($onotes, $stats, $this->addCoeffCol? 3: 2);
 
       if (!$this->excludeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
         foreach ($obj["ses"]["ctls"] as $ictl => $ctl) {
@@ -574,9 +680,10 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       ];
     }
 
-    $nbS = cl::merge(self::BA_S, [
+    $nbS = [
+      "border" => "all thin",
       "align" => "center",
-    ]);
+    ];
     $Stotals =& $ws["sheet_totals"];
     $Stotals["headers"] = [
       [null, "Nombre", "Pourcentage"],
@@ -590,14 +697,15 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       ["Nb ajournés", $totals["nb_ajournes"], $totals["per_ajournes"]],
       ["Nb absents", $totals["nb_absents"], null],
     ];
-    $perS = cl::merge(self::BA_S, [
+    $perS = [
+      "border" => "all thin",
       "format" => "0.00\\ %",
-    ]);
+    ];
     $Stotals["body_cols_styles"] = [
-      [self::BA_S, $nbS, $perS],
-      [self::BA_S, $nbS, $perS],
-      [self::BA_S, $nbS, $perS],
-      [self::BA_S, $nbS, $perS],
+      [["border" => "all thin"], $nbS, $perS],
+      [["border" => "all thin"], $nbS, $perS],
+      [["border" => "all thin"], $nbS, $perS],
+      [["border" => "all thin"], $nbS, $perS],
     ];
   }
 
