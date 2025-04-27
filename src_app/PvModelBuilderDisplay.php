@@ -5,21 +5,17 @@ use nulib\A;
 use nulib\cl;
 use nulib\cv;
 use nulib\str;
+use nur\v\bs3\fo\Form;
+use nur\v\bs3\fo\FormBasic;
 use nur\v\vo;
 
 /**
- * Class CsvPvModel2Builder: construire un document pouvant servir à la
- * consultation individuelle des notes et résultats pour un étudiant: affichage
- * exhaustif et en lignes
+ * Class ClassicEditionPvModelBuilder: construire un document pouvant servir à
+ * la consultation individuelle des notes et résultats pour un étudiant:
+ * affichage exhaustif et en lignes
  */
-class CsvPvModel2Builder extends CsvPvBuilder {
-  protected function verifixPvData(PVData $pvData): void {
-    $pvData->ws = [
-      "document" => null,
-      "sheet_promo" => null,
-      "sheet_stats" => null,
-      "sheet_totals" => null,
-    ];
+class PvModelBuilderDisplay extends PvModelBuilder {
+  protected function verifixPvData(): void {
   }
 
   static function prepare_layout(PvData $pvData): void {
@@ -313,12 +309,15 @@ class CsvPvModel2Builder extends CsvPvBuilder {
 
   private ?string $codApr = null;
 
-  function compute(?PvData $pvData=null): static {
-    $this->ensurePvData($pvData);
+  function compute(): static {
+    $pvData = $this->pvData;
 
-    $pvData->ws["sheet_promo"] = null;
-    $pvData->ws["sheet_stats"] = null;
-    $pvData->ws["sheet_totals"] = null;
+    $pvData->ws = [
+      "document" => null,
+      "sheet_promo" => null,
+      "sheet_stats" => null,
+      "sheet_totals" => null,
+    ];
     self::prepare_layout($pvData);
 
     $codApr = $this->codApr;
@@ -331,8 +330,8 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     return $this;
   }
 
-  protected function writeRows(?PvData $pvData=null): void {
-    $this->ensurePvData($pvData);
+  protected function writeRows(): void {
+    $pvData = $this->pvData;
     $builder = $this->builder;
     $ws = $pvData->ws;
 
@@ -371,7 +370,21 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     }
   }
 
-  function print(): void {
+  #############################################################################
+
+  function checkForm(): bool {
+    return true;
+  }
+
+  function printForm(): void {
+  }
+
+  function doFormAction(?array $params=null): void {
+  }
+
+  #############################################################################
+
+  function print(?array $params=null): void {
     $ws = $this->pvData->ws;
     $promo = $ws["sheet_promo"];
     $one = $this->codApr !== null;

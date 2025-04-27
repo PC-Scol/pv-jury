@@ -11,7 +11,7 @@ use nulib\ValueException;
 use stdClass;
 
 /**
- * Class PvJuryExtractor: extraire les données d'un fichier "PV de Jury" édité
+ * Class PvDataExtractor: extraire les données d'un fichier "PV de Jury" édité
  * depuis PEGASE
  */
 class PvDataExtractor {
@@ -218,12 +218,17 @@ class PvDataExtractor {
 
         $ises = $this->ises++;
         $this->obj["sess"][$ises] = $this->ses;
-        if (!$isControle) {
+
+        $sesTitle = $this->ses["title"];
+        if ($isControle) {
+          $ctlCols =& $this->data["ctl_cols"];
+          if (!isset($ctlCols[$sesTitle])) {
+            $ctlCols[$sesTitle] = ["title" => $sesTitle];
+          }
+        } else {
           $sesCols =& $this->data["ses_cols"];
           if (!isset($sesCols[$ises])) {
-            $sesCols[$ises] = [
-              "title" => $this->ses["title"],
-            ];
+            $sesCols[$ises] = ["title" => $sesTitle];
           }
         }
 
@@ -355,12 +360,14 @@ class PvDataExtractor {
 
   static function update_metadata(array &$data): void {
     $sesCols =& $data["ses_cols"];
+    $ctlCols =& $data["ctl_cols"];
     foreach ($data["gpts"] as &$gpt) {
       foreach ($gpt["objs"] as &$obj) {
         $cses = null;
         $pses = null;
         foreach ($obj["sess"] as $ises => &$ses) {
-          $isAcquis = $ses["is_acquis"] = $ses["title"] === null && $ses["acquis_col"] !== null;
+          $title = $ses["title"];
+          $isAcquis = $ses["is_acquis"] = $title === null && $ses["acquis_col"] !== null;
           $isSession = $ses["is_session"];
           $isControle = $ses["is_controle"];
           if ($isSession) {
@@ -368,15 +375,26 @@ class PvDataExtractor {
             $cses =& $ses;
           }
           if (($isAcquis || $isSession) && !isset($sesCols[$ises]["cols"])) {
-            A::merge($sesCols[$ises],
-              cl::select($ses, [
-                "have_value", "have_note", "have_res",
-                "is_acquis",
-                "acquis_col",
-                "is_session",
-                "note_col", "res_col", "ects_col", "pj_col",
-                "cols", "col_indexes",
-              ]));
+            A::merge($sesCols[$ises], cl::select($ses, [
+              "have_value", "have_note", "have_res",
+              "is_acquis",
+              "acquis_col",
+              "is_session",
+              "note_col", "res_col", "ects_col", "pj_col",
+              "is_controle",
+              "cols",
+            ]));
+          }
+          if ($isControle && !isset($ctlCols[$title]["cols"])) {
+            A::merge($ctlCols[$title], cl::select($ses, [
+              "have_value", "have_note", "have_res",
+              "is_acquis",
+              "acquis_col",
+              "is_session",
+              "note_col", "res_col", "ects_col", "pj_col",
+              "is_controle",
+              "cols",
+            ]));
           }
           if ($cses !== null) {
             if ($isControle) $cses["ctls"][] = $ses;
@@ -420,6 +438,7 @@ class PvDataExtractor {
       "gpts" => null,
       "gpt_objs" => null,
       "ses_cols" => null,
+      "ctl_cols" => null,
       "title" => null,
       "headers" => null,
       "rows" => null,

@@ -43,7 +43,7 @@ class CellStyles
 }
 
 
-class PvJuryXlsxBuilder
+class PvModelBuilderTemplateEdition
 {
   private ?IBuilder $builder = null;
 

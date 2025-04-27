@@ -1,7 +1,7 @@
 <?php
 namespace web\pages;
 
-use app\CsvPvModel2Builder;
+use app\PvModelBuilderDisplay;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormBasic;
@@ -59,7 +59,7 @@ class ViewPage extends APvPage {
     al::reset();
     $codApr = $searchfo["a"];
     if (isset($rows[$codApr])) {
-      $builder = new CsvPvModel2Builder();
+      $builder = new PvModelBuilderDisplay();
       $builder->setCodApr($codApr);
       $builder->compute($pvData);
       $this->builder = $builder;
@@ -72,7 +72,7 @@ class ViewPage extends APvPage {
 
   private Form $searchfo;
 
-  private ?CsvPvModel2Builder $builder = null;
+  private ?PvModelBuilderDisplay $builder = null;
 
   function print(): void {
     ly::row(); ly::col(12);

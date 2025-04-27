@@ -1,7 +1,7 @@
 <?php
 namespace app;
 
-use nur\sery\app;
+use nulib\app;
 use nulib\db\Capacitor;
 use nulib\db\CapacitorStorage;
 use nulib\db\sqlite\Sqlite;

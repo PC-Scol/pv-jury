@@ -1,12 +1,19 @@
 <?php
 namespace app;
 
+use Exception;
 use nulib\A;
 use nulib\cl;
 use nulib\cv;
 use nulib\ext\spout\SpoutBuilder;
+use nulib\os\path;
 use nulib\str;
 use nulib\ValueException;
+use nur\v\al;
+use nur\v\bs3\fo\Form;
+use nur\v\bs3\fo\FormBasic;
+use nur\v\plugins\showmorePlugin;
+use nur\v\v;
 use nur\v\vo;
 use OpenSpout\Writer\XLSX\Options\HeaderFooter;
 use OpenSpout\Writer\XLSX\Options\PageMargin;
@@ -16,52 +23,49 @@ use OpenSpout\Writer\XLSX\Options\PageSetup;
 use OpenSpout\Writer\XLSX\Options\PaperSize;
 
 /**
- * Class Model1CsvBuilder: construire un document pouvant servir à faire une
- * délibération: sélection par session, et affichage en colonnes
+ * Class PvModelBuilderClassicEdition: construire un document pouvant servir à
+ * faire une délibération: sélection par session, et affichage en colonnes
+ * (édition classique, inspiration APOGEE)
  */
-class CsvPvModel1Builder extends CsvPvBuilder {
+class PvModelBuilderClassicEdition extends PvModelBuilder {
   private ?int $ises = null;
 
-  function setIses(int $ises): void {
+  function setIses($ises): static {
+    $ises = cl::first(cl::with($ises));
     $ses = $this->pvData->sesCols[$ises] ?? null;
     ValueException::check_null($ses);
     $this->ises = $ises;
-    $this->pvData->verifixed = false;
+    return $this;
   }
 
-  function getSuffix(): string {
+  protected function getSuffix(): string {
     return $this->pvData->sesCols[$this->ises]["title"] ?? "";
   }
 
   private bool $addCoeffCol = false;
 
-  function setAddCoeffCol(bool $addCoeffCol=true): void {
+  function setAddCoeffCol(bool $addCoeffCol=true): static {
     $this->addCoeffCol = $addCoeffCol;
-  }
-
-  const ORDER_CODAPR = "codapr", ORDER_ALPHA = "nom", ORDER_MERITE = "note";
-
-  private string $order = self::ORDER_MERITE;
-
-  function setOrder(string $order): void {
-    $this->order = $order;
+    return $this;
   }
 
   private bool $excludeControles = false;
 
-  function setExcludeControles(bool $excludeControles): void {
+  function setExcludeControles(bool $excludeControles=true): static {
     $this->excludeControles = $excludeControles;
+    return $this;
   }
 
   private bool $excludeUnlessHaveValue = false;
 
-  function setExcludeUnlessHaveValue(bool $excludeUnlessHaveValue): void {
+  function setExcludeUnlessHaveValue(bool $excludeUnlessHaveValue=true): static {
     $this->excludeUnlessHaveValue = $excludeUnlessHaveValue;
+    return $this;
   }
 
   private ?array $includeObjs = null;
 
-  function setIncludeObjs(?array $includeObjs): void {
+  function setIncludeObjs(?array $includeObjs): static {
     if ($includeObjs !== null) {
       $objs = [[true]]; // toujours inclure 0.0
       foreach ($includeObjs as &$excludeObj) {
@@ -71,6 +75,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       $includeObjs = $objs;
     }
     $this->includeObjs = $includeObjs;
+    return $this;
   }
 
   protected function shouldExcludeObj(array $obj): bool {
@@ -79,7 +84,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     return !$includeObjet;
   }
 
-  protected function verifixPvData(PVData $pvData): void {
+  protected function preparePvData(PVData $pvData): void {
     $data = $pvData->data;
     $pvData->ws = [
       "document" => null,
@@ -138,16 +143,6 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     ];
   }
 
-  function getSessions(): array {
-    $sessions = [];
-    foreach ($this->pvData->sesCols as $ises => $ses) {
-      if ($ses["is_session"]) {
-        $sessions[$ises] = [$ises, $ses["title"]];
-      }
-    }
-    return $sessions;
-  }
-
   protected function getBuilderParams(): ?array {
     $title = $this->pvData->ws["document"]["title"][1];
     $footer = htmlspecialchars("&L$title&RPage &P / &N");
@@ -168,34 +163,25 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     ];
   }
 
-  const RES_MAP = [
-    "ADMIS" => "ADM",
-    "AJOURNE" => "AJ",
-    "ADMIS PAR COMPENSATION" => "ADMC",
-    "AJOURNE AUTORISE A CONTINUER" => "AJAC",
-    "DEFAILLANT" => "DEF",
-    "ELIMINE" => "ELIM",
-    "EN ATTENTE" => "ATT",
-    "NEUTRALISE" => "NEU",
-    "ACQUIS" => "ACQ",
-    "NON ACQUIS" => "NON_ACQ",
-    "EN COURS D'ACQUISITION" => "ENC_ACQ",
-    "ABS. INJ." => "ABI",
-    "ABS. JUS." => "ABS",
-  ];
-
-  private static function split_code_title(string &$title, ?string &$code=null): bool {
-    $code = null;
-    if (preg_match('/^(.*?) - (.*)/', $title, $ms)) {
-      $code = $ms[1];
-      $title = $ms[2];
-      return true;
-    }
-    return false;
-  }
-
   function prepareLayout(): void {
     $ws =& $this->pvData->ws;
+    A::merge($ws, [
+      "sheet_pv" => [
+        "headers" => null,
+        "headers_cols_styles" => null,
+        "body" => null,
+        "body_cols_styles" => null,
+        "footer" => null,
+        "footer_cols_styles" => null,
+      ],
+      "sheet_totals" => [
+        "headers" => null,
+        "headers_cols_styles" => null,
+        "body" => null,
+        "body_cols_styles" => null,
+      ],
+    ]);
+
     $objs = $ws["objs"];
     $Spv =& $ws["sheet_pv"];
 
@@ -296,88 +282,12 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     ]];
   }
 
-  function getAcq(array $row, array $acq): array {
-    $acquisCol = $acq["acquis_col"];
-    $acquis = null;
-    if ($acquisCol !== null) {
-      $acquis = $row[$acq["col_indexes"][$acquisCol]];
-      if (preg_match('/CAPITALISÉ(?: \(\d{2}(\d{2})-\d{2}(\d{2})\))?/u', $acquis, $ms)) {
-        $f = $ms[1] ?? null;
-        $t = $ms[2] ?? null;
-        if ($f && $t) $acquis = "CAP$f-$t";
-        else $acquis = "CAP";
-      } elseif ($acquis === "VALIDATION - EVALUATION") {
-        $acquis = "VAL-EVAL";
-      } else {
-        $acquis = null;
-      }
-    }
-    return ["acquis" => $acquis];
-  }
-
-  function getNoteResEcts(array $row, array $ses): array {
-    $noteCol = $ses["note_col"];
-    $note = null;
-    $resCol = $ses["res_col"];
-    $res = null;
-    $ectsCol = $ses["ects_col"];
-    $ects = null;
-    if ($resCol !== null) {
-      $res = $row[$ses["col_indexes"][$resCol]];
-      $res = cl::get(self::RES_MAP, $res, $res);
-    }
-    if ($noteCol !== null) {
-      $note = $row[$ses["col_indexes"][$noteCol]];
-      if (is_numeric($note)) {
-        $note = bcnumber::with($note)->floatval(3);
-      } elseif (is_string($note)) {
-        if ($res === null) $res = cl::get(self::RES_MAP, $note, $note);
-        $note = null;
-      }
-    }
-    if ($ectsCol !== null) {
-      $ects = $row[$ses["col_indexes"][$ectsCol]];
-      if (is_numeric($ects)) {
-        $ects = bcnumber::with($ects)->numval(3);
-      } elseif (is_string($ects)) {
-        $ects = cl::get(self::RES_MAP, $ects, $ects);
-      }
-    }
-    return [
-      "note" => $note,
-      "res" => $res,
-      "ects" => $ects,
-    ];
-  }
-
-  function getAcqNoteResEcts(array $row, array $obj): array {
-    $ses = $obj["ses"];
-    $acq = $this->getAcq($row, $obj["acq"]);
-    $noteResEcts = $this->getNoteResEcts($row, $ses);
-    $pjCol = $ses["col_indexes"][$ses["pj_col"]] ?? null;
-    $coeffCol = $ses["col_indexes"]["Coefficient"] ?? null;
-    return cl::merge($acq, $noteResEcts, [
-      "pj" => $row[$pjCol] ?? null,
-      "coeff" => $row[$coeffCol] ?? null,
-    ]);
-  }
-
-  function compareCodApr(array $a, array $b) {
-    $comparator = cl::compare(["+0", "+1", "+2"]);
-    return $comparator($a, $b);
-  }
-
-  function compareNom(array $a, array $b) {
-    $comparator = cl::compare(["+1", "+2"]);
-    return $comparator($a, $b);
-  }
-
   function compareNote(array $rowa, array $rowb) {
     $obj = cl::first($this->pvData->ws["objs"]);
     ["note" => $notea,
-    ] = $this->getAcqNoteResEcts($rowa, $obj);
+    ] = $this->getAcqNoteResEctsPjCoeff($rowa, $obj["ses"], $obj["acq"]);
     ["note" => $noteb,
-    ] = $this->getAcqNoteResEcts($rowb, $obj);
+    ] = $this->getAcqNoteResEctsPjCoeff($rowb, $obj["ses"], $obj["acq"]);
     if (!is_numeric($notea)) $notea = -1;
     if (!is_numeric($noteb)) $noteb = -1;
     $c = -cv::compare($notea, $noteb);
@@ -397,7 +307,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
       "ects" => $ects,
       "pj" => $pj,
       "coeff" => $coeff,
-    ] = $this->getAcqNoteResEcts($row, $obj);
+    ] = $this->getAcqNoteResEctsPjCoeff($row, $obj["ses"], $obj["acq"]);
 
     $nses = $ses["nses"] ?? null;
     if ($acquis !== null && $res === "AJ" && $nses !== null) {
@@ -407,7 +317,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
         "note" => $nnote,
         "res" => $nres,
         "ects" => $nects,
-      ] = $this->getNoteResEcts($row, $nses);
+      ] = $this->getNoteResEctsPj($row, $nses);
       if (str::starts_with("ADM", $nres)) {
         [$note, $res, $ects] = [$nnote, $nres, $nects];
       }
@@ -475,7 +385,7 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     [
       "note" => $note,
       "res" => $res,
-    ] = $this->getNoteResEcts($row, $ctl);
+    ] = $this->getNoteResEctsPj($row, $ctl);
 
     $brow1[] = $note;
     $brow1Styles[] = [
@@ -709,25 +619,9 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     ];
   }
 
-  function compute(?PvData $pvData=null): static {
-    $this->ensurePvData($pvData);
-
-    A::merge($pvData->ws, [
-      "sheet_pv" => [
-        "headers" => null,
-        "headers_cols_styles" => null,
-        "body" => null,
-        "body_cols_styles" => null,
-        "footer" => null,
-        "footer_cols_styles" => null,
-      ],
-      "sheet_totals" => [
-        "headers" => null,
-        "headers_cols_styles" => null,
-        "body" => null,
-        "body_cols_styles" => null,
-      ],
-    ]);
+  function compute(): static {
+    $pvData = $this->pvData;
+    $this->preparePvData($pvData);
     $this->prepareLayout();
 
     $rows = $pvData->rows;
@@ -750,8 +644,8 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     return $this;
   }
 
-  protected function writeRows(?PvData $pvData=null): void {
-    $this->ensurePvData($pvData);
+  protected function writeRows(): void {
+    $pvData = $this->pvData;
     /** @var SpoutBuilder $builder */
     $builder = $this->builder;
     $ws = $pvData->ws;
@@ -819,7 +713,134 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     $builder->write(cl::merge($prefix, ["Les membres du jury"]), null, $rowStyle);
   }
 
-  function print(): void {
+  #############################################################################
+
+  protected ?Form $form = null;
+
+  function getForm(): Form {
+    if ($this->form === null) {
+      $sessions = $this->getSessions();
+      $this->form = new FormBasic([
+        "method" => "post",
+        "schema" => [
+          "ises" => ["?int", null, "Session"],
+          "order" => ["string", null, "Ordre"],
+          "xc" => ["bool", null, "NE PAS inclure les controles"],
+          "xe" => ["bool", null, "Exclure les objets pour lesquels il n'y a ni note ni résultat"],
+          "objs" => ["array", [], "Objets à inclure dans l'édition"],
+        ],
+        "params" => [
+          "convert" => ["control" => "hidden", "value" => 1],
+          "ises" => cl::merge([
+            "control" => "select",
+            "items" => $sessions,
+          ], count($sessions) > 1? [
+            "no_item_value" => "",
+            "no_item_text" => "-- Veuillez choisir la session --",
+          ]: null),
+          "xc" => [
+            "control" => "hidden",
+            "value" => false,
+            //"control" => "checkbox",
+            //"value" => 1,
+          ],
+          "order" => [
+            "control" => "select",
+            "items" => [
+              [self::ORDER_MERITE, "Classer par mérite (note)"],
+              [self::ORDER_ALPHA, "Classer par ordre alphabétique (nom)"],
+              [self::ORDER_CODAPR, "Classer par numéro apprenant"],
+            ],
+          ],
+          "xe" => [
+            "control" => "checkbox",
+            "value" => 1,
+          ],
+          "objs" => false,
+        ],
+        "submit" => [
+          "Editer le PV",
+          "name" => "action",
+          "value" => "convert",
+          "accesskey" => "s",
+          "class" => "btn-primary"
+        ],
+        "submitted_key" => "convert",
+        "autoload_params" => true,
+      ]);
+    }
+    return $this->form;
+  }
+
+  function checkForm(): bool {
+    $form = $this->getForm();
+    if ($form->isSubmitted()) {
+      al::reset();
+      if ($form["ises"] === null) {
+        al::error("Vous devez choisir la session");
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function printForm(): void {
+    $form = $this->getForm();
+    $form->printAlert();
+    $form->printStart();
+    $form->printControl("convert");
+    $form->printControl("ises");
+    $form->printControl("xc");
+    $form->printControl("order");
+
+    $sm = new showmorePlugin();
+    $sm->printStartc();
+    vo::p([
+      "<em>Exclusion d'objets maquettes</em> : ",
+      "vous pouvez exclure certains objets de l'édition du PV. ",
+      $sm->invite("Afficher la liste des objets maquettes..."),
+    ]);
+    $sm->printStartp();
+    $form->printControl("xe");
+    vo::sdiv(["class" => "form-group"]);
+    foreach ($this->getObjs() as $iobj => $obj) {
+      if (str_contains($iobj, ".")) {
+        $form->printCheckbox("Inclure $obj", "objs[]", $iobj, true, [
+          "naked" => true,
+          "naked_label" => true,
+        ]);
+      } else {
+        vo::p(v::b($obj));
+      }
+    }
+    vo::ediv();
+    $sm->printEnd();
+
+    $form->printControl("");
+    $form->printEnd();
+  }
+
+  function doFormAction(?array $params=null): void {
+    $form = $this->getForm();
+    if ($params["add_coeff_col"] ?? false) $this->setAddCoeffCol();
+    $this->setIses($form["ises"]);
+    $this->setOrder($form["order"]);
+    $this->setExcludeControles(boolval($form["xc"]));
+    $this->setExcludeUnlessHaveValue(boolval($form["xe"]));
+    $this->setIncludeObjs($form["objs"] ?? []);
+    $suffix = $this->getSuffix();
+    $output = path::filename($this->pvData->origname);
+    $output = path::ensure_ext($output, "-$suffix.xlsx", ".csv");
+    try {
+      $this->build($output)->send();
+    } catch (Exception $e) {
+      al::error($e->getMessage());
+    }
+  }
+
+  #############################################################################
+
+  function printSession(): void {
     $ws = $this->pvData->ws;
     $pv = $ws["sheet_pv"];
 
@@ -852,5 +873,23 @@ class CsvPvModel1Builder extends CsvPvBuilder {
     }
     vo::end("tfoot");
     vo::etable();
+  }
+
+  function print(?array $params=null): void {
+    $pvData = $this->pvData;
+    $this->setExcludeUnlessHaveValue(true);
+    if ($params["add_coeff_col"] ?? false) $this->setAddCoeffCol();
+    foreach ($this->getSessions() as [$ises, $session]) {
+      $this->setIses($ises);
+      $this->compute();
+      vo::h2($session);
+      if ($pvData->ws["resultats"] === null) {
+        vo::p([
+          "class" => "alert alert-warning",
+          "Pour information, le fichier ne contient pas de résultats sur l'objet délibéré. L'encart 'nb étudiants/admis/ajournés' sera vide lors de l'édition"
+        ]);
+      }
+      $this->printSession();
+    }
   }
 }
