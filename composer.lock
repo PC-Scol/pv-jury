@@ -276,7 +276,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "2af9b0b8f03e12f73b3eb6edd39e24ef731db7eb"
+                "reference": "89f24d8d900208cc0acbd61b650ffb0e24e41fca"
             },
             "require": {
                 "ext-json": "*",
@@ -316,7 +316,7 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2025-04-23T07:56:51+00:00"
+            "time": "2025-04-28T01:06:24+00:00"
         },
         {
             "name": "nulib/phpss",
