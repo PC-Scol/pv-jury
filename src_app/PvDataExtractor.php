@@ -27,27 +27,46 @@ class PvDataExtractor {
   }
 
   static function parse2_gpts(array $row, array &$data): bool {
+    if (!cl::all_n($row)) $data["headers"][] = $row;
+    array_splice($row, 0, 3);
+    $data["gpts"] = $row;
+    return true;
+  }
+
+  static function parse3_objs(array $row, array &$data): bool {
     $c = new class($data) extends stdClass {
       public array $data;
-      public bool $newGpt = true;
-      public ?array $gpt = null;
+      public array $gpts;
+      public int $igpt = 0;
+      public bool $newObj = true;
+      public ?array $objs;
+      public int $iobj = 0;
+      public ?array $obj = null;
 
       function __construct(array &$data) {
         $this->data =& $data;
+        $this->gpts = $data["gpts"];
+        $this->objs =& $data["objs"];
       }
 
       function new($col): bool {
-        if (!$this->newGpt) return false;
-        $this->gpt = [
+        if (!$this->newObj) return false;
+        $this->obj = [
+          "iobj" => $this->iobj++,
           "title" => $col,
+          "gpt_parent" => false,
+          "gpt_count" => 0,
+          "gpt_title" => $this->gpts[$this->igpt],
           "size" => 1,
         ];
-        $this->newGpt = false;
+        $this->igpt++;
+        $this->newObj = false;
         return true;
       }
 
       function grow(): void {
-        $this->gpt["size"]++;
+        $this->igpt++;
+        $this->obj["size"]++;
       }
 
       function shouldCommit($col): bool {
@@ -55,14 +74,10 @@ class PvDataExtractor {
       }
 
       function commit(): void {
-        if ($this->newGpt) return;
-        $this->data["gpts"][] = $this->gpt;
-        $this->data["gpt_objs"][] = [
-          "title" => $this->gpt["title"],
-          "objs" => [],
-        ];
-        $this->newGpt = true;
-        $this->gpt = null;
+        if ($this->newObj) return;
+        $this->objs[] = $this->obj;
+        $this->newObj = true;
+        $this->obj = null;
       }
     };
 
@@ -78,84 +93,35 @@ class PvDataExtractor {
       }
     }
     $c->commit();
-    return true;
-  }
 
-  static function parse3_objs(array $row, array &$data): bool {
-    $c = new class($data) extends stdClass {
-      public array $data;
-      public int $igpt;
-      public ?array $gpt;
-      public ?array $gptsObjs;
-      public bool $newObj = true;
-      public ?array $obj = null;
-      public int $wobj = 0;
-
-      function __construct(array &$data) {
-        $this->data =& $data;
-        $this->igpt = 0;
-        $this->gpt =& $this->data["gpts"][$this->igpt];
-        $this->gptsObjs =& $this->data["gpt_objs"][$this->igpt];
-      }
-
-      function new($col): bool {
-        if (!$this->newObj) return false;
-        $this->obj = [
-          "title" => $col,
-          "size" => 1,
-        ];
-        $this->wobj++;
-        $this->newObj = false;
-        return true;
-      }
-
-      function grow(): void {
-        $this->obj["size"]++;
-        $this->wobj++;
-      }
-
-      function shouldCommit($col): bool {
-        return $col !== null;
-      }
-
-      function commit(bool $next=true): void {
-        if ($this->newObj) return;
-        $this->gpt["objs"][] = $this->obj;
-        $this->gptsObjs["objs"][] = $this->obj["title"];
-        $this->newObj = true;
-        $this->obj = null;
-        if ($next && $this->wobj >= $this->gpt["size"]) {
-          $igpt = ++$this->igpt;
-          $this->gpt =& $this->data["gpts"][$igpt];
-          $this->gptsObjs =& $this->data["gpt_objs"][$igpt];
-          $this->wobj = 0;
-        }
-      }
-    };
-
-    if (!cl::all_n($row)) $data["headers"][] = $row;
-    array_splice($row, 0, 3);
-    foreach ($row as $col) {
-      if ($c->new($col)) continue;
-      if ($c->shouldCommit($col)) {
-        $c->commit();
-        $c->new($col);
+    # mettre à jour gpt_parent et gpt_count
+    $haveGpts = false;
+    $parentObj = null;
+    $prevObj = null;
+    foreach ($data["objs"] as &$obj) {
+      if ($obj["gpt_title"] !== null) $haveGpts = true;
+      if ($prevObj !== null && $prevObj["gpt_title"] === null && $obj["gpt_title"] !== null) {
+        $prevObj["gpt_parent"] = true;
+        $parentObj =& $prevObj;
+        $parentObj["gpt_count"]++;
+      } elseif ($prevObj !== null && $prevObj["gpt_title"] !== null && $obj["gpt_title"] !== null) {
+        $parentObj["gpt_count"]++;
       } else {
-        $c->grow();
+        unset($parentObj);
+        $parentObj = null;
       }
-    }
-    $c->commit(false);
+      $prevObj =& $obj;
+    }; unset($obj);
+    $data["have_gpts"] = $haveGpts;
+
     return true;
   }
 
   static function parse4_sess(array $row, array &$data): bool {
     $c = new class($data) extends stdClass {
       public array $data;
-      public int $igpt;
-      public ?array $gpt;
       public int $iobj;
       public ?array $obj;
-      public int $wobj = 0;
       public bool $newSes = true;
       public ?array $ses = null;
       public int $ises = 0;
@@ -163,10 +129,8 @@ class PvDataExtractor {
 
       function __construct(array &$data) {
         $this->data =& $data;
-        $this->igpt = 0;
-        $this->gpt =& $this->data["gpts"][$this->igpt];
         $this->iobj = 0;
-        $this->obj =& $this->gpt["objs"][$this->iobj];
+        $this->obj =& $this->data["objs"][$this->iobj];
       }
 
       function new($col): bool {
@@ -188,22 +152,18 @@ class PvDataExtractor {
           "pj_col" => null,
           "is_controle" => false,
         ];
-        $this->wobj++;
         $this->wses++;
         $this->newSes = false;
         return true;
       }
 
-      function grow($col): void {
+      function grow(): void {
         $this->ses["size"]++;
-        $this->wobj++;
         $this->wses++;
       }
 
       function shouldCommit($col): bool {
-        return $col !== null
-          || $this->wobj >= $this->gpt["size"]
-          || $this->wses >= $this->obj["size"];
+        return $col !== null || $this->wses >= $this->obj["size"];
       }
 
       function commit(bool $next=true): void {
@@ -234,18 +194,10 @@ class PvDataExtractor {
 
         $this->newSes = true;
         $this->ses = null;
-        if ($next) {
-          if ($this->wobj >= $this->gpt["size"]) {
-            $this->gpt =& $this->data["gpts"][++$this->igpt];
-            $this->obj =& $this->gpt["objs"][$this->iobj = 0];
-            $this->wobj = 0;
-            $this->ises = 0;
-            $this->wses = 0;
-          } elseif ($this->wses >= $this->obj["size"]) {
-            $this->obj =& $this->gpt["objs"][++$this->iobj];
-            $this->ises = 0;
-            $this->wses = 0;
-          }
+        if ($next && $this->wses >= $this->obj["size"]) {
+          $this->obj =& $this->data["objs"][++$this->iobj];
+          $this->ises = 0;
+          $this->wses = 0;
         }
       }
     };
@@ -258,7 +210,7 @@ class PvDataExtractor {
         $c->commit();
         $c->new($col);
       } else {
-        $c->grow($col);
+        $c->grow();
       }
     }
     $c->commit(false);
@@ -268,8 +220,6 @@ class PvDataExtractor {
   static function parse5_cols(array $row, array &$data): bool {
     $c = new class($data) extends stdClass {
       public array $data;
-      public int $xgpt = 0;
-      public ?array $gpt;
       public int $xobj = 0;
       public ?array $obj;
       public int $xses = 0;
@@ -277,8 +227,7 @@ class PvDataExtractor {
 
       function __construct(array &$data) {
         $this->data =& $data;
-        $this->gpt =& $this->data["gpts"][$this->xgpt];
-        $this->obj =& $this->gpt["objs"][$this->xobj];
+        $this->obj =& $this->data["objs"][$this->xobj];
         $this->ses =& $this->obj["sess"][$this->xses];
       }
 
@@ -304,17 +253,12 @@ class PvDataExtractor {
           if ($this->xses >= count($this->obj["sess"])) {
             $this->xses = 0;
             $this->xobj++;
-            if ($this->xobj >= count($this->gpt["objs"])) {
-              $this->xobj = 0;
-              $this->xgpt++;
-              if ($this->xgpt >= count($this->data["gpts"])) {
-                $updateRefs = false;
-              }
+            if ($this->xobj >= count($this->data["objs"])) {
+              $updateRefs = false;
             }
           }
           if ($updateRefs) {
-            $this->gpt =& $this->data["gpts"][$this->xgpt];
-            $this->obj =& $this->gpt["objs"][$this->xobj];
+            $this->obj =& $this->data["objs"][$this->xobj];
             $this->ses =& $this->obj["sess"][$this->xses];
           }
         }
@@ -333,78 +277,74 @@ class PvDataExtractor {
   static function parse6_row(array $row, array &$data): void {
     $codApr = $row[0];
     $sindex = 3;
-    foreach ($data["gpts"] as &$gpt) {
-      foreach ($gpt["objs"] as &$obj) {
-        foreach ($obj["sess"] as &$ses) {
-          $noteCol = $ses["note_col"];
-          $resCol = $ses["res_col"];
-          foreach ($ses["cols"] as $col) {
-            $value = $row[$sindex];
-            if ($value === "-") $row[$sindex] = $value = null;
-            # ne pas considérer Barème quand il s'agit de décider s'il y a une
-            # valeur
-            if ($col === "Barème") $isValue = false;
-            else $isValue = $value !== null;
-            $ses["have_value"] = $ses["have_value"] || $isValue;
-            $haveNote = $col === $noteCol && $isValue;
-            $ses["have_note"] = $ses["have_note"] || $haveNote;
-            $haveRes = $col === $resCol && $isValue;
-            $ses["have_res"] = $ses["have_res"] || $haveRes;
-            $sindex++;
-          }
-        }; unset($ses);
-      }; unset($obj);
-    }; unset($gpt);
+    foreach ($data["objs"] as &$obj) {
+      foreach ($obj["sess"] as &$ses) {
+        $noteCol = $ses["note_col"];
+        $resCol = $ses["res_col"];
+        foreach ($ses["cols"] as $col) {
+          $value = $row[$sindex];
+          if ($value === "-") $row[$sindex] = $value = null;
+          # ne pas considérer Barème quand il s'agit de décider s'il y a une
+          # valeur
+          if ($col === "Barème") $isValue = false;
+          else $isValue = $value !== null;
+          $ses["have_value"] = $ses["have_value"] || $isValue;
+          $haveNote = $col === $noteCol && $isValue;
+          $ses["have_note"] = $ses["have_note"] || $haveNote;
+          $haveRes = $col === $resCol && $isValue;
+          $ses["have_res"] = $ses["have_res"] || $haveRes;
+          $sindex++;
+        }
+      }; unset($ses);
+    }; unset($obj);
     $data["rows"][$codApr] = $row;
   }
 
   static function update_metadata(array &$data): void {
     $sesCols =& $data["ses_cols"];
     $ctlCols =& $data["ctl_cols"];
-    foreach ($data["gpts"] as &$gpt) {
-      foreach ($gpt["objs"] as &$obj) {
-        $cses = null;
-        $pses = null;
-        foreach ($obj["sess"] as $ises => &$ses) {
-          $title = $ses["title"];
-          $isAcquis = $ses["is_acquis"] = $title === null && $ses["acquis_col"] !== null;
-          $isSession = $ses["is_session"];
-          $isControle = $ses["is_controle"];
-          if ($isSession) {
-            if ($cses !== null) $pses =& $cses;
-            $cses =& $ses;
-          }
-          if (($isAcquis || $isSession) && !isset($sesCols[$ises]["cols"])) {
-            A::merge($sesCols[$ises], cl::select($ses, [
-              "have_value", "have_note", "have_res",
-              "is_acquis",
-              "acquis_col",
-              "is_session",
-              "note_col", "res_col", "ects_col", "pj_col",
-              "is_controle",
-              "cols",
-            ]));
-          }
-          if ($isControle && !isset($ctlCols[$title]["cols"])) {
-            A::merge($ctlCols[$title], cl::select($ses, [
-              "have_value", "have_note", "have_res",
-              "is_acquis",
-              "acquis_col",
-              "is_session",
-              "note_col", "res_col", "ects_col", "pj_col",
-              "is_controle",
-              "cols",
-            ]));
-          }
-          if ($cses !== null) {
-            if ($isControle) $cses["ctls"][] = $ses;
-            if ($pses !== null && $pses["is_session_n"]) $pses["nses"] = $ses;
-          }
-        }; unset($ses);
-        unset($cses);
-        unset($pses);
-      }; unset($obj);
-    }; unset($gpt);
+    foreach ($data["objs"] as &$obj) {
+      $cses = null;
+      $pses = null;
+      foreach ($obj["sess"] as $ises => &$ses) {
+        $title = $ses["title"];
+        $isAcquis = $ses["is_acquis"] = $title === null && $ses["acquis_col"] !== null;
+        $isSession = $ses["is_session"];
+        $isControle = $ses["is_controle"];
+        if ($isSession) {
+          if ($cses !== null) $pses =& $cses;
+          $cses =& $ses;
+        }
+        if (($isAcquis || $isSession) && !isset($sesCols[$ises]["cols"])) {
+          A::merge($sesCols[$ises], cl::select($ses, [
+            "have_value", "have_note", "have_res",
+            "is_acquis",
+            "acquis_col",
+            "is_session",
+            "note_col", "res_col", "ects_col", "pj_col",
+            "is_controle",
+            "cols",
+          ]));
+        }
+        if ($isControle && !isset($ctlCols[$title]["cols"])) {
+          A::merge($ctlCols[$title], cl::select($ses, [
+            "have_value", "have_note", "have_res",
+            "is_acquis",
+            "acquis_col",
+            "is_session",
+            "note_col", "res_col", "ects_col", "pj_col",
+            "is_controle",
+            "cols",
+          ]));
+        }
+        if ($cses !== null) {
+          if ($isControle) $cses["ctls"][] = $ses;
+          if ($pses !== null && $pses["is_session_n"]) $pses["nses"] = $ses;
+        }
+      }; unset($ses);
+      unset($cses);
+      unset($pses);
+    }; unset($obj);
   }
 
   function extract($input): PvData {
@@ -435,8 +375,9 @@ class PvDataExtractor {
       "origname" => $origname,
       "name" => $name,
       "date" => $date,
+      "have_gpts" => false,
       "gpts" => null,
-      "gpt_objs" => null,
+      "objs" => null,
       "ses_cols" => null,
       "ctl_cols" => null,
       "title" => null,

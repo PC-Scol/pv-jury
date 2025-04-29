@@ -5,6 +5,7 @@ use app\config\bootstrap;
 use app\pvs;
 use nulib\app\cli\Application;
 use nulib\os\sh;
+use nulib\output\msg;
 
 class RebuildApp extends Application {
   const PROJDIR = __DIR__.'/../..';
@@ -27,6 +28,7 @@ class RebuildApp extends Application {
   function main() {
     $storageFile = pvs::storage_file();
     if ($this->clean && file_exists($storageFile)) {
+      msg::info("clean storage");
       unlink($storageFile);
     }
 
@@ -35,13 +37,19 @@ class RebuildApp extends Application {
       $channel = pvs::channel();
       $channel->setRebuilder(true);
       foreach ($files as $file) {
-        $channel->charge($file);
+        $filename = basename($file);
+        msg::action("chargement de $filename", function() use ($channel, $file) {
+          $channel->charge($file);
+        });
       }
     } else {
       $files = sh::ls_pfiles(pvs::file(null), "*.json");
       $channel = pvs::channel_rebuilder();
       foreach ($files as $file) {
-        $channel->charge($file);
+        $filename = basename($file);
+        msg::action("chargement de $filename", function() use ($channel, $file) {
+          $channel->charge($file);
+        });
       }
     }
   }

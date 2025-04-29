@@ -8,6 +8,7 @@ use nulib\cv;
 use nulib\ext\spout\SpoutBuilder;
 use nulib\os\path;
 use nulib\str;
+use nur\b\values\Breaker;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormBasic;
@@ -64,11 +65,10 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
 
   function setIncludeObjs(?array $includeObjs): static {
     if ($includeObjs !== null) {
-      $objs = [[true]]; // toujours inclure 0.0
-      foreach ($includeObjs as &$includeObj) {
-        [$igpt, $iobj] = str::split_pair($includeObj, ".");
-        $objs[$igpt][$iobj] = true;
-      }; unset($includeObj);
+      $objs = [[true]]; // toujours inclure 0
+      foreach ($includeObjs as $includeObj) {
+        $objs[$includeObj] = true;
+      }
       $includeObjs = $objs;
     }
     $this->includeObjs = $includeObjs;
@@ -77,7 +77,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
 
   protected function shouldExcludeObj(array $obj): bool {
     if ($this->includeObjs === null) return false;
-    $includeObjet = $this->includeObjs[$obj["igpt"]][$obj["iobj"]] ?? false;
+    $includeObjet = $this->includeObjs[$obj["iobj"]] ?? false;
     return !$includeObjet;
   }
 
@@ -93,79 +93,72 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
     $data = $pvData->data;
     $ws =& $pvData->ws;
 
-    $haveGpt = false;
     $firstObj = true;
     $titleObj = null;
     $titleSes = null;
     $objs = [];
     # construire la liste des objets
-    foreach ($data["gpts"] as $igpt => $gpt) {
-      if ($gpt["title"] !== null) $haveGpt = true;
-      foreach ($gpt["objs"] as $iobj => $obj) {
-        if ($firstObj) {
-          $titleObj = $obj["title"];
-          self::split_code_title($titleObj);
-        }
-        $obj["igpt"] = $igpt;
-        $obj["iobj"] = $iobj;
-        # ne garder que les acquis et les sessions sélectionnées
-        $sess = null;
-        $sesTitles = [];
-        foreach ($obj["sess"] as $ises => $ses) {
-          if ($titleSes === null) {
-            $sesTitle = $ses["title"];
-            if ($sesTitle !== null) $sesTitles[] = $sesTitle;
-          }
-          # filtrer les "sessions"
-          // les acquis sont toujours sélectionnés
-          // jamais les contrôles
-          if ($ses["is_controle"]) continue;
-          // les sessions si elles sont sélectionnées
-          if ($ses["is_session"] && $this->shouldExcludeIses($ises)) {
-            $ses["show_cols"] = null;
-          } else {
-            # calculer les colonnes à afficher
-            // pour la session
-            $ses["show_cols"] = $this->getShowCols($this->icols, $ses);
-            // pour les controles
-            $ctls = $ses["ctls"] ?? null;
-            if ($ctls !== null) {
-              $showCtls = null;
-              foreach ($ctls as $ctl) {
-                $ctl["show_cols"] = $this->getShowCols($this->icols, $ctl);
-                if ($ctl["show_cols"] !== null) $showCtls[] = $ctl;
-              }
-              if ($showCtls !== null) $ses["ctls"] = $showCtls;
-              else unset($ses["ctls"]);
-            }
-          }
-          $sess[$ises] = $ses;
-        }
-        $obj["sess"] = $sess;
-        if ($titleSes === null) $titleSes = implode(", ", $sesTitles);
-        # filtrer ceux qui n'ont pas de données
-        if ($firstObj) {
-          # toujours inclure le premier objet
-          $includeObj = true;
-        } elseif ($sess === null) {
-          $includeObj = false;
-        } elseif ($this->excludeUnlessHaveValue) {
-          $haveValue = false;
-          foreach ($obj["sess"] as $ses) {
-            if ($ses["have_value"]) {
-              $haveValue = true;
-              break;
-            }
-          }
-          $includeObj = $haveValue;
-        } else {
-          $includeObj = true;
-        }
-        if ($includeObj) $objs[] = $obj;
-        $firstObj = false;
+    foreach ($data["objs"] as $obj) {
+      if ($firstObj) {
+        $titleObj = $obj["title"];
+        self::split_code_title($titleObj);
       }
+      # ne garder que les acquis et les sessions sélectionnées
+      $sess = null;
+      $sesTitles = [];
+      foreach ($obj["sess"] as $ises => $ses) {
+        if ($titleSes === null) {
+          $sesTitle = $ses["title"];
+          if ($sesTitle !== null) $sesTitles[] = $sesTitle;
+        }
+        # filtrer les "sessions"
+        // les acquis sont toujours sélectionnés
+        // les contrôles ne sont jamais sélectionnés
+        if ($ses["is_controle"]) continue;
+        // les sessions sont sélectionnées si l'utilisateur le demande
+        if ($ses["is_session"] && $this->shouldExcludeIses($ises)) {
+          $ses["show_cols"] = null;
+        } else {
+          # calculer les colonnes à afficher
+          // pour la session
+          $ses["show_cols"] = $this->getShowCols($this->icols, $ses);
+          // pour les controles
+          $ctls = $ses["ctls"] ?? null;
+          if ($ctls !== null) {
+            $showCtls = null;
+            foreach ($ctls as $ctl) {
+              $ctl["show_cols"] = $this->getShowCols($this->icols, $ctl);
+              if ($ctl["show_cols"] !== null) $showCtls[] = $ctl;
+            }
+            if ($showCtls !== null) $ses["ctls"] = $showCtls;
+            else unset($ses["ctls"]);
+          }
+        }
+        $sess[$ises] = $ses;
+      }
+      $obj["sess"] = $sess;
+      if ($titleSes === null) $titleSes = implode(", ", $sesTitles);
+      # filtrer ceux qui n'ont pas de données
+      if ($firstObj) {
+        # toujours inclure le premier objet
+        $includeObj = true;
+      } elseif ($sess === null) {
+        $includeObj = false;
+      } elseif ($this->excludeUnlessHaveValue) {
+        $haveValue = false;
+        foreach ($obj["sess"] as $ses) {
+          if ($ses["have_value"]) {
+            $haveValue = true;
+            break;
+          }
+        }
+        $includeObj = $haveValue;
+      } else {
+        $includeObj = true;
+      }
+      if ($includeObj) $objs[] = $obj;
+      $firstObj = false;
     }
-    $ws["have_gpt"] = $haveGpt;
     $ws["objs"] = $objs;
 
     $ws["document"]["title"] = [
@@ -177,7 +170,9 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
   }
 
   protected function getBuilderParams(): ?array {
-    $title = $this->pvData->ws["document"]["title"][1];
+    $pvData = $this->pvData;
+    $haveGpts = $pvData->data["have_gpts"];
+    $title = $pvData->ws["document"]["title"][1];
     $footer = htmlspecialchars("&L$title&RPage &P / &N");
     return [
       "spout" => [
@@ -190,7 +185,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
         "different_odd_even" => false,
       ],
       "sheet_view" => [
-        "->setFreezeRow" => 9,
+        "->setFreezeRow" => $haveGpts? 10: 9,
         "->setFreezeColumn" => "E",
       ],
     ];
@@ -202,34 +197,78 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
     "bg_color" => "white",
   ];
 
+  const HCOL_OBJ = 0, HCOL_PARENT = 1, HCOL_CHILD = 2;
+
+  const HROW_BORDERS = [
+    "without_gpts" => [
+      self::HCOL_OBJ => [
+        "one" => [1 => "all medium"],
+        "left" => [1 => "top left bottom medium"],
+        "middle" => [1 => "top bottom medium"],
+        "right" => [1 => "top right bottom medium"],
+      ],
+    ],
+    "with_gpts" => [
+      self::HCOL_OBJ => [
+        "one" => ["left top right medium", "left bottom right medium"],
+        "left" => ["left top medium", "left bottom medium"],
+        "middle" => ["top medium", "bottom medium"],
+        "right" => ["top right medium", "right bottom medium"],
+      ],
+      self::HCOL_PARENT => [
+        "one" => ["left top medium", "left bottom right medium"],
+        "left" => ["left top medium", "left bottom medium"],
+        "middle" => ["top medium", "bottom medium"],
+        "right" => ["top medium", "right bottom medium"],
+      ],
+      self::HCOL_CHILD => [
+        "one" => ["top right medium", "all thin"],
+        "left" => ["top medium", "top medium, left bottom thin"],
+        "middle" => ["top medium", "top medium, bottom thin"],
+        "right" => ["top right medium", "top medium, right bottom thin"],
+      ],
+    ],
+  ];
+
   protected static function addHcol(
     $value, ?array $colStyles,
     array &$hrow, array &$hrow_colsStyles,
-    ?int &$colIndex=null, ?int $maxIndex=null, ?bool $oneCol=null,
+    ?int &$colIndex=null, ?int $maxIndex=null, ?bool $oneCol=null, bool $incColIndex=true,
+    ?array $thicknessMap=null, bool $haveGpts=false, int $hcolType=self::HCOL_OBJ, int $hrowNum=1,
+    ?string $hcolKey=null,
   ): void {
     if ($colIndex !== null) {
-      if ($oneCol) {
+      $gptKey = $haveGpts? "with_gpts" : "without_gpts";
+      if (($hcolKey === null && $oneCol) || $hcolKey === "one") {
+        $border = self::HROW_BORDERS[$gptKey][$hcolType]["one"][$hrowNum];
+        $border = str::replace($border, $thicknessMap);
         A::merge($colStyles, [
           "font" => ["bold" => true],
-          "border" => "all thin",
+          "border" => $border,
         ]);
-      } elseif ($colIndex == 0) {
+      } elseif (($hcolKey === null && $colIndex == 0) || $hcolKey === "left") {
+        $border = self::HROW_BORDERS[$gptKey][$hcolType]["left"][$hrowNum];
+        $border = str::replace($border, $thicknessMap);
         A::merge($colStyles, [
           "font" => ["bold" => true],
-          "border" => "top left bottom thin",
+          "border" => $border,
         ]);
-      } elseif ($colIndex == $maxIndex) {
+      } elseif (($hcolKey === null && $colIndex == $maxIndex) || $hcolKey === "right") {
+        $border = self::HROW_BORDERS[$gptKey][$hcolType]["right"][$hrowNum];
+        $border = str::replace($border, $thicknessMap);
         A::merge($colStyles, [
           "font" => ["bold" => true],
-          "border" => "top right bottom thin",
+          "border" => $border,
         ]);
       } else {
+        $border = self::HROW_BORDERS[$gptKey][$hcolType]["middle"][$hrowNum];
+        $border = str::replace($border, $thicknessMap);
         A::merge($colStyles, [
           "font" => ["bold" => true],
-          "border" => "top bottom thin",
+          "border" => $border,
         ]);
       }
-      $colIndex++;
+      if ($incColIndex) $colIndex++;
     }
     $hrow[] = $value;
     $hrow_colsStyles[] = $colStyles;
@@ -238,7 +277,8 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
   protected function addHrow23(
     array $ses,
     array &$hrow2, array &$hrow2_colsStyles,
-    array &$hrow3, array &$hrow3_colsStyles
+    array &$hrow3, array &$hrow3_colsStyles,
+    int $headersIndex=1,
   ): int {
     $headers = $this->pvData->headers;
     $showCols = $ses["show_cols"];
@@ -247,15 +287,19 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
     $colIndex2 = 0;
     $maxIndex2 = $count2 - 1;
     $oneCol2 = $colIndex2 === $maxIndex2;
+    $firstCol = true;
     foreach ($showCols as $col => $ref) {
-      $value = $headers[1][$index2++];
+      $value = $headers[$headersIndex][$index2++];
+      if ($firstCol) $value ??= " ";
       $colStyles = null;
       self::addHcol(
         $value, $colStyles, $hrow2, $hrow2_colsStyles,
-        $colIndex2, $maxIndex2, $oneCol2,
+        $colIndex2, $maxIndex2, $oneCol2, true,
+        ["medium" => "thin"],
       );
+      $firstCol = false;
 
-      $value = $headers[2][$ses["col_indexes"][$col]];
+      $value = $headers[$headersIndex + 1][$ses["col_indexes"][$col]];
       $colStyles = [
         "font" => ["bold" => true],
         "border" => "all thin",
@@ -268,6 +312,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
 
   protected function prepareLayout(): void {
     $pvData = $this->pvData;
+    $haveGpts = $pvData->data["have_gpts"];
     $headers = $pvData->headers;
 
     $ws =& $pvData->ws;
@@ -291,12 +336,26 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
     $showColsSizes =& $ws["show_cols_sizes"];
     $Spv =& $ws["sheet_pv"];
 
-    $hrow1 = [null, null, null];
-    $hrow1_colsStyles = [
+    $hrow0 = [null, null, null];
+    $hrow0_colsStyles = [
       ["border" => "left top thin"],
       ["border" => "top thin"],
       ["border" => "top right thin"],
     ];
+    $hrow1 = [null, null, null];
+    if ($haveGpts) {
+      $hrow1_colsStyles = [
+        ["border" => "left thin"],
+        null,
+        ["border" => "right thin"],
+      ];
+    } else {
+      $hrow1_colsStyles = [
+        ["border" => "left top thin"],
+        ["border" => "top thin"],
+        ["border" => "top right thin"],
+      ];
+    }
     $hrow2 = [null, null, null];
     $hrow2_colsStyles = [
       ["border" => "left thin"],
@@ -321,10 +380,14 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
         "align" => "center", "wrap" => true,
       ],
     ];
+    $index1 = 0;
+    $breaker = new Breaker();
+    $gptTitle = null;
     foreach ($objs as $iobj => $obj) {
       if ($this->shouldExcludeObj($obj)) continue;
       $firstSes = true;
       $count1 = 0;
+      $headersIndex = $haveGpts? 2: 1;
       foreach ($obj["sess"] as $ises => $ses) {
         if ($firstSes) {
           $index1 = cl::first($ses["col_indexes"]);
@@ -332,33 +395,90 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
         }
         $showCols = $ses["show_cols"] ?? null;
         if ($showCols === null) continue;
-        $showColsSize = $this->addHrow23($ses, $hrow2, $hrow2_colsStyles, $hrow3, $hrow3_colsStyles);
+        $showColsSize = $this->addHrow23($ses, $hrow2, $hrow2_colsStyles, $hrow3, $hrow3_colsStyles, $headersIndex);
         $showColsSizes[$iobj]["ses_sizes"][$ises] = $showColsSize;
         $count1 += $showColsSize;
         $ctls = $ses["ctls"] ?? null;
         if ($ctls !== null) {
           foreach ($ctls as $ictl => $ctl) {
-            $showColsSize = $this->addHrow23($ctl, $hrow2, $hrow2_colsStyles, $hrow3, $hrow3_colsStyles);
+            $showColsSize = $this->addHrow23($ctl, $hrow2, $hrow2_colsStyles, $hrow3, $hrow3_colsStyles, $headersIndex);
             $showColsSizes[$iobj]["ctl_sizes"][$ictl] = $showColsSize;
             $count1 += $showColsSize;
           }
         }
       }
+
       $showColsSizes[$iobj]["size"] = $count1;
       $colIndex1 = 0;
       $maxIndex1 = $count1 - 1;
       $oneCol1 = $colIndex1 === $maxIndex1;
-      while ($count1-- > 0) {
-        $value = $headers[0][$index1++];
+
+      if ($obj["gpt_parent"]) {
+        $hcolType0 = self::HCOL_PARENT;
+        $gptTitle = null;
+        $colIndex0 = 0;
+        $incColIndex0 = false;
+        $maxIndex0 = $obj["gpt_count"];
+        $oneCol0 = $colIndex0 === $maxIndex0;
+        if ($oneCol0) $hcolKey0 = "one";
+        else $hcolKey0 = "left";
+        $hcolType1 = self::HCOL_PARENT;
+      } elseif ($obj["gpt_title"] !== null) {
+        $hcolType0 = self::HCOL_CHILD;
+        if ($breaker->shouldBreakOn($obj["gpt_title"])) {
+          $gptTitle = $obj["gpt_title"];
+        }
+        $colIndex0++;
+        $hcolType1 = self::HCOL_CHILD;
+      } else {
+        $hcolType0 = self::HCOL_OBJ;
+        $colIndex0 = 0;
+        $incColIndex0 = true;
+        $maxIndex0 = $maxIndex1;
+        $oneCol0 = $oneCol1;
+        $hcolKey0 = null;
+        $hcolType1 = self::HCOL_OBJ;
+      }
+
+      $headersIndex = $haveGpts? 1: 0;
+      for ($i = 0; $i < $count1; $i++) {
+        if ($haveGpts) {
+          if ($hcolKey0 === "middle" && $colIndex0 == $maxIndex0 && $colIndex1 == $maxIndex1) {
+            $hcolKey0 = "right";
+          }
+          self::addHcol(
+            $gptTitle, null, $hrow0, $hrow0_colsStyles,
+            $colIndex0, $maxIndex0, $oneCol0, $incColIndex0,
+            null, $haveGpts, $hcolType0, 0,
+            $hcolKey0,
+          );
+          $gptTitle = null;
+          if ($hcolKey0 === "left") $hcolKey0 = "middle";
+        }
+
+        $value = $headers[$headersIndex][$index1++];
         $colStyles = null;
         self::addHcol(
           $value, $colStyles, $hrow1, $hrow1_colsStyles,
-          $colIndex1, $maxIndex1, $oneCol1,
+          $colIndex1, $maxIndex1, $oneCol1, true,
+          null, $haveGpts, $hcolType1,
         );
       }
     }
-    $Spv["headers"] = [$hrow1, $hrow2, $hrow3];
-    $Spv["headers_cols_styles"] = [$hrow1_colsStyles, $hrow2_colsStyles, $hrow3_colsStyles];
+    // mettre un espace pour que le contenu de la dernière colonne ne déborde pas
+    $hrow1[] = " ";
+    $hrow2[] = " ";
+
+    $headers = [];
+    $headers_colsStyles = [];
+    if ($haveGpts) {
+      $headers[] = $hrow0;
+      $headers_colsStyles[] = $hrow0_colsStyles;
+    }
+    A::merge($headers, [$hrow1, $hrow2, $hrow3]);
+    A::merge($headers_colsStyles, [$hrow1_colsStyles, $hrow2_colsStyles, $hrow3_colsStyles]);
+    $Spv["headers"] = $headers;
+    $Spv["headers_cols_styles"] = $headers_colsStyles;
   }
 
   function compareNote(array $rowa, array $rowb) {
@@ -414,7 +534,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
         ]);
         break;
       case "res_col":
-        if ($resultats !== null && $firstObj && $res !== null) {
+        if ($firstObj && $res !== null) {
           $resultats[$codApr] = $res;
           $firstObj = false;
         }
@@ -487,7 +607,6 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
     $firstObj = true;
     $inote = 0;
     $snotes ??= [];
-    $resultats ??= [];
     foreach ($objs as $obj) {
       if ($this->shouldExcludeObj($obj)) continue;
       $acq = null;
@@ -826,15 +945,27 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
     vo::sdiv(["class" => "form-group"]);
     vo::div(["class" => $form->FGL_CLASS()]);
     vo::sdiv(["class" => $form->FGC_CLASS()]);
-    foreach ($this->getObjs() as $iobj => $obj) {
-      if (str_contains($iobj, ".")) {
-        $form->printCheckbox("Inclure $obj", "objs[]", $iobj, true, [
-          "naked" => true,
-          "naked_label" => true,
-        ]);
-      } else {
-        vo::p(v::b($obj));
+    $breaker = new Breaker();
+    $gptChildren = false;
+    foreach ($this->getSelectableObjs() as $obj) {
+      $iobj = $obj["iobj"];
+      $gptTitle = $obj["gpt_title"];
+      if ($gptChildren && $gptTitle === null) $gptChildren = false;
+      if ($gptChildren) {
+        if ($breaker->shouldBreakOn($gptTitle)) {
+          vo::p([
+            "class" => "indent1",
+            v::b($gptTitle),
+          ]);
+        }
+        vo::sdiv(["class" => "indent2"]);
       }
+      $form->printCheckbox("Inclure {$obj["title"]}", "objs[]", $iobj, true, [
+        "naked" => true,
+        "naked_label" => true,
+      ]);
+      if ($gptChildren) vo::ediv();
+      if ($obj["gpt_parent"]) $gptChildren = true;
     }
     vo::ediv();
     vo::ediv();

@@ -9,6 +9,7 @@ use nulib\ext\spout\SpoutBuilder;
 use nulib\os\path;
 use nulib\str;
 use nulib\ValueException;
+use nur\b\values\Breaker;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormBasic;
@@ -67,10 +68,9 @@ class PvModelBuilderClassicEdition extends PvModelBuilder {
 
   function setIncludeObjs(?array $includeObjs): static {
     if ($includeObjs !== null) {
-      $objs = [[true]]; // toujours inclure 0.0
-      foreach ($includeObjs as &$excludeObj) {
-        [$igpt, $iobj] = str::split_pair($excludeObj, ".");
-        $objs[$igpt][$iobj] = true;
+      $objs = [[true]]; // toujours inclure 0
+      foreach ($includeObjs as $includeObj) {
+        $objs[$includeObj] = true;
       }
       $includeObjs = $objs;
     }
@@ -80,7 +80,7 @@ class PvModelBuilderClassicEdition extends PvModelBuilder {
 
   protected function shouldExcludeObj(array $obj): bool {
     if ($this->includeObjs === null) return false;
-    $includeObjet = $this->includeObjs[$obj["igpt"]][$obj["iobj"]] ?? false;
+    $includeObjet = $this->includeObjs[$obj["iobj"]] ?? false;
     return !$includeObjet;
   }
 
@@ -93,46 +93,39 @@ class PvModelBuilderClassicEdition extends PvModelBuilder {
     ];
     $ws =& $pvData->ws;
 
-    $haveGpt = false;
     $firstObj = true;
     $titleObj = null;
     $titleSes = null;
     $objs = [];
     # construire la liste des objets
-    foreach ($data["gpts"] as $igpt => $gpt) {
-      if ($gpt["title"] !== null) $haveGpt = true;
-      foreach ($gpt["objs"] as $iobj => $obj) {
-        if ($firstObj) {
-          $titleObj = $obj["title"];
-          self::split_code_title($titleObj);
-        }
-        $obj["igpt"] = $igpt;
-        $obj["iobj"] = $iobj;
-        $obj["acq"] = null;
-        $obj["ses"] = null;
-        foreach ($obj["sess"] as $ises => $ses) {
-          if ($obj["acq"] === null && $ses["is_acquis"]) {
-            $obj["acq"] = $ses;
-          }
-          if ($obj["ses"] === null && $ises === $this->ises) {
-            $titleSes ??= $ses["title"];
-            $obj["ses"] = $ses;
-          }
-        }
-        unset($obj["sess"]);
-        # filtrer ceux qui n'ont pas de données
-        if ($firstObj) {
-          # toujours inclure le premier objet
-          $objs[] = $obj;
-        } elseif ($obj["ses"] !== null) {
-          if ($obj["ses"]["have_value"] || !$this->excludeUnlessHaveValue) {
-            $objs[] = $obj;
-          }
-        }
-        $firstObj = false;
+    foreach ($data["objs"] as $obj) {
+      if ($firstObj) {
+        $titleObj = $obj["title"];
+        self::split_code_title($titleObj);
       }
+      $obj["acq"] = null;
+      $obj["ses"] = null;
+      foreach ($obj["sess"] as $ises => $ses) {
+        if ($obj["acq"] === null && $ses["is_acquis"]) {
+          $obj["acq"] = $ses;
+        }
+        if ($obj["ses"] === null && $ises === $this->ises) {
+          $titleSes ??= $ses["title"];
+          $obj["ses"] = $ses;
+        }
+      }
+      unset($obj["sess"]);
+      # filtrer ceux qui n'ont pas de données
+      if ($firstObj) {
+        # toujours inclure le premier objet
+        $objs[] = $obj;
+      } elseif ($obj["ses"] !== null) {
+        if ($obj["ses"]["have_value"] || !$this->excludeUnlessHaveValue) {
+          $objs[] = $obj;
+        }
+      }
+      $firstObj = false;
     }
-    $ws["have_gpt"] = $haveGpt;
     $ws["objs"] = $objs;
 
     $ws["document"]["title"] = [
@@ -678,6 +671,7 @@ class PvModelBuilderClassicEdition extends PvModelBuilder {
     }
     $section_colsStyles = $Spv["footer_cols_styles"] ?? null;
     $section_rowStyles = $Spv["footer_row_styles"] ?? null;
+    $builder->write([]);
     foreach ($Spv["footer"] as $key => $row) {
       $colsStyle = $section_colsStyles[$key] ?? null;
       if ($colsStyle !== null) $colsStyle = cl::merge($prefix, $colsStyle);
@@ -803,14 +797,28 @@ class PvModelBuilderClassicEdition extends PvModelBuilder {
     $sm->printStartp();
     $form->printControl("xe");
     vo::sdiv(["class" => "form-group"]);
-    foreach ($this->getObjs() as $iobj => $obj) {
-      if (str_contains($iobj, ".")) {
-        $form->printCheckbox("Inclure $obj", "objs[]", $iobj, true, [
-          "naked" => true,
-          "naked_label" => true,
-        ]);
-      } else {
-        vo::p(v::b($obj));
+    $breaker = new Breaker();
+    $gptChildren = false;
+    foreach ($this->getSelectableObjs() as $obj) {
+      $iobj = $obj["iobj"];
+      $gptTitle = $obj["gpt_title"];
+      if ($gptChildren && $gptTitle === null) $gptChildren = false;
+      if ($gptChildren) {
+        if ($breaker->shouldBreakOn($gptTitle)) {
+          vo::p([
+            "class" => "indent1",
+            v::b($gptTitle),
+          ]);
+        }
+        vo::sdiv(["class" => "indent2"]);
+      }
+      $form->printCheckbox("Inclure {$obj["title"]}", "objs[]", $iobj, true, [
+        "naked" => true,
+        "naked_label" => true,
+      ]);
+      if ($gptChildren) vo::ediv();
+      if ($obj["gpt_parent"]) {
+        $gptChildren = true;
       }
     }
     vo::ediv();

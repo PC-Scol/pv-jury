@@ -1,0 +1,4 @@
+#!/bin/bash
+# -*- coding: utf-8 mode: sh -*- vim:sw=4:sts=4:et:ai:si:sta:fenc=utf-8
+
+../bin/convert-pv-jury.php "$@" -d 2>&1 | less -S

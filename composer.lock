@@ -276,7 +276,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "89f24d8d900208cc0acbd61b650ffb0e24e41fca"
+                "reference": "d75350d6146c640b913f916eccbb3080d7f7bca0"
             },
             "require": {
                 "ext-json": "*",
@@ -316,7 +316,7 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2025-04-28T01:06:24+00:00"
+            "time": "2025-04-29T03:37:21+00:00"
         },
         {
             "name": "nulib/phpss",
@@ -366,7 +366,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "d597525b57c21577fd9f41cefdfa5058f5219871"
+                "reference": "8b0d66a3ddb74bf3ebc3bbb3789bfb1bbbbd74bc"
             },
             "require": {
                 "ext-dom": "*",
@@ -416,7 +416,7 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2025-03-23T04:22:20+00:00"
+            "time": "2025-04-29T07:08:44+00:00"
         },
         {
             "name": "nur/ture",

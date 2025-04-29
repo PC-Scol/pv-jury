@@ -218,23 +218,13 @@ abstract class PvModelBuilder {
     return $this->sessions;
   }
 
-  protected ?array $objs = null;
+  protected ?array $selectableObjs = null;
 
-  function getObjs(): array {
-    if ($this->objs === null) {
-      $objs = [];
-      foreach ($this->pvData->gptObjs as $igpt => $gpt) {
-        $gptTitle = $gpt["title"];
-        if ($gptTitle !== null) $objs["$igpt"] = $gptTitle;
-        foreach ($gpt["objs"] as $iobj => $obj) {
-          if ($igpt !== 0 || $iobj !== 0) {
-            $objs["$igpt.$iobj"] = $obj;
-          }
-        }
-      }
-      $this->objs = $objs;
+  function getSelectableObjs(): array {
+    if ($this->selectableObjs === null) {
+      $this->selectableObjs = array_slice($this->pvData->objs, 1);
     }
-    return $this->objs;
+    return $this->selectableObjs;
   }
 
   const STD_COLS = [

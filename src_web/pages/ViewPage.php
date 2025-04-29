@@ -59,7 +59,7 @@ class ViewPage extends APvPage {
     al::reset();
     $codApr = $searchfo["a"];
     if (isset($rows[$codApr])) {
-      $builder = new PvModelBuilderDisplay();
+      $builder = new PvModelBuilderDisplay($this->pvData);
       $builder->setCodApr($codApr);
       $builder->compute($pvData);
       $this->builder = $builder;
