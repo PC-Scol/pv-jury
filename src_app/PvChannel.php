@@ -1,6 +1,7 @@
 <?php
 namespace app;
 
+use app\config\cdefaults;
 use nulib\db\CapacitorChannel;
 use nulib\file;
 use nulib\file\web\Upload;
@@ -71,5 +72,15 @@ class PvChannel extends CapacitorChannel {
       $updates["lib_usr"] = $pvalues["lib_usr"];
     }
     return $updates;
+  }
+
+  function onDelete($item, array $values): bool {
+    if (!cdefaults::KEEP_FILES_ON_DELETE) {
+      $jsonName = $values["name"];
+      @unlink(pvs::json_file($jsonName));
+      $uploadName = $values["origname"];
+      @unlink(pvs::upload_file($uploadName));
+    }
+    return true;
   }
 }
