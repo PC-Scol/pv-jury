@@ -5,21 +5,16 @@ use nulib\A;
 use nulib\cl;
 use nulib\cv;
 use nulib\str;
+use nur\b\values\Breaker;
 use nur\v\vo;
 
 /**
- * Class CsvPvModel2Builder: construire un document pouvant servir à la
- * consultation individuelle des notes et résultats pour un étudiant: affichage
- * exhaustif et en lignes
+ * Class ClassicEditionPvModelBuilder: construire un document pouvant servir à
+ * la consultation individuelle des notes et résultats pour un étudiant:
+ * affichage exhaustif et en lignes
  */
-class CsvPvModel2Builder extends CsvPvBuilder {
-  protected function verifixPvData(PVData $pvData): void {
-    $pvData->ws = [
-      "document" => null,
-      "sheet_promo" => null,
-      "sheet_stats" => null,
-      "sheet_totals" => null,
-    ];
+class PvModelBuilderDisplay extends PvModelBuilder {
+  protected function verifixPvData(): void {
   }
 
   static function prepare_layout(PvData $pvData): void {
@@ -30,42 +25,34 @@ class CsvPvModel2Builder extends CsvPvBuilder {
 
     $ws["document"]["title"] = $data["title"];
     $firstObj = true;
-    $haveGpt = false;
     $stats = [];
     $colIndexes = [];
-    foreach ($data["gpts"] as $igpt => $gpt) {
-      if ($gpt["title"] !== null) $haveGpt = true;
-      $stats[$igpt] = [];
-      $stgpt =& $stats[$igpt];
-      foreach ($gpt["objs"] as $iobj => $obj) {
-        if ($firstObj) {
-          $ws["document"]["header"] = $obj["title"];
-          $firstObj = false;
+    foreach ($data["objs"] as $iobj => $obj) {
+      if ($firstObj) {
+        $ws["document"]["header"] = $obj["title"];
+        $firstObj = false;
+      }
+      $stses =& $stats[$iobj];
+      foreach ($obj["sess"] as $ises => $ses) {
+        $sesTitle = $ses["title"];
+        $note_data = null;
+        $res_data = null;
+        if ($ses["note_col"] !== null) {
+          $note_data = [
+            "notes" => [],
+          ];
         }
-        $stgpt[$iobj] = [];
-        $stses =& $stgpt[$iobj];
-        foreach ($obj["sess"] as $ises => $ses) {
-          $sesTitle = $ses["title"];
-          $note_data = null;
-          $res_data = null;
-          if ($ses["note_col"] !== null) {
-            $note_data = [
-              "notes" => [],
-            ];
-          }
-          if ($ses["res_col"] !== null) {
-            $res_data = [
-              "resultats" => [],
-            ];
-          }
-          $stses[$ises] = cl::merge($note_data, $res_data);
-          foreach ($ses["cols"] as $col) {
-            $colIndexes[$sesTitle][$col] = null;
-          }
+        if ($ses["res_col"] !== null) {
+          $res_data = [
+            "resultats" => [],
+          ];
+        }
+        $stses[$ises] = cl::merge($note_data, $res_data);
+        foreach ($ses["cols"] as $col) {
+          $colIndexes[$sesTitle][$col] = null;
         }
       }
     }
-    $ws["have_gpt"] = $haveGpt;
 
     $offset = 0;
     foreach ($colIndexes as &$indexes) {
@@ -76,7 +63,10 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     $ws["col_indexes"] = $colIndexes;
 
     $colRow = ["Apprenant", "Objet maquette"];
-    if ($haveGpt) array_splice($colRow, 1, 0, ["Groupement"]);
+    if ($data["have_gpts"]) {
+      $colRow[] = "Groupements";
+      $colRow[] = "Objets fils";
+    }
     $sesRow = array_fill(0, count($colRow), null);
     foreach ($colIndexes as $sesTitle => $indexes) {
       $cols = array_keys($indexes);
@@ -90,12 +80,12 @@ class CsvPvModel2Builder extends CsvPvBuilder {
   static function parse_row(array $row, PvData $pvData): bool {
     $codApr = $row[0];
     $data = $pvData->data;
+    $haveGpts = $data["have_gpts"];
     $ws =& $pvData->ws;
     $promo =& $ws["sheet_promo"];
     $stats =& $ws["stats"];
     $resultats =& $ws["resultats"];
 
-    $haveGpt = $ws["have_gpt"];
     $colIndexes = $ws["col_indexes"];
     $bodyPrefix = [implode(" ", array_splice($row, 0, 3))];
 
@@ -105,50 +95,61 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     $sindex = 0;
     $firstObj = true;
     $resultat = null;
-    foreach ($data["gpts"] as $igpt => $gpt) {
-      $gptPrefix = [];
-      if ($haveGpt) {
-        $gptPrefix[] = null;
-        $gptTitle = $gpt["title"];
-        if ($gptTitle !== null) $gptPrefix[0] = $gptTitle;
-      }
-      foreach ($gpt["objs"] as $iobj => $obj) {
-        $body = cl::merge($bodyPrefix, $gptPrefix, [$obj["title"]]);
-        $dindex = count($body);
-        $computeResultat = $firstObj;
-        foreach ($obj["sess"] as $ises => $ses) {
-          $sesTitle = $ses["title"];
-          $noteCol = $ses["note_col"];
-          $resCol = $ses["res_col"];
-          A::merge($body, array_fill(0, $ses["size"], null));
-          foreach ($ses["cols"] as $col) {
-            $colIndex = $colIndexes[$sesTitle][$col];
-            $value = $row[$sindex++];
-            if ($col === $noteCol && is_numeric($value)) {
-              $stats[$igpt][$iobj][$ises]["notes"][] = $value;
-              $value = bcnumber::with($value)->floatval(3);
-            } elseif ($col === $resCol && !is_numeric($value) && $value !== "-") {
-              if ($computeResultat && str::starts_with("Session", $sesTitle)) {
-                if (preg_match("/admis/i", $value)) {
-                  $resultat = $value;
-                  $computeResultat = false;
-                } else {
-                  $resultat = $value;
-                }
-              }
-              $stats[$igpt][$iobj][$ises]["resultats"][] = $value;
-            } elseif (is_numeric($value)) {
-              $value = bcnumber::with($value)->numval(3);
-            }
-            $body[$dindex + $colIndex] = $value;
+    $breaker = new Breaker();
+    foreach ($data["objs"] as $iobj => $obj) {
+      if ($haveGpts) {
+        $gptTitle = $obj["gpt_title"];
+        if ($obj["gpt_parent"]) {
+          # parent
+          $gptTitle = null;
+          $prefix = [$obj["title"], null, null];
+        } elseif ($gptTitle !== null) {
+          # enfant
+          if ($breaker->shouldBreakOn($gptTitle)) {
+            $promo["body"][] = cl::merge($bodyPrefix, [null, $gptTitle, null]);
           }
+          $prefix = [null, null, $obj["title"]];
+        } else {
+          $prefix = [$obj["title"], null, null];
         }
-        $promo["body"][] = $body;
-        $bodyPrefix[0] = null;
-        if ($haveGpt) $gptPrefix[0] = null;
-        $firstObj = false;
-        $resultats[$codApr] = $resultat;
+      } else {
+        $prefix = [$obj["title"]];
       }
+      $body = cl::merge($bodyPrefix, $prefix);
+
+      $dindex = count($body);
+      $computeResultat = $firstObj;
+      foreach ($obj["sess"] as $ises => $ses) {
+        $sesTitle = $ses["title"];
+        $noteCol = $ses["note_col"];
+        $resCol = $ses["res_col"];
+        A::merge($body, array_fill(0, $ses["size"], null));
+        foreach ($ses["cols"] as $col) {
+          $colIndex = $colIndexes[$sesTitle][$col];
+          $value = $row[$sindex++];
+          if ($col === $noteCol && is_numeric($value)) {
+            $stats[$iobj][$ises]["notes"][] = $value;
+            $value = bcnumber::with($value)->floatval(3);
+          } elseif ($col === $resCol && !is_numeric($value) && $value !== "-") {
+            if ($computeResultat && str::starts_with("Session", $sesTitle)) {
+              if (preg_match("/admis/i", $value)) {
+                $resultat = $value;
+                $computeResultat = false;
+              } else {
+                $resultat = $value;
+              }
+            }
+            $stats[$iobj][$ises]["resultats"][] = $value;
+          } elseif (is_numeric($value)) {
+            $value = bcnumber::with($value)->numval(3);
+          }
+          $body[$dindex + $colIndex] = $value;
+        }
+      }
+      $promo["body"][] = $body;
+      $bodyPrefix[0] = null;
+      $firstObj = false;
+      $resultats[$codApr] = $resultat;
     }
     return true;
   }
@@ -158,9 +159,9 @@ class CsvPvModel2Builder extends CsvPvBuilder {
 
   static function compute_stats(PvData $pvData): void {
     $data = $pvData->data;
+    $haveGpts = $data["have_gpts"];
     $ws =& $pvData->ws;
 
-    $haveGpt = $ws["have_gpt"];
 
     # tout d'abord, calculer les stats
     foreach ($ws["stats"] as &$gpt) {
@@ -214,7 +215,7 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     $sesRow = [null];
     $col1Row = [null];
     $col2Row = ["Objet maquette"];
-    if ($haveGpt) {
+    if ($haveGpts) {
       array_splice($sesRow, 0, 0, [null]);
       array_splice($col1Row, 0, 0, [null]);
       array_splice($col2Row, 0, 0, ["Groupement"]);
@@ -245,31 +246,29 @@ class CsvPvModel2Builder extends CsvPvBuilder {
 
     # puis faire autant de lignes que nécessaire
     $body =& $ws["sheet_stats"]["body"];
-    foreach ($data["gpts"] as $igpt => $gpt) {
-      $gptTitle = $gpt["title"];
-      foreach ($gpt["objs"] as $iobj => $obj) {
-        $row = $haveGpt? [$gptTitle]: [];
-        $row[] = $obj["title"];
-        foreach ($obj["sess"] as $ises => $ses) {
-          $haveNoteCol = $ses["note_col"] !== null;
-          $haveResCol = $ses["res_col"] !== null;
-          if (!$haveNoteCol && !$haveResCol) continue;
-          if ($haveNoteCol) {
-            $noteCols = $stats[$igpt][$iobj][$ises]["note_cols"] ?? null;
-            if ($noteCols !== null) $noteCols = array_values($noteCols);
-            else $noteCols = array_fill(0, count(self::NOTE_COLS), null);
-            A::merge($row, $noteCols);
-          }
-          if ($haveResCol) {
-            $resCols = $stats[$igpt][$iobj][$ises]["res_cols"] ?? null;
-            if ($resCols !== null) $resCols = array_values($resCols);
-            else $resCols = array_fill(0, count(self::RES_COLS), null);
-            A::merge($row, $resCols);
-          }
+    foreach ($data["objs"] as $iobj => $obj) {
+      $gptTitle = $obj["gpt_title"];
+      $row = $haveGpts? [$gptTitle]: [];
+      $row[] = $obj["title"];
+      foreach ($obj["sess"] as $ises => $ses) {
+        $haveNoteCol = $ses["note_col"] !== null;
+        $haveResCol = $ses["res_col"] !== null;
+        if (!$haveNoteCol && !$haveResCol) continue;
+        if ($haveNoteCol) {
+          $noteCols = $stats[$iobj][$ises]["note_cols"] ?? null;
+          if ($noteCols !== null) $noteCols = array_values($noteCols);
+          else $noteCols = array_fill(0, count(self::NOTE_COLS), null);
+          A::merge($row, $noteCols);
         }
-        $body[] = $row;
-        $gptTitle = null;
+        if ($haveResCol) {
+          $resCols = $stats[$iobj][$ises]["res_cols"] ?? null;
+          if ($resCols !== null) $resCols = array_values($resCols);
+          else $resCols = array_fill(0, count(self::RES_COLS), null);
+          A::merge($row, $resCols);
+        }
       }
+      $body[] = $row;
+      $gptTitle = null;
     }
 
     $resultats = $ws["resultats"];
@@ -313,12 +312,15 @@ class CsvPvModel2Builder extends CsvPvBuilder {
 
   private ?string $codApr = null;
 
-  function compute(?PvData $pvData=null): static {
-    $this->ensurePvData($pvData);
+  function compute(): static {
+    $pvData = $this->pvData;
 
-    $pvData->ws["sheet_promo"] = null;
-    $pvData->ws["sheet_stats"] = null;
-    $pvData->ws["sheet_totals"] = null;
+    $pvData->ws = [
+      "document" => null,
+      "sheet_promo" => null,
+      "sheet_stats" => null,
+      "sheet_totals" => null,
+    ];
     self::prepare_layout($pvData);
 
     $codApr = $this->codApr;
@@ -331,8 +333,9 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     return $this;
   }
 
-  protected function writeRows(?PvData $pvData=null): void {
-    $this->ensurePvData($pvData);
+  protected function writeRows(): void {
+    $pvData = $this->pvData;
+    $data = $pvData->data;
     $builder = $this->builder;
     $ws = $pvData->ws;
 
@@ -362,7 +365,7 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     $totals = $ws["sheet_totals"];
     $builder->write([]);
     $prefix = [null];
-    if ($ws["have_gpt"]) $prefix[] = null;
+    if ($data["have_gpts"]) $prefix[] = null;
     foreach ($totals["headers"] as $row) {
       $builder->write(cl::merge($prefix, $row));
     }
@@ -371,7 +374,21 @@ class CsvPvModel2Builder extends CsvPvBuilder {
     }
   }
 
-  function print(): void {
+  #############################################################################
+
+  function checkForm(): bool {
+    return true;
+  }
+
+  function printForm(): void {
+  }
+
+  function doFormAction(?array $params=null): void {
+  }
+
+  #############################################################################
+
+  function print(?array $params=null): void {
     $ws = $this->pvData->ws;
     $promo = $ws["sheet_promo"];
     $one = $this->codApr !== null;

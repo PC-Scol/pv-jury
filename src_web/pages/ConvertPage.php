@@ -1,12 +1,15 @@
 <?php
 namespace web\pages;
 
-use app\CsvPvModel1Builder;
+use app\PvModelBuilder;
+use app\PvModelBuilderClassicEdition;
 use app\PvChannel;
+use app\PvModelBuilderPegaseEdition;
 use app\pvs;
 use Exception;
 use nulib\cl;
 use nulib\os\path;
+use nulib\StateException;
 use nulib\text\words;
 use nur\authz;
 use nur\b\authnz\IAuthzUser;
@@ -25,6 +28,9 @@ use web\init\APvPage;
 
 class ConvertPage extends APvPage {
   const TITLE = "PV Jury";
+  const PLUGINS = [
+    showmorePlugin::class,
+  ];
 
   function setup(): void {
     parent::setup();
@@ -53,18 +59,6 @@ class ConvertPage extends APvPage {
     $pvData = $this->pvData;
     $this->count = count($pvData->rows ?? []);
 
-    $objs = [];
-    foreach ($pvData->gptObjs as $igpt => $gpt) {
-      $gptTitle = $gpt["title"];
-      if ($gptTitle !== null) $objs["$igpt"] = $gptTitle;
-      foreach ($gpt["objs"] as $iobj => $obj) {
-        if ($igpt !== 0 || $iobj !== 0) {
-          $objs["$igpt.$iobj"] = $obj;
-        }
-      }
-    }
-    $this->objs = $objs;
-
     $modele = session::get("modele", 1);
     $modelefo = $this->modelefo = new FormInline([
       "method" => "post",
@@ -76,6 +70,7 @@ class ConvertPage extends APvPage {
           "items" => [
             [1, "Modèle classique"],
             [2, "Modèle classique avec coefficients"],
+            [3, "Modèle PEGASE en colonnes"],
           ],
           "default" => $modele,
         ],
@@ -91,71 +86,22 @@ class ConvertPage extends APvPage {
     $this->addPlugin(new autosubmitSelectPlugin("#modele"));
     $this->modele = $modele;
 
-    $builder = $this->builder = new CsvPvModel1Builder($pvData);
-    $sessions = $this->sessions = $builder->getSessions();
-    $convertfo = $this->convertfo = new FormBasic([
-      "method" => "post",
-      "schema" => [
-        "ises" => ["?int", null, "Session"],
-        "order" => ["string", null, "Ordre"],
-        "xc" => ["bool", null, "NE PAS inclure les controles"],
-        "xe" => ["bool", null, "Exclure les objets pour lesquels il n'y a ni note ni résultat"],
-        "objs" => ["array", [], "Objets à inclure dans l'édition"],
-      ],
-      "params" => [
-        "convert" => ["control" => "hidden", "value" => 1],
-        "ises" => cl::merge([
-          "control" => "select",
-          "items" => $sessions,
-        ], count($sessions) > 1? [
-          "no_item_value" => "",
-          "no_item_text" => "-- Veuillez choisir la session --",
-        ]: null),
-        "xc" => [
-          "control" => "hidden",
-          "value" => false,
-          //"control" => "checkbox",
-          //"value" => 1,
-        ],
-        "order" => [
-          "control" => "select",
-          "items" => [
-            [CsvPvModel1Builder::ORDER_MERITE, "Classer par mérite (note)"],
-            [CsvPvModel1Builder::ORDER_ALPHA, "Classer par ordre alphabétique (nom)"],
-            [CsvPvModel1Builder::ORDER_CODAPR, "Classer par numéro apprenant"],
-          ],
-        ],
-        "xe" => [
-          "control" => "checkbox",
-          "value" => 1,
-        ],
-        "objs" => false,
-      ],
-      "submit" => [
-        "Editer le PV",
-        "name" => "action",
-        "value" => "convert",
-        "accesskey" => "s",
-        "class" => "btn-primary"
-      ],
-      "submitted_key" => "convert",
-      "autoload_params" => true,
-    ]);
-
-    if ($convertfo->isSubmitted()) {
-      al::reset();
-      if ($convertfo["ises"] === null) {
-        al::error("Vous devez choisir la session");
-        $this->dispatchAction(false);
-      }
+    switch ($modele) {
+    case 1:
+    case 2:
+      $builder = new PvModelBuilderClassicEdition($pvData);
+      break;
+    case 3:
+      $builder = new PvModelBuilderPegaseEdition($pvData);
+      break;
+    default:
+      throw StateException::unexpected_state();
     }
-
-    $this->sm = $this->addPlugin(new showmorePlugin());
+    $this->builder = $builder;
+    if (!$builder->checkForm()) $this->dispatchAction(false);
   }
 
   private array $pv;
-
-  private ?array $objs;
 
   private PvChannel $pvChannel;
 
@@ -163,41 +109,22 @@ class ConvertPage extends APvPage {
 
   private int $count;
 
-  private array $sessions;
-
-  private CsvPvModel1Builder $builder;
-
   private Form $modelefo;
 
   private int $modele;
 
-  private Form $convertfo;
+  private PvModelBuilder $builder;
 
   private Form $deletefo;
-
-  private showmorePlugin $sm;
 
   const VALID_ACTIONS = ["download", "convert", "delete"];
   const ACTION_PARAM = "action";
 
   function convertAction() {
     page::more_time();
-    $builder = $this->builder;
-    $convertfo = $this->convertfo;
-    if ($this->modele == 2) $builder->setAddCoeffCol();
-    $builder->setIses($convertfo["ises"]);
-    $builder->setOrder($convertfo["order"]);
-    $builder->setExcludeControles(boolval($convertfo["xc"]));
-    $builder->setExcludeUnlessHaveValue(boolval($convertfo["xe"]));
-    $builder->setIncludeObjs($convertfo["objs"] ?? []);
-    $suffix = $builder->getSuffix();
-    $output = path::filename($this->pvData->origname);
-    $output = path::ensure_ext($output, "-$suffix.xlsx", ".csv");
-    try {
-      $builder->build($output)->send();
-    } catch (Exception $e) {
-      al::error($e->getMessage());
-    }
+    $this->builder->doFormAction([
+      "add_coeff_col" => $this->modele == 2,
+    ]);
     page::redirect(true);
   }
 
@@ -246,40 +173,7 @@ class ConvertPage extends APvPage {
       vo::p(["Mettre en forme les données du fichier CSV pour impression. inclure aussi les statistiques"]);
       $this->modelefo->print();
       al::print();
-      $convertfo = $this->convertfo;
-      $convertfo->autoloadParams();
-      $convertfo->printAlert();
-      $convertfo->printStart();
-      $convertfo->printControl("convert");
-      $convertfo->printControl("ises");
-      $convertfo->printControl("xc");
-      $convertfo->printControl("order");
-
-      $sm = $this->sm;
-      $sm->printStartc();
-      vo::p([
-        "<em>Exclusion d'objets maquettes</em> : ",
-        "vous pouvez exclure certains objets de l'édition du PV. ",
-        $sm->invite("Afficher la liste des objets maquettes..."),
-      ]);
-      $sm->printStartp();
-      $convertfo->printControl("xe");
-      vo::sdiv(["class" => "form-group"]);
-      foreach ($this->objs as $iobj => $obj) {
-        if (str_contains($iobj, ".")) {
-          $convertfo->printCheckbox("Inclure $obj", "objs[]", $iobj, true, [
-            "naked" => true,
-            "naked_label" => true,
-          ]);
-        } else {
-          vo::p(v::b($obj));
-        }
-      }
-      vo::ediv();
-      $sm->printEnd();
-
-      $convertfo->printControl("");
-      $convertfo->printEnd();
+      $this->builder->printForm();
       vo::end("fieldset");
 
       vo::start("fieldset");
@@ -356,21 +250,9 @@ class ConvertPage extends APvPage {
     }
 
     if ($valid) {
-      $builder = $this->builder;
-      $builder->setExcludeUnlessHaveValue(true);
-      if ($this->modele == 2) $builder->setAddCoeffCol();
-      foreach ($this->sessions as [$ises, $session]) {
-        vo::h2($session);
-        $builder->setIses($ises);
-        $builder->compute();
-        if ($pvData->ws["resultats"] === null) {
-          vo::p([
-            "class" => "alert alert-warning",
-            "Pour information, le fichier ne contient pas de résultats sur l'objet délibéré. L'encart 'nb étudiants/admis/ajournés' sera vide lors de l'édition"
-          ]);
-        }
-        $builder->print();
-      }
+      $this->builder->print([
+        "add_coeff_col" => $this->modele == 2,
+      ]);
     }
   }
 }
