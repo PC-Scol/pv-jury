@@ -24,6 +24,6 @@ apache_dirs=(
 
 rm -f "$PV_JURY_DATADIR/var"/*.{run,lock}
 
-rebuild.php --verifix
+rebuild.php --verifix --clean-orphans
 
 exit 0

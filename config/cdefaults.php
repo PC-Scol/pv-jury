@@ -10,6 +10,10 @@ class cdefaults {
   # l'accès à l'application doit-il être authentifié par CAS?
   const AUTH_CAS = \AUTH_CAS;
 
+  # mettre à true en développement pour garder les fichiers importés au lieu de
+  # les supprimer
+  const KEEP_FILES_ON_DELETE = false;
+
   const APP = [
     "debug" => false,
     "trace_sql" => false,
