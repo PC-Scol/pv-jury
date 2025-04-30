@@ -1,16 +1,16 @@
 <?php
 namespace app\config;
 
+use nulib\app;
+use nulib\output\log as nlog;
+use nulib\output\msg as nmsg;
+use nulib\output\std\StdMessenger;
 use nur\authz;
 use nur\b\authnz\CasAuthzManager;
 use nur\config;
 use nur\config\ArrayConfig;
 use nur\config\EnvConfig;
 use nur\msg;
-use nur\sery\app;
-use nulib\output\log as nlog;
-use nulib\output\msg as nmsg;
-use nulib\output\std\StdMessenger;
 use nur\session;
 use nur\v\bs3\Bs3Messenger;
 use nur\v\route;

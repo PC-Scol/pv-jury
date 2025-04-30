@@ -10,8 +10,9 @@ use nulib\str;
  * @property-read string name
  * @property-read string date
  * @property-read array gpts
- * @property-read array gptObjs
+ * @property-read array objs
  * @property-read array sesCols
+ * @property-read array|null ctlCols
  * @property-read array title
  * @property-read array headers
  * @property-read array rows
@@ -32,6 +33,4 @@ class PvData {
   }
 
   public ?array $ws = [];
-
-  public bool $verifixed = false;
 }

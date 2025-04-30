@@ -1,8 +1,9 @@
 <?php
 namespace app;
 
-use nur\sery\app;
+use nulib\app;
 use nulib\db\Capacitor;
+use nulib\db\CapacitorChannel;
 use nulib\db\CapacitorStorage;
 use nulib\db\sqlite\Sqlite;
 use nulib\db\sqlite\SqliteStorage;
@@ -65,6 +66,44 @@ class pvs {
   static function storage(): CapacitorStorage {
     $sqlite = new Sqlite(self::storage_file());
     return new SqliteStorage($sqlite);
+  }
+
+  private static Capacitor $config;
+
+  static function config(): Capacitor {
+    self::$config ??= new Capacitor(
+      self::storage(),
+      new class() extends CapacitorChannel {
+        const NAME = "config";
+        const TABLE_NAME = self::NAME;
+        const COLUMN_DEFINITIONS = [
+          "name" => "varchar not null primary key",
+          "value" => "varchar",
+        ];
+        function getItemValues($item, ?string $value=null): ?array {
+          return ["name" => $item, "value" => $value];
+        }
+      },
+    );
+    self::$config->ensureExists();
+    return self::$config;
+  }
+
+  const EXPECTED_VERSION = 1;
+
+  const CONFIG_VERSION = "version";
+
+  static function get_version(): ?int {
+    $config = self::config()->one(self::CONFIG_VERSION);
+    $version = $config["value"] ?? null;
+    if ($version !== null) $version = intval($version);
+    return $version;
+  }
+
+  static function set_version(int $version): void {
+    self::config()->charge(self::CONFIG_VERSION, function() use ($version) {
+      return ["value" => $version];
+    });
   }
 
   static function channel(): PvChannel {

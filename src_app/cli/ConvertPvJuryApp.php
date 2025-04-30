@@ -2,15 +2,17 @@
 namespace app\cli;
 
 use app\config\bootstrap;
-use app\CsvPvBuilder;
-use app\CsvPvModel1Builder;
-use app\CsvPvModel2Builder;
+use app\PvModelBuilder;
+use app\PvModelBuilderClassicEdition;
+use app\PvModelBuilderDisplay;
 use app\PvDataExtractor;
-use app\PvJuryXlsxBuilder;
+use app\PvModelBuilderTemplateEdition;
+use app\PvModelBuilderPegaseEdition;
 use nulib\app\cli\Application;
 use nulib\ext\json;
 use nulib\ext\yaml;
 use nulib\StateException;
+use nulib\str;
 
 class ConvertPvJuryApp extends Application {
   const PROJDIR = __DIR__.'/../..';
@@ -20,14 +22,21 @@ class ConvertPvJuryApp extends Application {
     "purpose" => "convertir une extraction de PV de jury",
     "usage" => "INPUT.csv [-o OUTPUT.csv]",
 
-    ["-1", "--model1", "name" => "model", "value" => 1,
-      "help" => "Sélectionner le modèle n°1",
+    ["-1", "--model-display", "name" => "model", "value" => 1,
+      "help" => "Sélectionner le modèle 'affichage individuel' (c'est la valeur par défaut)",
+    ],
+    ["-2", "--model-classic-edition", "name" => "model", "value" => 2,
+      "help" => "Sélectionner le modèle 'édition classique'",
+    ],
+    ["-3", "--model-pegase-edition", "name" => "model", "value" => 3,
+      "help" => "Sélectionner le modèle 'édition PEGASE'",
     ],
     ["-s", "--ises", "args" => 1, "argsdesc" => "ISES",
-      "help" => "spécifier l'identifiant de session pour le modèle n°1",
+      "help" => "spécifier l'identifiant de session pour le modèle 'édition classique'
+ou les identifiants séparés par des virgules pour le modèle 'édition PEGASE'",
     ],
-    ["-2", "--model2", "name" => "model", "value" => 2,
-      "help" => "Sélectionner le modèle n°2 (c'est la valeur par défaut)",
+    ["-c", "--icols", "args" => 1, "argsdesc" => "ICOLS",
+      "help" => "spécifier les colonnes séparées par des virgules pour le modèle 'édition PEGASE'",
     ],
     ["-d", "--dump-yaml", "value" => true,
       "help" => "Afficher les données au format YAML",
@@ -45,12 +54,14 @@ class ConvertPvJuryApp extends Application {
   ];
 
   const CSV_BUILDERS = [
-    1 => CsvPvModel1Builder::class,
-    2 => CsvPvModel2Builder::class,
+    1 => PvModelBuilderDisplay::class,
+    2 => PvModelBuilderClassicEdition::class,
+    3 => PvModelBuilderPegaseEdition::class,
   ];
 
-  protected int $model = 2;
-  protected ?int $ises = null;
+  protected int $model = 1;
+  protected $ises = null;
+  protected $icols = null;
   protected bool $dumpYaml = false;
   protected ?string $jsonOutput = null;
   protected ?string $csvOutput = null;
@@ -83,10 +94,18 @@ class ConvertPvJuryApp extends Application {
     if ($csvOutput !== null) {
       $class = self::CSV_BUILDERS[$this->model] ?? null;
       if ($class === null) throw StateException::unexpected_state();
-      /** @var CsvPvBuilder $builder */
-      $builder = new $class();
-      $builder->setPvData($pvData);
-      if ($this->ises !== null) $builder->setIses($this->ises);
+      /** @var PvModelBuilder $builder */
+      $builder = new $class($pvData);
+      $ises = $this->ises;
+      if ($ises !== null) {
+        $ises = preg_split('/\s*,\s*/', str::trim($ises));
+        $builder->setIses($ises);
+      }
+      $icols = $this->icols;
+      if ($icols !== null) {
+        $icols = preg_split('/\s*,\s*/', str::trim($icols));
+        $builder->setIcols($icols);
+      }
       $builder->build($csvOutput);
       if ($dumpYaml) {
         yaml::dump([
@@ -98,7 +117,7 @@ class ConvertPvJuryApp extends Application {
       }
     }
     if($xlsxOutput !== null){
-      $builder = new PvJuryXlsxBuilder();
+      $builder = new PvModelBuilderTemplateEdition();
       $builder->build($pvData->data, $xlsxOutput)->write();
     }
   }

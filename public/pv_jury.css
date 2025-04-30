@@ -4,3 +4,6 @@
   overflow: auto;
   max-height: 30em;
 }
+
+.indent1 { margin-left: 2em;}
+.indent2 { margin-left: 4em;}

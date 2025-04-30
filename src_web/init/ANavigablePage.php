@@ -7,7 +7,7 @@ use nur\v\bs3\plugins\navbarProfilePlugin;
 use nur\v\vp\NavigablePage;
 
 class ANavigablePage extends NavigablePage {
-  const CSS = ["pv_jury.css?1"];
+  const CSS = ["pv_jury.css?2"];
   const CONTAINER_OPTIONS = [
     "container" => "fluid",
   ];

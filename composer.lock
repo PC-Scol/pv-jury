@@ -286,6 +286,8 @@
             "require-dev": {
                 "ext-curl": "*",
                 "ext-pcntl": "*",
+                "ext-pdo": "*",
+                "ext-pgsql": "*",
                 "ext-posix": "*",
                 "ext-sqlite3": "*",
                 "nulib/tests": "^8.2"
@@ -314,7 +316,7 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2025-03-25T04:47:45+00:00"
+            "time": "2025-04-29T03:37:21+00:00"
         },
         {
             "name": "nulib/phpss",
@@ -463,6 +465,8 @@
             "bin": [
                 "bin/dumpser.php",
                 "bin/csv2xlsx.php",
+                "bin/json2yml.php",
+                "bin/yml2json.php",
                 "nur_bin/compctl.php",
                 "nur_bin/compdep.php",
                 "nur_bin/datectl.php",
@@ -483,9 +487,7 @@
             },
             "autoload": {
                 "psr-4": {
-                    "nulib\\": "src_glue",
-                    "nur\\sery\\wip\\": "src",
-                    "nur\\sery\\": "src_app",
+                    "nulib\\": "src",
                     "nur\\": "nur_src"
                 },
                 "files": [
@@ -494,7 +496,7 @@
             },
             "autoload-dev": {
                 "psr-4": {
-                    "nur\\sery\\": "tests",
+                    "nulib\\": "tests",
                     "nur\\": "nur_tests"
                 }
             },
