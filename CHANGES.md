@@ -1,3 +1,8 @@
+## Release 0.10.1 du 30/04/2025-07:50
+
+* `e5ddac8` corriger la suppression des fichiers
+* `f95214b` maj doc
+
 ## Release 0.10.0 du 30/04/2025-05:52
 
 Cette version ajout le nouveau modèle 'PEGASE'

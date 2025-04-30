@@ -10,16 +10,25 @@
 depuis PEGASE
 
 Les fonctionnalités principales sont les suivantes:
-- mettre en forme le PV pour impression, sous une forme se rapprochant de
-  l'édition sous APOGEE. Rajouter les statistiques par élément pédagogique
-  - possibilité d'exclusion de certains objets maquettes de l'édition du PV.
-    C'est utile quand la maquette est modélisée par blocs de compétences, afin
-    d'exclure les éléments pédagogiques du second semestre si l'édition concerne
-    uniquement le premier semestre
-  - obtenir un lien à partager aux enseignants ou aux membres du jury permettant
-    de consulter le détail du PV par étudiant
+- éditer le PV au format Excel pour impression.
+  Des statistiques par élément pédagogique sont rajoutées à la fin du tableau
+- possibilité d'exclusion de certains objets maquettes de l'édition du PV.
+  C'est utile quand la maquette est modélisée par blocs de compétences, afin
+  d'exclure les éléments pédagogiques du second semestre si l'édition concerne
+  uniquement le premier semestre
+- obtenir un lien à partager aux enseignants ou aux membres du jury permettant
+  de consulter le détail du PV par étudiant
 - enregistrer le fichier CSV au format Excel en appliquant le format numérique
   aux notes. Aucune autre donnée n'est rajoutée.
+
+Pour l'édition du PV, plusieurs modèles sont disponibles:
+- modèle classique APOGEE: le résultat se rapproche de l'édition sous APOGEE.
+  L'édition se fait pour une seule session
+- modèle classique APOGEE avec coefficients: une variante du modèle précédent
+  qui ajoute la colonne "Coefficient"
+- modèle PEGASE: le résultat est le plus proche de la forme originale fournie
+  par PEGASE. L'édition se fait pour les sessions sélectionnées. Il est possible
+  de choisir quelles colonnes seront incluses dans l'édition.
 
 NB: dans certaines circonstances, s'il y a des acquis capitalisés en session 2
 l'année antérieure, PEGASE ne les remonte pas sur la bonne session. `pv-jury`
