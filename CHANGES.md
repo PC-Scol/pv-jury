@@ -1,3 +1,15 @@
+## Release 0.10.0 du 30/04/2025-05:52
+
+Cette version ajout le nouveau modèle 'PEGASE'
+
+Du fait des corrections sur la prise en compte des groupements, elle nécessite
+aussi que les imports soit reconstruits. Cette opération est automatiquement
+effectuée au démarrage de l'application.
+
+* `ba89d89` reconstruction automatique des imports
+* `67665f4` corriger la prise en compte des groupements
+* `1d9ea16` ajout du modèle PEGASE
+
 ## Release 0.9.1 du 11/04/2025-22:02
 
 * `8f34045` renommer 'modèle APOGEE' en 'modèle classique'
