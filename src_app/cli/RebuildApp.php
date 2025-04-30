@@ -107,6 +107,7 @@ class RebuildApp extends Application {
       foreach ($orphanUploads as $uploadName) {
         msg::action("suppression de $uploadName", function() use ($uploadName) {
           @unlink(pvs::upload_file($uploadName));
+          return true;
         });
       }
     }
