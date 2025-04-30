@@ -91,7 +91,7 @@ class RebuildApp extends Application {
       $orphanJsons = sh::ls_files(pvs::file(null), "*.json");
       $orphanUploads = sh::ls_files(pvs::upload_file(null), "*.csv");
       $channel->each(null, function($item, array $values) use (&$orphanUploads, &$orphanJsons) {
-        $jsonName = $values["name"];
+        $jsonName = "{$values["name"]}.json";
         $key = array_search($jsonName, $orphanJsons);
         if ($key !== false) unset($orphanJsons[$key]);
         $uploadName = $values["origname"];
