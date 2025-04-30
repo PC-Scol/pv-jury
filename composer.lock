@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "61ab227297cb9ede3a28d57499692965",
+    "content-hash": "f3692fca14e4478eb714795ad6442711",
     "packages": [
         {
             "name": "composer/pcre",
@@ -272,11 +272,11 @@
         },
         {
             "name": "nulib/php",
-            "version": "0.4.1p82",
+            "version": "0.5.0p82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "03338f97f0eba1a54c28492aaba54d7bd4c61dfe"
+                "reference": "9f8b6545e68079728bb7349487b99024bd7d5090"
             },
             "require": {
                 "ext-json": "*",
@@ -316,18 +316,18 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2025-04-29T03:37:21+00:00"
+            "time": "2025-04-30T00:33:36+00:00"
         },
         {
             "name": "nulib/phpss",
-            "version": "0.4.0p82",
+            "version": "0.5.0p82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-phpss.git",
-                "reference": "44b6507d02d62451fcf260b9af19ced7083dc674"
+                "reference": "620e1b8eab68afc8bae94b5a936b7929c03bc734"
             },
             "require": {
-                "nulib/php": "^0.4.0p82",
+                "nulib/php": "^0.5.0p82",
                 "php": "^8.2",
                 "phpoffice/phpspreadsheet": "^3.3.0"
             },
@@ -358,15 +358,15 @@
                 }
             ],
             "description": "wrapper pour phpoffice/phpspreadsheet",
-            "time": "2025-03-14T11:30:18+00:00"
+            "time": "2025-04-30T00:48:34+00:00"
         },
         {
             "name": "nulib/spout",
-            "version": "0.4.0p82",
+            "version": "0.5.0p82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "2b2af6be95070c1262740ab0242c96c1d86af568"
+                "reference": "32fbed599e2e3cfc616df70fe51ba8ec4cb3aefd"
             },
             "require": {
                 "ext-dom": "*",
@@ -375,7 +375,7 @@
                 "ext-libxml": "*",
                 "ext-xmlreader": "*",
                 "ext-zip": "*",
-                "nulib/php": "^0.4.0p82",
+                "nulib/php": "^0.5.0p82",
                 "php": "^8.2"
             },
             "replace": {
@@ -416,15 +416,15 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2025-03-14T11:41:00+00:00"
+            "time": "2025-04-30T00:43:21+00:00"
         },
         {
             "name": "nur/ture",
-            "version": "0.4.1p82",
+            "version": "0.5.0p82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-ture.git",
-                "reference": "2da0780a56f2dae769019f2901ea68dfef67025f"
+                "reference": "60df574a0e733396c90b2f354729f7383dcc3516"
             },
             "require": {
                 "php": "^8.2"
@@ -457,9 +457,9 @@
                 "ext-sqlite3": "*",
                 "ext-tidy": "*",
                 "ext-zip": "*",
-                "nulib/php": "^0.4.0p82",
-                "nulib/phpss": "^0.4.0p82",
-                "nulib/spout": "^0.4.0p82",
+                "nulib/php": "^0.5.0p82",
+                "nulib/phpss": "^0.5.0p82",
+                "nulib/spout": "^0.5.0p82",
                 "nulib/tests": "^8.2"
             },
             "bin": [
@@ -512,7 +512,7 @@
                 }
             ],
             "description": "espace de maturation pour les librairies",
-            "time": "2025-03-17T13:23:56+00:00"
+            "time": "2025-04-30T01:35:31+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",
