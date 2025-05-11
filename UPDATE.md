@@ -24,7 +24,7 @@ cd pv-jury
 git pull
 
 # reconstruire les images si nécessaire puis redémarrer le cas échéant
-./start -rB
+./start -rb
 ~~~
 
 -*- coding: utf-8 mode: markdown -*- vim:sw=4:sts=4:et:ai:si:sta:fenc=utf-8:noeol:binary
