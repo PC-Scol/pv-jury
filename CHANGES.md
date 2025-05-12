@@ -1,3 +1,10 @@
+## Release 0.11.0 du 12/05/2025-15:54
+
+* `a14aee3` support de l'authentification externe
+* `201a4e0` nouvelle config de test
+* `8bcbdc6` accepter l'option -b pour --rebuild
+* `9794de9` maj doc
+
 ## Release 0.10.2 du 30/04/2025-08:13
 
 ## Release 0.10.1 du 30/04/2025-07:50

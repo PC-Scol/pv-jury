@@ -82,6 +82,7 @@ class ConvertPage extends APvPage {
     if ($modelefo->isSubmitted()) {
       $modele = $modelefo["modele"];
       session::set("modele", $modele);
+      page::redirect(true);
     }
     $this->addPlugin(new autosubmitSelectPlugin("#modele"));
     $this->modele = $modele;

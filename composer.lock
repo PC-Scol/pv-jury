@@ -276,7 +276,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "d75350d6146c640b913f916eccbb3080d7f7bca0"
+                "reference": "de184e9909a631f6aac485db7ea46585b30a98b2"
             },
             "require": {
                 "ext-json": "*",
@@ -316,7 +316,7 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2025-04-29T03:37:21+00:00"
+            "time": "2025-05-12T11:31:32+00:00"
         },
         {
             "name": "nulib/phpss",
@@ -324,7 +324,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-phpss.git",
-                "reference": "e06fa96a22c04ba5fef8028e18beb5c608388f67"
+                "reference": "19ef9cae64dd860492055845779262c236c29556"
             },
             "require": {
                 "nulib/php": "^8.2-dev",
@@ -358,7 +358,7 @@
                 }
             ],
             "description": "wrapper pour phpoffice/phpspreadsheet",
-            "time": "2025-03-23T04:22:50+00:00"
+            "time": "2025-04-30T00:48:38+00:00"
         },
         {
             "name": "nulib/spout",
@@ -366,7 +366,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "8b0d66a3ddb74bf3ebc3bbb3789bfb1bbbbd74bc"
+                "reference": "d52f9a0ebfe4fc2bab145209178ce2d4570c2e75"
             },
             "require": {
                 "ext-dom": "*",
@@ -416,7 +416,7 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2025-04-29T07:08:44+00:00"
+            "time": "2025-04-30T00:43:25+00:00"
         },
         {
             "name": "nur/ture",
@@ -424,7 +424,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-ture.git",
-                "reference": "36d486a6492b10e8d76fb18bb3831adbf5c6fe1d"
+                "reference": "0c90d4b074bcf514f078582528debac16bd9aaa8"
             },
             "require": {
                 "php": "^8.2"
@@ -512,7 +512,7 @@
                 }
             ],
             "description": "espace de maturation pour les librairies",
-            "time": "2025-04-23T08:02:10+00:00"
+            "time": "2025-05-12T11:38:12+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",
@@ -899,7 +899,7 @@
         },
         {
             "name": "symfony/polyfill-ctype",
-            "version": "v1.31.0",
+            "version": "v1.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-ctype.git",
@@ -958,7 +958,7 @@
                 "portable"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.31.0"
+                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.32.0"
             },
             "funding": [
                 {
@@ -978,16 +978,16 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v7.2.5",
+            "version": "v7.2.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "4c4b6f4cfcd7e52053f0c8bfad0f7f30fb924912"
+                "reference": "0feafffb843860624ddfd13478f481f4c3cd8b23"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/yaml/zipball/4c4b6f4cfcd7e52053f0c8bfad0f7f30fb924912",
-                "reference": "4c4b6f4cfcd7e52053f0c8bfad0f7f30fb924912",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/0feafffb843860624ddfd13478f481f4c3cd8b23",
+                "reference": "0feafffb843860624ddfd13478f481f4c3cd8b23",
                 "shasum": ""
             },
             "require": {
@@ -1030,7 +1030,7 @@
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/yaml/tree/v7.2.5"
+                "source": "https://github.com/symfony/yaml/tree/v7.2.6"
             },
             "funding": [
                 {
@@ -1046,7 +1046,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-03-03T07:12:39+00:00"
+            "time": "2025-04-04T10:10:11+00:00"
         }
     ],
     "packages-dev": [],
