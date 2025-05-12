@@ -92,7 +92,7 @@ args=(
     -k,--stop action=stop "Arrêter l'application"
     -r,--refresh action=refresh "Redémarrer l'application si nécessaire"
     -R,--restart action=restart "Forcer l'arrêt puis le démarrage de l'application"
-    -B,--build Build=1 "++Forcer la (re)construction des images avant le démarrage"
+    -b,-B,--rebuild Build=1 "++Forcer la (re)construction des images avant le démarrage"
 )
 parse_args "$@"; set -- "${args[@]}"
 

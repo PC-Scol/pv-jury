@@ -1,8 +1,7 @@
 > [!IMPORTANT]
 > **En cas de livraison d'une nouvelle version de l'application**
-> Prenez le temps de lire [la liste des changements](CHANGES.md) AVANT de
-> commencer à faire quoi que ce soit. Ensuite, vous pourrez consulter la section
-> "Installer une mise à jour" ci-dessous.
+> Prenez le temps de lire [ces instructions](UPDATE.md) AVANT de commencer à
+> faire quoi que ce soit.
 
 # pv-jury
 
@@ -104,15 +103,7 @@ liens pour avoir des détails sur la procédure.
 
 ## Installer une mise à jour
 
-Généralement, il faut reconstruire les images avant de relancer les services:
-~~~sh
-cd pv-jury
-
-# mettre à jour le dépôt
-git pull
-
-# reconstruire les images si nécessaire, et redémarrer le cas échéant
-./start -rB
-~~~
+Veuillez suivre [ces instructions](UPDATE.md) AVANT de commencer à faire quoi
+que ce soit.
 
 -*- coding: utf-8 mode: markdown -*- vim:sw=4:sts=4:et:ai:si:sta:fenc=utf-8:noeol:binary

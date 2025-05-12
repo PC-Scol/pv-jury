@@ -4,12 +4,7 @@ namespace app\config;
 use nur\v\bs3\Bs3IconManager;
 use web\pages\IndexPage;
 
-define("AUTH_CAS", boolval(getenv("AUTH_CAS")));
-
 class cdefaults {
-  # l'accès à l'application doit-il être authentifié par CAS?
-  const AUTH_CAS = \AUTH_CAS;
-
   # mettre à true en développement pour garder les fichiers importés au lieu de
   # les supprimer
   const KEEP_FILES_ON_DELETE = false;
