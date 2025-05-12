@@ -272,11 +272,11 @@
         },
         {
             "name": "nulib/php",
-            "version": "0.5.0p82",
+            "version": "0.5.1p82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "9f8b6545e68079728bb7349487b99024bd7d5090"
+                "reference": "bd8cdcafbeee9a786200672a022493441582b177"
             },
             "require": {
                 "ext-json": "*",
@@ -316,7 +316,7 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2025-04-30T00:33:36+00:00"
+            "time": "2025-05-12T11:31:32+00:00"
         },
         {
             "name": "nulib/phpss",
@@ -420,11 +420,11 @@
         },
         {
             "name": "nur/ture",
-            "version": "0.5.0p82",
+            "version": "0.5.1p82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-ture.git",
-                "reference": "60df574a0e733396c90b2f354729f7383dcc3516"
+                "reference": "452182a3ef0ef9d0bc7b4442d761d248cb7e4b86"
             },
             "require": {
                 "php": "^8.2"
@@ -512,7 +512,7 @@
                 }
             ],
             "description": "espace de maturation pour les librairies",
-            "time": "2025-04-30T01:35:31+00:00"
+            "time": "2025-05-12T11:37:59+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",
