@@ -1,3 +1,8 @@
+## Release 0.11.1 du 22/05/2025-17:43
+
+* `49b23c3` augmenter la mémoire allouée par défaut
+* `69896fa` renommer fichiers par défaut
+
 ## Release 0.11.0 du 12/05/2025-15:54
 
 * `a14aee3` support de l'authentification externe
