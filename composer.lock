@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "333ea667914ff748d7f892cf595ad2ea",
+    "content-hash": "98d7c2954ecf8244a84c6d441c61aeed",
     "packages": [
         {
             "name": "composer/pcre",
@@ -271,17 +271,20 @@
             "time": "2022-12-02T22:17:43+00:00"
         },
         {
-            "name": "nulib/php",
+            "name": "nulib/base",
             "version": "dev-dev82",
             "source": {
                 "type": "git",
-                "url": "https://git.univ-reunion.fr/sda-php/nulib.git",
-                "reference": "de184e9909a631f6aac485db7ea46585b30a98b2"
+                "url": "https://git.univ-reunion.fr/sda-php/nulib-base.git",
+                "reference": "6b03925584b905f526a6e7a6e9b60255f8bfea27"
             },
             "require": {
                 "ext-json": "*",
                 "php": "^8.2",
                 "symfony/yaml": "^7.1"
+            },
+            "replace": {
+                "nulib/php": "*"
             },
             "require-dev": {
                 "ext-curl": "*",
@@ -316,7 +319,7 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2025-05-12T11:31:32+00:00"
+            "time": "2025-06-03T06:22:15+00:00"
         },
         {
             "name": "nulib/phpss",
@@ -324,10 +327,10 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-phpss.git",
-                "reference": "19ef9cae64dd860492055845779262c236c29556"
+                "reference": "fc56aadc042b37d37146767852bf8f2eb87b17fd"
             },
             "require": {
-                "nulib/php": "^8.2-dev",
+                "nulib/base": "^8.2-dev",
                 "php": "^8.2",
                 "phpoffice/phpspreadsheet": "^3.3.0"
             },
@@ -358,7 +361,7 @@
                 }
             ],
             "description": "wrapper pour phpoffice/phpspreadsheet",
-            "time": "2025-04-30T00:48:38+00:00"
+            "time": "2025-05-30T19:30:11+00:00"
         },
         {
             "name": "nulib/spout",
@@ -366,7 +369,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "d52f9a0ebfe4fc2bab145209178ce2d4570c2e75"
+                "reference": "311f30a3dcf5ced559b02ea88c88100c23c975be"
             },
             "require": {
                 "ext-dom": "*",
@@ -375,7 +378,7 @@
                 "ext-libxml": "*",
                 "ext-xmlreader": "*",
                 "ext-zip": "*",
-                "nulib/php": "^8.2-dev",
+                "nulib/base": "^8.2-dev",
                 "php": "^8.2"
             },
             "replace": {
@@ -416,7 +419,7 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2025-04-30T00:43:25+00:00"
+            "time": "2025-05-30T19:07:57+00:00"
         },
         {
             "name": "nur/ture",
@@ -424,7 +427,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-ture.git",
-                "reference": "0c90d4b074bcf514f078582528debac16bd9aaa8"
+                "reference": "1175d0c85218603fa9de3e107a7186a1341695a6"
             },
             "require": {
                 "php": "^8.2"
@@ -457,7 +460,7 @@
                 "ext-sqlite3": "*",
                 "ext-tidy": "*",
                 "ext-zip": "*",
-                "nulib/php": "^8.2-dev",
+                "nulib/base": "^8.2-dev",
                 "nulib/phpss": "^8.2-dev",
                 "nulib/spout": "^8.2-dev",
                 "nulib/tests": "^8.2"
@@ -475,8 +478,8 @@
                 "nur_bin/ldap-delete.php",
                 "nur_bin/ldap-get-infos.php",
                 "nur_bin/ldap-search.php",
-                "nur_bin/sqlite-storage.php",
-                "nur_bin/mysql-storage.php"
+                "nur_bin/storage.sqlite.php",
+                "nur_bin/storage.mysql.php"
             ],
             "type": "library",
             "extra": {
@@ -500,11 +503,6 @@
                     "nur\\": "nur_tests"
                 }
             },
-            "scripts": {
-                "uc": [
-                    "@php sbin/update_classes.php"
-                ]
-            },
             "authors": [
                 {
                     "name": "Jephte Clain",
@@ -512,7 +510,7 @@
                 }
             ],
             "description": "espace de maturation pour les librairies",
-            "time": "2025-05-12T11:38:12+00:00"
+            "time": "2025-05-30T19:40:08+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",
@@ -832,16 +830,16 @@
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v3.5.1",
+            "version": "v3.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "74c71c939a79f7d5bf3c1ce9f5ea37ba0114c6f6"
+                "reference": "63afe740e99a13ba87ec199bb07bbdee937a5b62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/74c71c939a79f7d5bf3c1ce9f5ea37ba0114c6f6",
-                "reference": "74c71c939a79f7d5bf3c1ce9f5ea37ba0114c6f6",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/63afe740e99a13ba87ec199bb07bbdee937a5b62",
+                "reference": "63afe740e99a13ba87ec199bb07bbdee937a5b62",
                 "shasum": ""
             },
             "require": {
@@ -854,7 +852,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.5-dev"
+                    "dev-main": "3.6-dev"
                 }
             },
             "autoload": {
@@ -879,7 +877,7 @@
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.5.1"
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.6.0"
             },
             "funding": [
                 {
@@ -895,7 +893,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-25T14:20:29+00:00"
+            "time": "2024-09-25T14:21:43+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -978,16 +976,16 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v7.2.6",
+            "version": "v7.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "0feafffb843860624ddfd13478f481f4c3cd8b23"
+                "reference": "cea40a48279d58dc3efee8112634cb90141156c2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/yaml/zipball/0feafffb843860624ddfd13478f481f4c3cd8b23",
-                "reference": "0feafffb843860624ddfd13478f481f4c3cd8b23",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/cea40a48279d58dc3efee8112634cb90141156c2",
+                "reference": "cea40a48279d58dc3efee8112634cb90141156c2",
                 "shasum": ""
             },
             "require": {
@@ -1030,7 +1028,7 @@
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/yaml/tree/v7.2.6"
+                "source": "https://github.com/symfony/yaml/tree/v7.3.0"
             },
             "funding": [
                 {
@@ -1046,14 +1044,14 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-04-04T10:10:11+00:00"
+            "time": "2025-04-04T10:10:33+00:00"
         }
     ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "nulib/php": 20,
+        "nulib/base": 20,
         "nulib/spout": 20,
         "nulib/phpss": 20,
         "nur/ture": 20
