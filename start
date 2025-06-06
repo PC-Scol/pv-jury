@@ -3,7 +3,7 @@
 MYDIR="$(cd "$(dirname -- "$0")"; pwd)"
 "$MYDIR/sbin/runphp" --bs --ue --ci || exit 1
 PVJURY="$MYDIR"
-source "$PVJURY/vendor/nulib/php/load.sh" || exit 1
+source "$PVJURY/vendor/nulib/base/load.sh" || exit 1
 
 function dclsct() {
     # afficher les containers correspondant à $@ (docker-compose.yml)
