@@ -1,3 +1,8 @@
+## Release 0.12.0 du 06/06/2025-11:07
+
+* `b39d7f2` corriger l'affichage des acquis
+* `039e972` migration vers nulib/base
+
 ## Release 0.11.1 du 22/05/2025-17:43
 
 * `49b23c3` augmenter la mémoire allouée par défaut
