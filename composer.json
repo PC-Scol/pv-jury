@@ -9,7 +9,7 @@
 		}
 	],
 	"require": {
-		"nulib/php": "^0.5.0p82",
+		"nulib/base": "^0.5.0p82",
 		"nulib/spout": "^0.5.0p82",
 		"nulib/phpss": "^0.5.0p82",
 		"nur/ture": "^0.5.0p82",
