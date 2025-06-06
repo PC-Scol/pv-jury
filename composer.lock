@@ -283,6 +283,9 @@
                 "php": "^8.2",
                 "symfony/yaml": "^7.1"
             },
+            "replace": {
+                "nulib/php": "*"
+            },
             "require-dev": {
                 "ext-curl": "*",
                 "ext-pcntl": "*",
@@ -316,7 +319,7 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2025-05-12T11:31:32+00:00"
+            "time": "2025-06-03T06:22:15+00:00"
         },
         {
             "name": "nulib/phpss",
@@ -475,8 +478,8 @@
                 "nur_bin/ldap-delete.php",
                 "nur_bin/ldap-get-infos.php",
                 "nur_bin/ldap-search.php",
-                "nur_bin/sqlite-storage.php",
-                "nur_bin/mysql-storage.php"
+                "nur_bin/storage.sqlite.php",
+                "nur_bin/storage.mysql.php"
             ],
             "type": "library",
             "extra": {
@@ -499,11 +502,6 @@
                     "nulib\\": "tests",
                     "nur\\": "nur_tests"
                 }
-            },
-            "scripts": {
-                "uc": [
-                    "@php sbin/update_classes.php"
-                ]
             },
             "authors": [
                 {
@@ -832,16 +830,16 @@
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v3.5.1",
+            "version": "v3.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "74c71c939a79f7d5bf3c1ce9f5ea37ba0114c6f6"
+                "reference": "63afe740e99a13ba87ec199bb07bbdee937a5b62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/74c71c939a79f7d5bf3c1ce9f5ea37ba0114c6f6",
-                "reference": "74c71c939a79f7d5bf3c1ce9f5ea37ba0114c6f6",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/63afe740e99a13ba87ec199bb07bbdee937a5b62",
+                "reference": "63afe740e99a13ba87ec199bb07bbdee937a5b62",
                 "shasum": ""
             },
             "require": {
@@ -854,7 +852,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.5-dev"
+                    "dev-main": "3.6-dev"
                 }
             },
             "autoload": {
@@ -879,7 +877,7 @@
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.5.1"
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.6.0"
             },
             "funding": [
                 {
@@ -895,7 +893,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-25T14:20:29+00:00"
+            "time": "2024-09-25T14:21:43+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -978,16 +976,16 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v7.2.6",
+            "version": "v7.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "0feafffb843860624ddfd13478f481f4c3cd8b23"
+                "reference": "cea40a48279d58dc3efee8112634cb90141156c2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/yaml/zipball/0feafffb843860624ddfd13478f481f4c3cd8b23",
-                "reference": "0feafffb843860624ddfd13478f481f4c3cd8b23",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/cea40a48279d58dc3efee8112634cb90141156c2",
+                "reference": "cea40a48279d58dc3efee8112634cb90141156c2",
                 "shasum": ""
             },
             "require": {
@@ -1030,7 +1028,7 @@
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/yaml/tree/v7.2.6"
+                "source": "https://github.com/symfony/yaml/tree/v7.3.0"
             },
             "funding": [
                 {
@@ -1046,7 +1044,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-04-04T10:10:11+00:00"
+            "time": "2025-04-04T10:10:33+00:00"
         }
     ],
     "packages-dev": [],

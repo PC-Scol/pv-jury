@@ -28,10 +28,10 @@
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-ctype" />
       <path value="$PROJECT_DIR$/vendor/symfony/yaml" />
       <path value="$PROJECT_DIR$/vendor/nulib/spout" />
-      <path value="$PROJECT_DIR$/vendor/nulib/php" />
       <path value="$PROJECT_DIR$/vendor/nulib/phpss" />
       <path value="$PROJECT_DIR$/vendor/symfony/deprecation-contracts" />
       <path value="$PROJECT_DIR$/vendor/nur/ture" />
+      <path value="$PROJECT_DIR$/vendor/nulib/base" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2" />
