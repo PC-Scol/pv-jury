@@ -24,7 +24,11 @@ abstract class PvModelBuilder {
     "NON ACQUIS" => "NON_ACQ",
     "EN COURS D'ACQUISITION" => "ENC_ACQ",
     "ABS. INJ." => "ABI",
-    "ABS. JUS." => "ABS",
+    "ABS. JUS." => "ABJ",
+  ];
+  const ACQ_MAP = [
+    "VALIDATION - EVALUATION" => "VAL-EVAL",
+    "DISPENSE ASSIDUITE" => "DIS.ASS",
   ];
 
   function __construct(PvData $pvData) {
@@ -81,10 +85,8 @@ abstract class PvModelBuilder {
         $t = $ms[2] ?? null;
         if ($f && $t) $acquis = "CAP$f-$t";
         else $acquis = "CAP";
-      } elseif ($acquis === "VALIDATION - EVALUATION") {
-        $acquis = "VAL-EVAL";
       } else {
-        $acquis = null;
+        $acquis = cl::get(self::ACQ_MAP, $acquis, $acquis);
       }
     }
     return ["acquis" => $acquis];
