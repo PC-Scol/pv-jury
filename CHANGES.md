@@ -1,3 +1,5 @@
+## Release 0.12.1 du 06/06/2025-11:18
+
 ## Release 0.12.0 du 06/06/2025-11:07
 
 * `b39d7f2` corriger l'affichage des acquis
