@@ -61,7 +61,7 @@ class pvs {
     return app::get()->getVarfile("pvs.db");
   }
 
-  static function storage(): SqliteCapacitor {
+  static function capacitor(): SqliteCapacitor {
     $sqlite = new Sqlite(self::storage_file());
     return new SqliteCapacitor($sqlite);
   }
@@ -69,7 +69,7 @@ class pvs {
   private static CapacitorChannel $config;
 
   static function config(): CapacitorChannel {
-    self::$config ??= self::storage()->newChannel(new class() extends CapacitorChannel {
+    self::$config ??= self::capacitor()->newChannel(new class() extends CapacitorChannel {
       const NAME = "config";
       const TABLE_NAME = self::NAME;
       const COLUMN_DEFINITIONS = [
@@ -102,11 +102,11 @@ class pvs {
 
   static function channel(): PvChannel {
     $channel = new PvChannel();
-    return $channel->initCapacitor(self::storage());
+    return $channel->initCapacitor(self::capacitor());
   }
 
   static function channel_rebuilder(): PvChannelRebuilder {
     $channel = new PvChannelRebuilder();
-    return $channel->initCapacitor(self::storage());
+    return $channel->initCapacitor(self::capacitor());
   }
 }
