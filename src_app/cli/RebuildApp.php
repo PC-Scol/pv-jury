@@ -9,9 +9,6 @@ use nulib\os\sh;
 use nulib\output\msg;
 
 class RebuildApp extends Application {
-  const PROJDIR = __DIR__.'/../..';
-  const APPCODE = bootstrap::APPCODE;
-
   const ARGS = [
     "purpose" => "reconstruire la base de donnée des PVs de jury",
 

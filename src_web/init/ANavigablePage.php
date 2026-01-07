@@ -1,6 +1,7 @@
 <?php
 namespace web\init;
 
+use app\config\cdefaults;
 use nur\config;
 use nur\v\bs3\plugins\navbarProfilePlugin;
 use nur\v\vp\NavigablePage;
@@ -11,6 +12,7 @@ class ANavigablePage extends NavigablePage {
     "container" => "fluid",
   ];
 
+  const REQUIRE_AUTH = cdefaults::AUTH_ANY;
   const PLUGINS = [navbarProfilePlugin::class];
 
   function NAVBAR_OPTIONS(): ?array {

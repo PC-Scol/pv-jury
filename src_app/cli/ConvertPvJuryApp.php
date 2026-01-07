@@ -15,9 +15,6 @@ use nulib\StateException;
 use nulib\str;
 
 class ConvertPvJuryApp extends Application {
-  const PROJDIR = __DIR__.'/../..';
-  const APPCODE = bootstrap::APPCODE;
-
   const ARGS = [
     "purpose" => "convertir une extraction de PV de jury",
     "usage" => "INPUT.csv [-o OUTPUT.csv]",

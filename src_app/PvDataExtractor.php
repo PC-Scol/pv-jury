@@ -3,11 +3,11 @@ namespace app;
 
 use nulib\A;
 use nulib\cl;
+use nulib\exceptions;
 use nulib\ext\tab\SsReader;
 use nulib\file\web\Upload;
 use nulib\os\path;
 use nulib\str;
-use nulib\ValueException;
 use stdClass;
 
 /**
@@ -353,12 +353,13 @@ class PvDataExtractor {
     } elseif (is_string($input)) {
       $origname = path::filename($input);
     } else {
-      throw ValueException::invalid_kind($input, "file");
+      throw exceptions::invalid_value($input, "file");
     }
     $name = pvs::basename($origname);
     $date = pvs::get_date($origname);
 
     $reader = SsReader::with($input, [
+      "all_null_is_empty_row" => false,
       "use_headers" => false,
       "parse_none" => true,
     ]);

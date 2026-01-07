@@ -60,7 +60,7 @@ class IndexPage extends APvPage {
       $codUsr = authz::get()->getUsername();
       $mineCol = "iif(cod_usr = '$codUsr', 0, 1)";
 
-      $usrs = cl::all($pvChannel->getCapacitor()->db()->all([
+      $usrs = cl::all($pvChannel->db()->all([
         "select distinct",
         "cols" => [
           "cod_usr" => "coalesce(cod_usr, '')",

@@ -1,12 +1,10 @@
 <?php
 namespace app;
 
-use nulib\app;
-use nulib\db\Capacitor;
+use nulib\app\app;
 use nulib\db\CapacitorChannel;
-use nulib\db\CapacitorStorage;
 use nulib\db\sqlite\Sqlite;
-use nulib\db\sqlite\SqliteStorage;
+use nulib\db\sqlite\SqliteCapacitor;
 use nulib\file;
 use nulib\os\path;
 use nulib\php\time\DateTime;
@@ -63,30 +61,26 @@ class pvs {
     return app::get()->getVarfile("pvs.db");
   }
 
-  static function storage(): CapacitorStorage {
+  static function storage(): SqliteCapacitor {
     $sqlite = new Sqlite(self::storage_file());
-    return new SqliteStorage($sqlite);
+    return new SqliteCapacitor($sqlite);
   }
 
-  private static Capacitor $config;
+  private static CapacitorChannel $config;
 
-  static function config(): Capacitor {
-    self::$config ??= new Capacitor(
-      self::storage(),
-      new class() extends CapacitorChannel {
-        const NAME = "config";
-        const TABLE_NAME = self::NAME;
-        const COLUMN_DEFINITIONS = [
-          "name" => "varchar not null primary key",
-          "value" => "varchar",
-        ];
-        function getItemValues($item, ?string $value=null): ?array {
-          return ["name" => $item, "value" => $value];
-        }
-      },
-    );
-    self::$config->ensureExists();
-    return self::$config;
+  static function config(): CapacitorChannel {
+    self::$config ??= self::storage()->newChannel(new class() extends CapacitorChannel {
+      const NAME = "config";
+      const TABLE_NAME = self::NAME;
+      const COLUMN_DEFINITIONS = [
+        "name" => "varchar not null primary key",
+        "value" => "varchar",
+      ];
+      function getItemValues($item, ?string $value=null): ?array {
+        return ["name" => $item, "value" => $value];
+      }
+    });
+    return self::$config->ensureSetup();
   }
 
   const EXPECTED_VERSION = 1;
@@ -108,13 +102,11 @@ class pvs {
 
   static function channel(): PvChannel {
     $channel = new PvChannel();
-    new Capacitor(self::storage(), $channel);
-    return $channel;
+    return $channel->initCapacitor(self::storage());
   }
 
   static function channel_rebuilder(): PvChannelRebuilder {
     $channel = new PvChannelRebuilder();
-    new Capacitor(self::storage(), $channel);
-    return $channel;
+    return $channel->initCapacitor(self::storage());
   }
 }
