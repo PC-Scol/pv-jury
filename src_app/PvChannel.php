@@ -58,27 +58,27 @@ class PvChannel extends CapacitorChannel {
     ];
   }
 
-  function onCreate($item, array $values, ?array $alwaysNull): ?array {
-    $name = $values["name"];
-    file::writer(pvs::json_file($name))->encodeJson($values["data"]);
+  function onCreate($item, array $row, ?array $alwaysNull): ?array {
+    $name = $row["name"];
+    file::writer(pvs::json_file($name))->encodeJson($row["data"]);
     return ["data" => null];
   }
 
-  function onUpdate($item, array $values, array $pvalues): ?array {
-    $updates = $this->onCreate($item, $values, $pvalues);
-    if ($this->rebuilder && $values["cod_usr"] === null && $pvalues["cod_usr"] !== null) {
+  function onUpdate($item, array $row, array $prow): ?array {
+    $updates = $this->onCreate($item, $row, $prow);
+    if ($this->rebuilder && $row["cod_usr"] === null && $prow["cod_usr"] !== null) {
       # si rebuilder, essayer de garder le même nom d'utilisateur
-      $updates["cod_usr"] = $pvalues["cod_usr"];
-      $updates["lib_usr"] = $pvalues["lib_usr"];
+      $updates["cod_usr"] = $prow["cod_usr"];
+      $updates["lib_usr"] = $prow["lib_usr"];
     }
     return $updates;
   }
 
-  function onDelete($item, array $values): bool {
+  function onDelete(array $row): bool {
     if (!cdefaults::KEEP_FILES_ON_DELETE) {
-      $jsonName = "{$values["name"]}.json";
+      $jsonName = "{$row["name"]}.json";
       @unlink(pvs::json_file($jsonName));
-      $uploadName = $values["origname"];
+      $uploadName = $row["origname"];
       @unlink(pvs::upload_file($uploadName));
     }
     return true;

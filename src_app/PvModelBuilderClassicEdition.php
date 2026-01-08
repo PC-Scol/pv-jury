@@ -8,7 +8,6 @@ use nulib\cv;
 use nulib\ext\spout\SpoutBuilder;
 use nulib\os\path;
 use nulib\str;
-use nulib\ValueException;
 use nur\b\values\Breaker;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
@@ -33,8 +32,7 @@ class PvModelBuilderClassicEdition extends PvModelBuilder {
 
   function setIses($ises): static {
     $ises = cl::first(cl::with($ises));
-    $ses = $this->pvData->sesCols[$ises] ?? null;
-    ValueException::check_null($ses);
+    cv::not_null($this->pvData->sesCols[$ises] ?? null);
     $this->ises = $ises;
     return $this;
   }

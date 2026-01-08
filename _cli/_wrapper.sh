@@ -78,6 +78,7 @@ if [ "$RUNPHP_MODE" == host ]; then
         docker compose run
         ${RUNPHP_BUILD:+--build}
         --rm
+        -e RUNPHP_MYSELF="$MYDIR/$MYNAME"
     )
     cwd="$(pwd)"
     mounted=
@@ -97,10 +98,9 @@ if [ "$RUNPHP_MODE" == host ]; then
     args+=(
         --workdir "$cwd"
         "$COMPOSE_SERVICE"
-        exec "$MYNAME"
+        exec "$0"
         "$@"
     )
-    cd "$PROJDIR"
     exec "${args[@]}"
 fi
 
