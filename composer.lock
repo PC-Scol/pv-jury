@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "98d7c2954ecf8244a84c6d441c61aeed",
+    "content-hash": "9053436ad0ded8021d3d1cfec062026b",
     "packages": [
         {
             "name": "composer/pcre",
@@ -690,11 +690,11 @@
         },
         {
             "name": "nulib/base",
-            "version": "dev-dev82",
+            "version": "0.9.1p82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-base.git",
-                "reference": "abf58a23be0effa54a4e0518389282c39de669dd"
+                "reference": "1a002c827015187002898a96b1d2516a13b3c563"
             },
             "require": {
                 "ext-json": "*",
@@ -759,18 +759,18 @@
                 }
             ],
             "description": "fonctions et classes essentielles",
-            "time": "2026-01-07T17:12:34+00:00"
+            "time": "2026-01-07T17:12:05+00:00"
         },
         {
             "name": "nulib/phpss",
-            "version": "dev-dev82",
+            "version": "0.9.0p82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-phpss.git",
-                "reference": "5978856d6f6afc21ea962a5a70dcb5099c215fd0"
+                "reference": "3c292322fa020340022fa97e1c4bd5fdf83ba9a3"
             },
             "require": {
-                "nulib/base": "^8.2-dev",
+                "nulib/base": "^0.9.0p82",
                 "php": "^8.2",
                 "phpoffice/phpspreadsheet": "^3.3.0"
             },
@@ -801,15 +801,15 @@
                 }
             ],
             "description": "wrapper pour phpoffice/phpspreadsheet",
-            "time": "2026-01-07T14:46:42+00:00"
+            "time": "2026-01-07T14:46:07+00:00"
         },
         {
             "name": "nulib/spout",
-            "version": "dev-dev82",
+            "version": "0.9.0p82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nulib-spout.git",
-                "reference": "3dde241830c73823481228408f6df9c1d7ea037d"
+                "reference": "46c307159558c2ed927582b1e9d6ddb4c81e4be3"
             },
             "require": {
                 "ext-dom": "*",
@@ -818,7 +818,7 @@
                 "ext-libxml": "*",
                 "ext-xmlreader": "*",
                 "ext-zip": "*",
-                "nulib/base": "^8.2-dev",
+                "nulib/base": "^0.9.0p82",
                 "php": "^8.2"
             },
             "replace": {
@@ -862,15 +862,15 @@
                 }
             ],
             "description": "wrapper pour openspout/openspout",
-            "time": "2026-01-07T14:43:33+00:00"
+            "time": "2026-01-07T14:43:02+00:00"
         },
         {
             "name": "nur/ture",
-            "version": "dev-dev82",
+            "version": "0.9.0p82",
             "source": {
                 "type": "git",
                 "url": "https://git.univ-reunion.fr/sda-php/nur-ture.git",
-                "reference": "501fc9203bf6314ab175c21a67778b6fbab1b0ed"
+                "reference": "8122932273d6a2d1b0544c8be8b3667e10addb67"
             },
             "require": {
                 "php": "^8.2"
@@ -903,9 +903,9 @@
                 "ext-sqlite3": "*",
                 "ext-tidy": "*",
                 "ext-zip": "*",
-                "nulib/base": "^8.2-dev",
-                "nulib/phpss": "^8.2-dev",
-                "nulib/spout": "^8.2-dev",
+                "nulib/base": "^0.9.0p82",
+                "nulib/phpss": "^0.9.0p82",
+                "nulib/spout": "^0.9.0p82",
                 "nulib/tests": "^8.2"
             },
             "bin": [
@@ -949,7 +949,7 @@
                 }
             ],
             "description": "espace de maturation pour les librairies",
-            "time": "2026-01-07T14:49:47+00:00"
+            "time": "2026-01-07T14:49:20+00:00"
         },
         {
             "name": "phpmailer/phpmailer",
@@ -2280,12 +2280,7 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "nulib/base": 20,
-        "nulib/spout": 20,
-        "nulib/phpss": 20,
-        "nur/ture": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
