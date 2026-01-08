@@ -1,9 +1,9 @@
 <?php
 namespace app\init;
 
-use nur\config;
 use nulib\db\mysql\Mysql;
-use nulib\db\mysql\MysqlStorage;
+use nulib\db\mysql\MysqlCapacitor;
+use nur\config;
 
 class pv_jurydb {
   private static $mysql;
@@ -12,7 +12,7 @@ class pv_jurydb {
     return self::$mysql ??= new Mysql(config::db("pv_jury"), $params);
   }
 
-  static function storage(?array $params=null): MysqlStorage {
-    return new MysqlStorage(self::mysql($params));
+  static function storage(?array $params=null): MysqlCapacitor {
+    return new MysqlCapacitor(self::mysql($params));
   }
 }

@@ -9,6 +9,8 @@ class cdefaults {
   # les supprimer
   const KEEP_FILES_ON_DELETE = false;
 
+  const AUTH_ANY = \AUTH_CAS || \AUTH_BASIC;
+
   const APP = [
     "debug" => false,
     "trace_sql" => false,

@@ -12,7 +12,7 @@ composer:
   dist:
     link: false
     require:
-      nulib/base: ^0.6.0p82
-      nulib/spout: ^0.6.0p82
-      nulib/phpss: ^0.6.0p82
-      nur/ture: ^0.6.0p82
+      nulib/base: ^0.9.0p82
+      nulib/spout: ^0.9.0p82
+      nulib/phpss: ^0.9.0p82
+      nur/ture: ^0.9.0p82

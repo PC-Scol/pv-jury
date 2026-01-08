@@ -1,0 +1,1 @@
+../vendor/bin/sqlite.capacitor.php

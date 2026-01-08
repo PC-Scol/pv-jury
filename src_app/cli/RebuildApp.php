@@ -9,9 +9,6 @@ use nulib\os\sh;
 use nulib\output\msg;
 
 class RebuildApp extends Application {
-  const PROJDIR = __DIR__.'/../..';
-  const APPCODE = bootstrap::APPCODE;
-
   const ARGS = [
     "purpose" => "reconstruire la base de donnée des PVs de jury",
 
@@ -90,11 +87,11 @@ class RebuildApp extends Application {
       ]);
       $orphanJsons = sh::ls_files(pvs::file(null), "*.json");
       $orphanUploads = sh::ls_files(pvs::upload_file(null), "*.csv");
-      $channel->each(null, function($item, array $values) use (&$orphanUploads, &$orphanJsons) {
-        $jsonName = "{$values["name"]}.json";
+      $channel->each(null, function(array $row) use (&$orphanUploads, &$orphanJsons) {
+        $jsonName = "{$row["name"]}.json";
         $key = array_search($jsonName, $orphanJsons);
         if ($key !== false) unset($orphanJsons[$key]);
-        $uploadName = $values["origname"];
+        $uploadName = $row["origname"];
         $key = array_search($uploadName, $orphanUploads);
         if ($key !== false) unset($orphanUploads[$key]);
       });
