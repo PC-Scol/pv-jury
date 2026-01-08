@@ -1,3 +1,8 @@
+## Release 0.13.0 du 08/01/2026-08:02
+
+* `1f1aa5b` forcer la création de la session
+* `46436b2` maj nulib-base et nur-ture
+
 ## Release 0.12.1 du 06/06/2025-11:18
 
 ## Release 0.12.0 du 06/06/2025-11:07
