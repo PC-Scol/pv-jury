@@ -31,6 +31,10 @@ services:
       - session-data:/var/lib/php/sessions
       - .:/var/www/app
       - ./devel:/data/pv-jury
+      - ../nulib-base:/var/www/nulib-base
+      - ../nulib-spout:/var/www/nulib-spout
+      - ../nulib-phpss:/var/www/nulib-phpss
+      - ../nur-ture:/var/www/nur-ture
     ports:
       - ${LSN_ADDR}:80
       - ${LSN_ADDR_SSL}:443

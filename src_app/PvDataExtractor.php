@@ -17,7 +17,7 @@ use stdClass;
 class PvDataExtractor {
   static function parse1_title(array $row, array &$data, &$ctx): bool {
     if ($ctx === null) $ctx = 1;
-    if ($ctx >=4 && cl::all_n($row)) {
+    if ($ctx >= 4 && cl::all_n($row)) {
       # il faut au moins 4 lignes de titre
       return true;
     }
@@ -234,13 +234,13 @@ class PvDataExtractor {
       function addCol($col, int $colIndex): void {
         if (str::starts_with("Amngt/Acquis", $col)) {
           $this->ses["acquis_col"] = $col;
-        } elseif ($col === "Note" || $col === "Note Retenue" || $col === "Note Finale") {
+        } elseif ($col === "Note"/* || $col === "Note Retenue"*/ || $col === "Note Finale") {
           $this->ses["note_col"] = $col;
         } elseif ($col === "Résultat" || $col === "Résultat Final") {
           $this->ses["res_col"] = $col;
         } elseif ($col === "ECTS" || $col === "ECTS Finaux") {
           $this->ses["ects_col"] = $col;
-        } elseif ($col === "Points Jury" || $col === "Points Jury Retenus") {
+        } elseif ($col === "Points Jury" /*|| $col === "Points Jury Retenus"*/) {
           $this->ses["pj_col"] = $col;
         }
         $cols =& $this->ses["cols"];
@@ -360,6 +360,7 @@ class PvDataExtractor {
 
     $reader = SsReader::with($input, [
       "all_null_is_empty_row" => false,
+      "ignore_empty_rows" => false,
       "use_headers" => false,
       "parse_none" => true,
     ]);
@@ -385,20 +386,22 @@ class PvDataExtractor {
       "headers" => null,
       "rows" => null,
     ];
-    $state = 1;
+    $state = 10;
     foreach ($reader as $row) {
       A::ensure_size($row, $maxCols);
-      if ($state == 1 && self::parse1_title($row, $data, $ctx1)) {
-        $state = 2;
-      } elseif ($state == 2 && self::parse2_gpts($row, $data)) {
-        $state = 3;
-      } elseif ($state == 3 && self::parse3_objs($row, $data)) {
-        $state = 4;
-      } elseif ($state == 4 && self::parse4_sess($row, $data)) {
-        $state = 5;
-      } elseif ($state == 5 && self::parse5_cols($row, $data)) {
-        $state = 6;
-      } elseif ($state == 6) {
+      if ($state == 10 && self::parse1_title($row, $data, $ctx1)) {
+        $state = 11;
+      } elseif ($state == 11) {
+        $state = 20;
+      } elseif ($state == 20 && self::parse2_gpts($row, $data)) {
+        $state = 30;
+      } elseif ($state == 30 && self::parse3_objs($row, $data)) {
+        $state = 40;
+      } elseif ($state == 40 && self::parse4_sess($row, $data)) {
+        $state = 50;
+      } elseif ($state == 50 && self::parse5_cols($row, $data)) {
+        $state = 60;
+      } elseif ($state == 60) {
         self::parse6_row($row, $data);
       }
     }
