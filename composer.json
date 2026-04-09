@@ -4,31 +4,15 @@
 	"description": "Conversion de PV Jury",
 	"repositories": [
 		{
-			"type": "path",
-			"url": "../nulib-base"
-		},
-		{
-			"type": "path",
-			"url": "../nulib-spout"
-		},
-		{
-			"type": "path",
-			"url": "../nulib-phpss"
-		},
-		{
-			"type": "path",
-			"url": "../nur-ture"
-		},
-		{
 			"type": "composer",
 			"url": "https://repos.univ-reunion.fr/composer"
 		}
 	],
 	"require": {
-		"nulib/base": "^8.2-dev",
-		"nulib/spout": "^8.2-dev",
-		"nulib/phpss": "^8.2-dev",
-		"nur/ture": "^8.2-dev",
+		"nulib/base": "^0.10.0p82",
+		"nulib/spout": "^0.10.0p82",
+		"nulib/phpss": "^0.10.0p82",
+		"nur/ture": "^0.10.0p82",
 		"ext-bcmath": "*",
 		"php": "^8.2"
 	},

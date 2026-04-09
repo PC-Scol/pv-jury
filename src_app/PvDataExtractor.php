@@ -234,14 +234,18 @@ class PvDataExtractor {
       function addCol($col, int $colIndex): void {
         if (str::starts_with("Amngt/Acquis", $col)) {
           $this->ses["acquis_col"] = $col;
-        } elseif ($col === "Note"/* || $col === "Note Retenue"*/ || $col === "Note Finale") {
+        } elseif ($col === "Note" || $col === "Note Finale") {
           $this->ses["note_col"] = $col;
+        } elseif ($col === "Note Retenue") {
+          $this->ses["note_col"] ??= $col;
         } elseif ($col === "Résultat" || $col === "Résultat Final") {
           $this->ses["res_col"] = $col;
         } elseif ($col === "ECTS" || $col === "ECTS Finaux") {
           $this->ses["ects_col"] = $col;
-        } elseif ($col === "Points Jury" /*|| $col === "Points Jury Retenus"*/) {
+        } elseif ($col === "Points Jury") {
           $this->ses["pj_col"] = $col;
+        } elseif ($col === "Points Jury Retenus") {
+          $this->ses["pj_col"] ??= $col;
         }
         $cols =& $this->ses["cols"];
         $cols[] = $col;
@@ -390,8 +394,8 @@ class PvDataExtractor {
     foreach ($reader as $row) {
       A::ensure_size($row, $maxCols);
       if ($state == 10 && self::parse1_title($row, $data, $ctx1)) {
-        $state = 11;
-      } elseif ($state == 11) {
+      #  $state = 11;
+      #} elseif ($state == 11) {
         $state = 20;
       } elseif ($state == 20 && self::parse2_gpts($row, $data)) {
         $state = 30;
