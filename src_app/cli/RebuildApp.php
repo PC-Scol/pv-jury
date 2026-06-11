@@ -1,10 +1,8 @@
 <?php
 namespace app\cli;
 
-use app\config\bootstrap;
 use app\pvs;
 use nulib\app\cli\Application;
-use nulib\cl;
 use nulib\os\sh;
 use nulib\output\msg;
 
