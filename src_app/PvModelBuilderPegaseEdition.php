@@ -793,7 +793,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
       }
       $builder->write(cl::merge($prefix, $row), $colsStyle, $rowStyle);
     }
-    $builder->setDifferentOddEven(true);
+    if ($builder instanceof SpoutBuilder) $builder->setDifferentOddEven(true);
     $section_colsStyles = $Spv["body_cols_styles"] ?? null;
     $section_rowStyles = $Spv["body_row_styles"] ?? null;
     foreach ($Spv["body"] as $key => $row) {
@@ -802,7 +802,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
       $rowStyle = $section_rowStyles[$key] ?? null;
       $builder->write(cl::merge($prefix, $row), $colsStyle, $rowStyle);
     }
-    $builder->setDifferentOddEven(false);
+    if ($builder instanceof SpoutBuilder) $builder->setDifferentOddEven(false);
     $section_colsStyles = $Spv["footer_cols_styles"] ?? null;
     $section_rowStyles = $Spv["footer_row_styles"] ?? null;
     $builder->write([]);

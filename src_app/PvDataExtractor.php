@@ -81,7 +81,7 @@ class PvDataExtractor {
       }
     };
 
-    if (!cl::all_n($row)) $data["headers"][] = $row;
+    $data["headers"][] = $row;
     array_splice($row, 0, 3);
     foreach ($row as $col) {
       if ($c->new($col)) continue;
@@ -202,7 +202,7 @@ class PvDataExtractor {
       }
     };
 
-    if (!cl::all_n($row)) $data["headers"][] = $row;
+    $data["headers"][] = $row;
     array_splice($row, 0, 3);
     foreach ($row as $col) {
       if ($c->new($col)) continue;
@@ -269,7 +269,16 @@ class PvDataExtractor {
       }
     };
 
-    if (!cl::all_n($row)) $data["headers"][] = $row;
+    # Renommer les colonnes Barème avec le nom de la colonne note précédente
+    $prevNoteCol = null;
+    foreach ($row as &$col) {
+      if ($col === "Note" || str::starts_with("Note ", $col)) {
+        $prevNoteCol = $col;
+      } elseif ($col === "Barème" && $prevNoteCol !== null) {
+        $col .= " $prevNoteCol";
+      }
+    }; unset($col);
+    $data["headers"][] = $row;
     array_splice($row, 0, 3);
     $sindex = 3;
     foreach ($row as $col) {
@@ -290,8 +299,11 @@ class PvDataExtractor {
           if ($value === "-") $row[$sindex] = $value = null;
           # ne pas considérer Barème quand il s'agit de décider s'il y a une
           # valeur
-          if ($col === "Barème") $isValue = false;
-          else $isValue = $value !== null;
+          if ($col === "Barème" || str::starts_with("Barème ", $col)) {
+            $isValue = false;
+          } else {
+            $isValue = $value !== null;
+          }
           $ses["have_value"] = $ses["have_value"] || $isValue;
           $haveNote = $col === $noteCol && $isValue;
           $ses["have_note"] = $ses["have_note"] || $haveNote;

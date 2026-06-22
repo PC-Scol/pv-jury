@@ -166,6 +166,7 @@ class PvModelBuilderDisplay extends PvModelBuilder {
     # tout d'abord, calculer les stats
     foreach ($ws["stats"] as &$gpt) {
       foreach ($gpt as &$obj) {
+        if ($obj === null) continue;
         foreach ($obj as &$ses) {
           if ($ses === null) continue;
           $notes = $ses["notes"] ?? null;
