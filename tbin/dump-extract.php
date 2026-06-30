@@ -2,6 +2,6 @@
 <?php
 require __DIR__.'/../vendor/autoload.php';
 
-use app\cli\RebuildApp;
+use app\cli\DumpExtractApp;
 
-RebuildApp::run();
+DumpExtractApp::run();

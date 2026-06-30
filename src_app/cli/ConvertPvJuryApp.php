@@ -62,7 +62,6 @@ ou les identifiants séparés par des virgules pour le modèle 'édition PEGASE'
   protected ?string $jsonOutput = null;
   protected ?string $csvOutput = null;
   protected ?string $xlsxOutput = null;
-  protected ?array $args = null;
 
   function main() {
     $args = $this->args;

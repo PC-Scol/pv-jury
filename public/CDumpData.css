@@ -1,0 +1,30 @@
+@CHARSET "utf-8";
+
+.dd-raw {
+  display: inline-block;
+  max-width: 25em;
+  overflow-x: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 8px 8px 0 8px;
+}
+.dd-data {
+}
+.dd-key {
+  color: darkcyan;
+}
+.dd-value {
+  color: darkmagenta;
+}
+.dd-control {
+  border: 1px solid gray;
+  border-radius: 5px 5px;
+  text-align: center;
+}
+
+.list-group.dd {
+  margin-bottom: 0;
+}
+.list-group.dd .list-group-item {
+  padding: 0.5em;
+}
