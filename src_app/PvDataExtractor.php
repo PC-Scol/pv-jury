@@ -147,9 +147,16 @@ class PvDataExtractor {
           "is_session_f" => false,
           "is_session" => false,
           "note_col" => null,
+          "note_cols" => null,
+          "bareme_col" => null,
+          "bareme_cols" => null,
           "res_col" => null,
+          "res_cols" => null,
           "ects_col" => null,
+          "ects_cols" => null,
           "pj_col" => null,
+          "pj_cols" => null,
+          "mention_col" => null,
           "is_controle" => false,
         ];
         $this->wses++;
@@ -234,24 +241,37 @@ class PvDataExtractor {
       function addCol($col, int $colIndex): void {
         if (str::starts_with("Amngt/Acquis", $col)) {
           $this->ses["acquis_col"] = $col;
-        } elseif ($col === "Note" || $col === "Note Finale") {
+        } elseif ($col === "Note" || str::starts_with("Note ", $col)) {
           $this->ses["note_col"] = $col;
-        } elseif ($col === "Note Retenue") {
-          $this->ses["note_col"] ??= $col;
-        } elseif ($col === "Résultat" || $col === "Résultat Final") {
+          $this->ses["note_cols"][$col] = true;
+        } elseif ($col === "Barème" || str::starts_with("Barème ", $col)) {
+          $this->ses["bareme_col"] = $col;
+          $this->ses["bareme_cols"][$col] = true;
+        } elseif ($col === "Résultat" || str::starts_with("Résultat ", $col)) {
           $this->ses["res_col"] = $col;
-        } elseif ($col === "ECTS" || $col === "ECTS Finaux") {
+          $this->ses["res_cols"][$col] = true;
+        } elseif ($col === "ECTS" || str::starts_with("ECTS ", $col)) {
           $this->ses["ects_col"] = $col;
-        } elseif ($col === "Points Jury") {
+          $this->ses["ects_cols"][$col] = true;
+        } elseif ($col === "Points Jury" || str::starts_with("Points Jury ", $col)) {
           $this->ses["pj_col"] = $col;
-        } elseif ($col === "Points Jury Retenus") {
-          $this->ses["pj_col"] ??= $col;
+          $this->ses["pj_cols"][$col] = true;
+        } elseif ($col === "Mention") {
+          $this->ses["mention_col"] = $col;
         }
         $cols =& $this->ses["cols"];
         $cols[] = $col;
         $this->ses["col_indexes"][$col] = $colIndex;
 
         if (count($cols) >= $this->ses["size"]) {
+          # corriger les valeurs *_cols
+          foreach (["note", "bareme", "res", "ects", "pj"] as $key) {
+            $key = "{$key}_cols";
+            if ($this->ses[$key] !== null) {
+              $this->ses[$key] = array_keys($this->ses[$key]);
+            }
+          }
+
           $this->xses++;
           $updateRefs = true;
           if ($this->xses >= count($this->obj["sess"])) {
@@ -331,27 +351,56 @@ class PvDataExtractor {
           if ($cses !== null) $pses =& $cses;
           $cses =& $ses;
         }
-        if (($isAcquis || $isSession) && !isset($sesCols[$ises]["cols"])) {
-          A::merge($sesCols[$ises], cl::select($ses, [
-            "have_value", "have_note", "have_res",
-            "is_acquis",
-            "acquis_col",
-            "is_session",
-            "note_col", "res_col", "ects_col", "pj_col",
-            "is_controle",
-            "cols",
-          ]));
+        $bool_cols = ["have_value", "have_note", "have_res", "is_acquis", "is_session", "is_controle"];
+        $scalar_cols = ["acquis_col", "note_col", "bareme_col", "res_col", "ects_col", "pj_col", "mention_col"];
+        $array_cols = ["cols", "note_cols", "bareme_cols", "res_cols", "ects_cols", "pj_cols"];
+        if ($isAcquis || $isSession) {
+          if (!isset($sesCols[$ises]["cols"])) {
+            # première fois: prendre en l'état
+            $cols = array_merge($bool_cols, $scalar_cols, $array_cols);
+            A::merge($sesCols[$ises], cl::select($ses, $cols));
+          } else {
+            # fois suivantes, merger si modifications
+            foreach ($bool_cols as $col) {
+              if ($ses[$col]) $sesCols[$ises][$col] = true;
+            }
+            foreach ($scalar_cols as $col) {
+              $sesCols[$ises][$col] ??= $ses[$col];
+            }
+            foreach ($array_cols as $col) {
+              $pvalues = $sesCols[$ises][$col];
+              $values = $ses[$col];
+              if ($values !== $pvalues) {
+                $pvalues = array_fill_keys($pvalues ?? [], true);
+                $values = array_fill_keys($values ?? [], true);
+                $values = array_merge($pvalues, $values);
+                $sesCols[$ises][$col] = array_keys($values);
+              }
+            }
+          }
         }
-        if ($isControle && !isset($ctlCols[$title]["cols"])) {
-          A::merge($ctlCols[$title], cl::select($ses, [
-            "have_value", "have_note", "have_res",
-            "is_acquis",
-            "acquis_col",
-            "is_session",
-            "note_col", "res_col", "ects_col", "pj_col",
-            "is_controle",
-            "cols",
-          ]));
+        if ($isControle) {
+          if (!isset($ctlCols[$title]["cols"])) {
+            $cols = array_merge($bool_cols, $scalar_cols, $array_cols);
+            A::merge($ctlCols[$title], cl::select($ses, $cols));
+          } else {
+            foreach ($bool_cols as $col) {
+              if ($ses[$col]) $ctlCols[$title][$col] = true;
+            }
+            foreach ($scalar_cols as $col) {
+              $ctlCols[$title][$col] ??= $ses[$col];
+            }
+            foreach ($array_cols as $col) {
+              $pvalues = $ctlCols[$title][$col];
+              $values = $ses[$col];
+              if ($values !== $pvalues) {
+                $pvalues = array_fill_keys($pvalues ?? [], true);
+                $values = array_fill_keys($values ?? [], true);
+                $values = array_merge($pvalues, $values);
+                $ctlCols[$title][$col] = array_keys($values);
+              }
+            }
+          }
         }
         if ($cses !== null) {
           if ($isControle) $cses["ctls"][] = $ses;

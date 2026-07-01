@@ -36,11 +36,13 @@ function _set_composefiles() {
     composefile="$PVJURY/docker-compose.yml"
     composefiles=("$composefile")
     composeargs=(-f "$composefile")
-    localfile="$PVJURY/docker-compose.local.yml"
-    if [ -f "$localfile" ]; then
-        composefiles+=("$localfile")
-        composeargs+=(-f "$localfile")
-    fi
+    for localfile in override local; do
+        localfile="$PVJURY/docker-compose.$localfile.yml"
+        if [ -f "$localfile" ]; then
+            composefiles+=("$localfile")
+            composeargs+=(-f "$localfile")
+        fi
+    done
 }
 
 function start_pvjury() {
@@ -51,16 +53,28 @@ function start_pvjury() {
     if [ -n "$ForceStart" ]; then
         :
     elif dcrunning "${composefiles[@]}"; then
-        enote "Le frontal web DRE est démarré"
+        enote "L'application PV-Jury est démarrée"
         return
     fi
 
-    if [ -n "$Build" ]; then
+    if [ -n "$Rebuild" ]; then
         "$MYDIR/sbin/build" -r || die
     fi
 
-    estep "Démarrage de l'application pv-jury"
-    docker compose "${composeargs[@]}" up -d --build || die
+    estep "Démarrage de l'application PV-Jury"
+    docker compose "${composeargs[@]}" up -d --wait --build ${Recreate:+--force-recreate} || die
+
+    if [ -n "$Devel" ]; then
+        auto_down=1
+        function auto_down_trap() {
+            if [ -n "$auto_down" ]; then
+                docker compose "${composeargs[@]}" down
+            fi
+        }
+        trap auto_down_trap 1 3 15 EXIT
+
+        docker compose "${composeargs[@]}" logs -f
+    fi
 }
 
 function stop_pvjury() {
@@ -69,30 +83,55 @@ function stop_pvjury() {
 
     [ -f "$composefile" ] || return 0
     if dcrunning "${composefiles[@]}"; then
-        estep "Arrêt de l'application pv-jury"
+        estep "Arrêt de l'application PV-Jury"
         docker compose "${composeargs[@]}" down || die
     fi
 }
 
 function refresh_pvjury() {
-    local ForceStart=1
+    local ForceStart=1 Recreate=
     start_pvjury "$@"
 }
 
 function restart_pvjury() {
-    stop_pvjury "$@"
+    local ForceStart=1 Recreate=1
     start_pvjury "$@"
 }
 
+function shell_prompt() {
+     local composefile localfile; local -a composefiles composeargs
+    _set_composefiles
+
+    [ -f "$composefile" ] || die "$composefile: fichier introuvable"
+    if dcrunning "${composefiles[@]}"; then
+        local container="$1"; shift
+        local -a cmd
+        if [ $# -gt 0 ]; then
+            cmd=("$@")
+            estep "$container $1"
+        else
+            cmd=(bash)
+            estep "$container Invite shell"
+        fi
+        docker compose "${composeargs[@]}" exec "$container" "${cmd[@]}" || die
+    else
+        eerror "Impossible de lancer l'invite shell $container: l'application PV-Jury est arrêtée"
+    fi
+}
+
 action=start
-Build=
+Rebuild=
+Devel=
 args=(
-    "Contrôler l'application pv-jury"
+    "Contrôler l'application PV-Jury"
     -s,--start action=start "Démarrer l'application si elle ne tourne pas déjà"
     -k,--stop action=stop "Arrêter l'application"
     -r,--refresh action=refresh "Redémarrer l'application si nécessaire"
     -R,--restart action=restart "Forcer l'arrêt puis le démarrage de l'application"
-    -b,-B,--rebuild Build=1 "++Forcer la (re)construction des images avant le démarrage"
+    -b,-B,--rebuild Rebuild=1 "++Forcer la (re)construction des images avant le démarrage"
+    -D,--devel Devel=1 "++Activer le mode développement (start + log + autodown)"
+    -x,--shell-web action=shell_web "Lancer une invite bash dans le container web"
+    --shell-cron action=shell_cron "Lancer une invite bash dans le container cron"
 )
 parse_args "$@"; set -- "${args[@]}"
 
@@ -101,5 +140,6 @@ start) start_pvjury "$@";;
 stop) stop_pvjury "$@";;
 refresh) refresh_pvjury "$@";;
 restart) restart_pvjury "$@";;
+shell_*) shell_prompt "${action#shell_}" "$@";;
 *) die "$action: action non implémentée";;
 esac

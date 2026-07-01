@@ -134,12 +134,15 @@ abstract class PvModelBuilder {
     ];
   }
 
-  function getAcqNoteResEctsPjCoeff(array $row, array $ses, ?array $acq): array {
+  function getAcqNoteResEctsPjCoeffMention(array $row, array $ses, ?array $acq): array {
     if ($acq !== null) $acq = $this->getAcq($row, $acq);
     $noteResEctsPj = $this->getNoteResEctsPj($row, $ses);
     $coeffCol = $ses["col_indexes"]["Coefficient"] ?? null;
+    $mentionCol = $ses["col_indexes"]["Mention"] ?? null;
     return cl::merge($acq, $noteResEctsPj, [
       "coeff" => $row[$coeffCol] ?? null,
+      "have_mention" => $mentionCol !== null,
+      "mention" => $row[$mentionCol] ?? null,
     ]);
   }
 
@@ -226,71 +229,59 @@ abstract class PvModelBuilder {
   }
 
   const STD_COLS = [
-    "acquis_col" => [1, "Aménagements / Acquis / CHC incomplet", true],
-    "note_col" => [2, "Note", true],
-    "res_col" => [3, "Résultat", true],
-    "ects_col" => [4, "ECTS", true],
-    "pj_col" => [5, "Points Jury", true],
+    "acquis_col" => [true, "Aménagements / Acquis / CHC incomplet", 1],
+    "note_cols" => [true, null, 2],
+    "bareme_cols" => [false, null, 2],
+    "res_cols" => [true, null, 4],
+    "ects_cols" => [true, null, 5],
+    "pj_cols" => [true, null, 6],
+    "mention_col" => [true, null, 7],
   ];
 
   protected ?array $cols = null;
 
   function getCols(): array {
-    if ($this->cols === null) {
-      $pvData = $this->pvData;
-      $cols = [];
-      $lastIcol = 0;
-      foreach (self::STD_COLS as [$icol, $label, $checked]) {
-        $cols[$icol] = null;
-        if ($icol > $lastIcol) $lastIcol = $icol;
-      }
-      $defined = [];
-      $nextIcol = $lastIcol + 1;
-      $sess = cl::merge($pvData->sesCols, $pvData->ctlCols);
-      foreach ($sess as $ses) {
-        foreach (self::STD_COLS as $ref => [$icol, $label, $checked]) {
-          $col = $cols[$icol] ?? null;
-          if ($ses[$ref] !== null && $col === null) {
-            $cols[$icol] = [$icol, $label, $checked, $ref];
+    if ($this->cols !== null) return $this->cols;
+    $pvData = $this->pvData;
+    $sess = cl::merge($pvData->sesCols, $pvData->ctlCols);
+    $index = 1;
+    $cols = [];
+    foreach ($sess as $ses) {
+      foreach ($ses["cols"] as $col) {
+        $found = false;
+        foreach (self::STD_COLS as $ref => [$checked, $label, $order]) {
+          if (in_array($col, cl::with($ses[$ref] ?? null))) {
+            $found = true;
+            break;
           }
         }
-        foreach ($ses["cols"] as $label) {
-          # vérifier que ce n'est pas une colonne standard
-          $found = false;
-          foreach (array_keys(self::STD_COLS) as $ref) {
-            if ($ses[$ref] === $label) {
-              $found = true;
-              break;
-            }
-          }
-          if ($found) continue;
-          # vérifier que ce n'est pas déjà défini
-          if ($defined[$label] ?? false) continue;
-          # ajouter la nouvelle colonne
-          $defined[$label] = true;
-          $cols[$nextIcol] = [$nextIcol, $label, false, null];
-          $nextIcol++;
+        $label ??= $col;
+        if (!$found) {
+          $ref = null;
+          $checked = false;
+          $order = 999;
         }
+        $icol = $index++;
+        $cols[$icol] = [
+          "col" => $col,
+          "ref" => $ref,
+          "label" => $label,
+          "checked" => $checked,
+          "order" => $order,
+        ];
       }
-      $this->cols = array_filter($cols, function ($col) {
-        return $col !== null;
-      });
     }
-    return $this->cols;
+    uasort($cols, cl::compare(["order", "icol"]));
+    return $this->cols = $cols;
   }
 
   function getShowCols(?array $icols=null, ?array $ses=null): ?array {
     $showCols = null;
-    foreach ($this->getCols() as [$icol, $label, $checked, $ref]) {
+    foreach ($this->getCols() as $icol => ["col" => $col, "ref" => $ref]) {
       if ($icols !== null && !in_array($icol, $icols)) continue;
-      if ($ref !== null) $label = $ses[$ref];
-      if ($label === null) continue;
-      if (in_array($label, $ses["cols"])) {
-        $showCols[$label] = $ref;
-      }
+      if (in_array($col, $ses["cols"])) $showCols[$col] = $ref;
     }
     return $showCols;
-
   }
 
   abstract function checkForm(): bool;

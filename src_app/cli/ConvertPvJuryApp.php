@@ -4,9 +4,7 @@ namespace app\cli;
 use app\PvDataExtractor;
 use app\PvModelBuilder;
 use app\PvModelBuilderClassicEdition;
-use app\PvModelBuilderDisplay;
 use app\PvModelBuilderPegaseEdition;
-use app\PvModelBuilderTemplateEdition;
 use nulib\app\cli\Application;
 use nulib\ext\json;
 use nulib\ext\yaml;
@@ -18,9 +16,6 @@ class ConvertPvJuryApp extends Application {
     "purpose" => "convertir une extraction de PV de jury",
     "usage" => "INPUT.csv [-o OUTPUT.csv]",
 
-    ["-1", "--model-display", "name" => "model", "value" => 1,
-      "help" => "Sélectionner le modèle 'affichage individuel' (c'est la valeur par défaut)",
-    ],
     ["-2", "--model-classic-edition", "name" => "model", "value" => 2,
       "help" => "Sélectionner le modèle 'édition classique'",
     ],
@@ -43,14 +38,10 @@ ou les identifiants séparés par des virgules pour le modèle 'édition PEGASE'
     ["-o", "--csv-output", "args" => "file",
       "help" => "Spécifier le fichier CSV en sortie",
     ],
-    ["-x", "--xlsx-output", "args" => "file",
-      "help" => "Spécifier le fichier XLSX mis en forme en sortie",
-    ],
     ["args" => "file", "name" => "args"],
   ];
 
   const CSV_BUILDERS = [
-    1 => PvModelBuilderDisplay::class,
     2 => PvModelBuilderClassicEdition::class,
     3 => PvModelBuilderPegaseEdition::class,
   ];
@@ -61,7 +52,6 @@ ou les identifiants séparés par des virgules pour le modèle 'édition PEGASE'
   protected bool $dumpYaml = false;
   protected ?string $jsonOutput = null;
   protected ?string $csvOutput = null;
-  protected ?string $xlsxOutput = null;
 
   function main() {
     $args = $this->args;
@@ -74,11 +64,10 @@ ou les identifiants séparés par des virgules pour le modèle 'édition PEGASE'
     $dumpYaml = $this->dumpYaml;
     $jsonOutput = $this->jsonOutput;
     $csvOutput = $this->csvOutput;
-    $xlsxOutput = $this ->xlsxOutput;
-    if (!$dumpYaml && $jsonOutput === null && $csvOutput === null && $xlsxOutput === null) {
+    if (!$dumpYaml && $jsonOutput === null && $csvOutput === null) {
       $csvOutput = "-";
     }
-    $wsdump = $dumpYaml && $csvOutput !== null || $xlsxOutput !== null;
+    $wsdump = $dumpYaml && $csvOutput !== null;
 
     if ($dumpYaml && !$wsdump) {
       yaml::dump($pvData->data);
@@ -110,10 +99,6 @@ ou les identifiants séparés par des virgules pour le modèle 'édition PEGASE'
       } else {
         $builder->write();
       }
-    }
-    if($xlsxOutput !== null){
-      $builder = new PvModelBuilderTemplateEdition();
-      $builder->build($pvData->data, $xlsxOutput)->write();
     }
   }
 }

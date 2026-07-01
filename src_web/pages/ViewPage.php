@@ -59,9 +59,9 @@ class ViewPage extends APvPage {
     al::reset();
     $codApr = $searchfo["a"];
     if (isset($rows[$codApr])) {
-      $builder = new PvModelBuilderDisplay($this->pvData);
+      $builder = new PvModelBuilderDisplay($pvData);
       $builder->setCodApr($codApr);
-      $builder->compute($pvData);
+      $builder->compute();
       $this->builder = $builder;
     } elseif ($codApr) {
       al::error("Code apprenant non trouvé dans ce fichier");
