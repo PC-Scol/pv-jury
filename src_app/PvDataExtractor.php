@@ -157,7 +157,6 @@ class PvDataExtractor {
           "is_session" => false,
           "note_col" => null,
           "note_cols" => null,
-          "bareme_col" => null,
           "bareme_cols" => null,
           "res_col" => null,
           "res_cols" => null,
@@ -250,20 +249,35 @@ class PvDataExtractor {
       function addCol($col, int $colIndex): void {
         if (str::starts_with("Amngt/Acquis", $col)) {
           $this->ses["acquis_col"] = $col;
-        } elseif ($col === "Note" || str::starts_with("Note ", $col)) {
+        } elseif ($col === "Note Finale") {
+          # la note finale prime sur les autres
           $this->ses["note_col"] = $col;
           $this->ses["note_cols"][$col] = true;
+        } elseif ($col === "Note" || str::starts_with("Note ", $col)) {
+          $this->ses["note_col"] ??= $col;
+          $this->ses["note_cols"][$col] = true;
         } elseif ($col === "Barème" || str::starts_with("Barème ", $col)) {
-          $this->ses["bareme_col"] = $col;
           $this->ses["bareme_cols"][$col] = true;
-        } elseif ($col === "Résultat" || str::starts_with("Résultat ", $col)) {
+        } elseif ($col === "Résultat Final") {
+          # le résultat final prime sur les autres
           $this->ses["res_col"] = $col;
           $this->ses["res_cols"][$col] = true;
-        } elseif ($col === "ECTS" || str::starts_with("ECTS ", $col)) {
+        } elseif ($col === "Résultat" || str::starts_with("Résultat ", $col)) {
+          $this->ses["res_col"] ??= $col;
+          $this->ses["res_cols"][$col] = true;
+        } elseif ($col === "ECTS Finaux") {
+          # les ECTS finaux priment sur les autres
           $this->ses["ects_col"] = $col;
           $this->ses["ects_cols"][$col] = true;
-        } elseif ($col === "Points Jury" || str::starts_with("Points Jury ", $col)) {
+        } elseif ($col === "ECTS" || str::starts_with("ECTS ", $col)) {
+          $this->ses["ects_col"] ??= $col;
+          $this->ses["ects_cols"][$col] = true;
+        } elseif ($col === "Points Jury Retenus") {
+          # les points jury retenus priment sur les autres
           $this->ses["pj_col"] = $col;
+          $this->ses["pj_cols"][$col] = true;
+        } elseif ($col === "Points Jury" || str::starts_with("Points Jury ", $col)) {
+          $this->ses["pj_col"] ??= $col;
           $this->ses["pj_cols"][$col] = true;
         } elseif ($col === "Mention") {
           $this->ses["mention_col"] = $col;
@@ -361,7 +375,7 @@ class PvDataExtractor {
           $cses =& $ses;
         }
         $bool_cols = ["have_value", "have_note", "have_res", "is_acquis", "is_session", "is_controle"];
-        $scalar_cols = ["acquis_col", "note_col", "bareme_col", "res_col", "ects_col", "pj_col", "mention_col"];
+        $scalar_cols = ["acquis_col", "note_col", "res_col", "ects_col", "pj_col", "mention_col"];
         $array_cols = ["cols", "note_cols", "bareme_cols", "res_cols", "ects_cols", "pj_cols"];
         if ($isAcquis || $isSession) {
           if (!isset($sesCols[$ises]["cols"])) {
