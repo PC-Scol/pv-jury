@@ -8,6 +8,7 @@ use nulib\ext\tab\SsReader;
 use nulib\file\web\Upload;
 use nulib\os\path;
 use nulib\str;
+use nulib\ValueException;
 use stdClass;
 
 /**
@@ -15,8 +16,16 @@ use stdClass;
  * depuis PEGASE
  */
 class PvDataExtractor {
+  static function invalid_file(): ValueException {
+    return new ValueException("Ce fichier ne semble pas être un PV de jury valide");
+  }
   static function parse1_title(array $row, array &$data, &$ctx): bool {
-    if ($ctx === null) $ctx = 1;
+    if ($ctx === null) {
+      if (!str::starts_with("Pv de jury", cl::first($row))) {
+        throw self::invalid_file();
+      }
+      $ctx = 1;
+    }
     if ($ctx >= 4 && cl::all_n($row)) {
       # il faut au moins 4 lignes de titre
       return true;
@@ -470,6 +479,7 @@ class PvDataExtractor {
         self::parse6_row($row, $data);
       }
     }
+    if ($data["objs"] === null) throw self::invalid_file();
     self::update_metadata($data);
 
     return new PvData($data);

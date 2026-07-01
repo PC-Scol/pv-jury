@@ -144,8 +144,13 @@ class IndexPage extends APvPage {
 
   function importAction() {
     $file = $this->file;
-    pvs::channel()->charge($file, null, null, $values);
-    page::redirect(page::bu(ConvertPage::class, ["n" => $values["name"]]));
+    try {
+      pvs::channel()->charge($file, null, null, $values);
+      page::redirect(page::bu(ConvertPage::class, ["n" => $values["name"]]));
+    } catch (Exception $e) {
+      al::error($e->getMessage());
+      page::redirect(true);
+    }
   }
 
   function print(): void {

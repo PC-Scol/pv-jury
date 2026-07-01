@@ -2,6 +2,7 @@
 namespace app\cli;
 
 use app\pvs;
+use Exception;
 use nulib\app\cli\Application;
 use nulib\os\sh;
 use nulib\output\msg;
@@ -60,8 +61,13 @@ class RebuildApp extends Application {
         foreach ($files as $file) {
           $filename = basename($file);
           msg::action("chargement de $filename", function() use ($channel, $file) {
-            $channel->charge($file);
-            return true;
+            try {
+              $channel->charge($file);
+              return true;
+            } catch (Exception $e) {
+              msg::error($e->getMessage());
+              return false;
+            }
           });
         }
       } else {
@@ -70,8 +76,13 @@ class RebuildApp extends Application {
         foreach ($files as $file) {
           $filename = basename($file);
           msg::action("chargement de $filename", function() use ($channel, $file) {
-            $channel->charge($file);
-            return true;
+            try {
+              $channel->charge($file);
+              return true;
+            } catch (Exception $e) {
+              msg::error($e->getMessage());
+              return false;
+            }
           });
         }
       }
