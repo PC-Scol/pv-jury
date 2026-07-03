@@ -1,3 +1,15 @@
+## Release 0.14.0 du 03/07/2026-11:30
+
+* `a745147` maj environnement de démo
+* `e68eba7` corriger le calcul des colonnes
+* `a24a1af` les valeurs finales ont la priorité sur les autres valeurs
+* `1389912` exception si fichier invalide
+* `85b6c5e` support de la colonne mention
+* `47060a4` réorganiser pour faciliter les tests
+* `82220f2` renommer les colonnes Barème
+* `307a0a9` revert nouveau format (c'était un bug)
+* `7e8a5cc` début du support du nouveau format (à confirmer)
+
 ## Release 0.13.1 du 08/01/2026-08:09
 
 ## Release 0.13.0 du 08/01/2026-08:02

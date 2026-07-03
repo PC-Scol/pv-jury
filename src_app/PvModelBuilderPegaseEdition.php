@@ -490,9 +490,9 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
       else break;
     }
     ["note" => $notea,
-    ] = $this->getAcqNoteResEctsPjCoeff($rowa, $ses, $acq);
+    ] = $this->getAcqNoteResEctsPjCoeffMention($rowa, $ses, $acq);
     ["note" => $noteb,
-    ] = $this->getAcqNoteResEctsPjCoeff($rowb, $ses, $acq);
+    ] = $this->getAcqNoteResEctsPjCoeffMention($rowb, $ses, $acq);
     if (!is_numeric($notea)) $notea = -1;
     if (!is_numeric($noteb)) $noteb = -1;
     $c = -cv::compare($notea, $noteb);
@@ -512,7 +512,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
       "res" => $res,
       "ects" => $ects,
       "pj" => $pj,
-    ] = $this->getAcqNoteResEctsPjCoeff($row, $ses, $acq);
+    ] = $this->getAcqNoteResEctsPjCoeffMention($row, $ses, $acq);
 
     $showCols = $ses["show_cols"];
     foreach ($showCols as $col => $ref) {
@@ -525,7 +525,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
           "align" => "center",
         ]);
         break;
-      case "note_col":
+      case "note_cols":
         $snote = $note;
         $value = $note;
         A::merge($colStyles, [
@@ -533,7 +533,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
           "format" => "0.000",
         ]);
         break;
-      case "res_col":
+      case "res_cols":
         if ($firstObj && $res !== null) {
           $resultats[$codApr] = $res;
           $firstObj = false;
@@ -543,13 +543,13 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
           "align" => "center",
         ]);
         break;
-      case "ects_col":
+      case "ects_cols":
         $value = $ects;
         A::merge($colStyles, [
           "align" => "center",
         ]);
         break;
-      case "pj_col":
+      case "pj_cols":
         $value = $pj;
         A::merge($colStyles, [
           "align" => "center",
@@ -748,6 +748,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
     $pvData = $this->pvData;
     $this->preparePvData($pvData);
     $this->prepareLayout();
+    //$pvData->ws["debug_cols"] = $this->getCols();
 
     $rows = $pvData->rows;
     switch ($this->order) {
@@ -793,7 +794,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
       }
       $builder->write(cl::merge($prefix, $row), $colsStyle, $rowStyle);
     }
-    $builder->setDifferentOddEven(true);
+    if ($builder instanceof SpoutBuilder) $builder->setDifferentOddEven(true);
     $section_colsStyles = $Spv["body_cols_styles"] ?? null;
     $section_rowStyles = $Spv["body_row_styles"] ?? null;
     foreach ($Spv["body"] as $key => $row) {
@@ -802,7 +803,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
       $rowStyle = $section_rowStyles[$key] ?? null;
       $builder->write(cl::merge($prefix, $row), $colsStyle, $rowStyle);
     }
-    $builder->setDifferentOddEven(false);
+    if ($builder instanceof SpoutBuilder) $builder->setDifferentOddEven(false);
     $section_colsStyles = $Spv["footer_cols_styles"] ?? null;
     $section_rowStyles = $Spv["footer_row_styles"] ?? null;
     $builder->write([]);
@@ -921,7 +922,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
     ]);
     vo::sdiv(["class" => $form->FGC_CLASS()]);
     $index = 1;
-    foreach ($this->getCols() as [$icol, $label, $checked, $ref]) {
+    foreach ($this->getCols() as $icol => ["label" => $label, "checked" => $checked]) {
       $form->printCheckbox($label, "cols[]", $icol, $checked, [
         "id" => "col$index",
         "naked" => true,

@@ -3,10 +3,10 @@ namespace web\pages;
 
 use app\pvs;
 use Exception;
-use nur\authz;
 use nulib\cl;
 use nulib\file\web\Upload;
 use nulib\web\uploads;
+use nur\authz;
 use nur\v\al;
 use nur\v\bs3\fo\Form;
 use nur\v\bs3\fo\FormInline;
@@ -144,8 +144,13 @@ class IndexPage extends APvPage {
 
   function importAction() {
     $file = $this->file;
-    pvs::channel()->charge($file, null, null, $values);
-    page::redirect(page::bu(ConvertPage::class, ["n" => $values["name"]]));
+    try {
+      pvs::channel()->charge($file, null, null, $values);
+      page::redirect(page::bu(ConvertPage::class, ["n" => $values["name"]]));
+    } catch (Exception $e) {
+      al::error($e->getMessage());
+      page::redirect(true);
+    }
   }
 
   function print(): void {

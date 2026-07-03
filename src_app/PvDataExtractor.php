@@ -8,6 +8,7 @@ use nulib\ext\tab\SsReader;
 use nulib\file\web\Upload;
 use nulib\os\path;
 use nulib\str;
+use nulib\ValueException;
 use stdClass;
 
 /**
@@ -15,9 +16,17 @@ use stdClass;
  * depuis PEGASE
  */
 class PvDataExtractor {
+  static function invalid_file(): ValueException {
+    return new ValueException("Ce fichier ne semble pas être un PV de jury valide");
+  }
   static function parse1_title(array $row, array &$data, &$ctx): bool {
-    if ($ctx === null) $ctx = 1;
-    if ($ctx >=4 && cl::all_n($row)) {
+    if ($ctx === null) {
+      if (!str::starts_with("Pv de jury", cl::first($row))) {
+        throw self::invalid_file();
+      }
+      $ctx = 1;
+    }
+    if ($ctx >= 4 && cl::all_n($row)) {
       # il faut au moins 4 lignes de titre
       return true;
     }
@@ -81,7 +90,7 @@ class PvDataExtractor {
       }
     };
 
-    if (!cl::all_n($row)) $data["headers"][] = $row;
+    $data["headers"][] = $row;
     array_splice($row, 0, 3);
     foreach ($row as $col) {
       if ($c->new($col)) continue;
@@ -147,9 +156,15 @@ class PvDataExtractor {
           "is_session_f" => false,
           "is_session" => false,
           "note_col" => null,
+          "note_cols" => null,
+          "bareme_cols" => null,
           "res_col" => null,
+          "res_cols" => null,
           "ects_col" => null,
+          "ects_cols" => null,
           "pj_col" => null,
+          "pj_cols" => null,
+          "mention_col" => null,
           "is_controle" => false,
         ];
         $this->wses++;
@@ -202,7 +217,7 @@ class PvDataExtractor {
       }
     };
 
-    if (!cl::all_n($row)) $data["headers"][] = $row;
+    $data["headers"][] = $row;
     array_splice($row, 0, 3);
     foreach ($row as $col) {
       if ($c->new($col)) continue;
@@ -234,20 +249,52 @@ class PvDataExtractor {
       function addCol($col, int $colIndex): void {
         if (str::starts_with("Amngt/Acquis", $col)) {
           $this->ses["acquis_col"] = $col;
-        } elseif ($col === "Note" || $col === "Note Retenue" || $col === "Note Finale") {
+        } elseif ($col === "Note Finale") {
+          # la note finale prime sur les autres
           $this->ses["note_col"] = $col;
-        } elseif ($col === "Résultat" || $col === "Résultat Final") {
+          $this->ses["note_cols"][$col] = true;
+        } elseif ($col === "Note" || str::starts_with("Note ", $col)) {
+          $this->ses["note_col"] ??= $col;
+          $this->ses["note_cols"][$col] = true;
+        } elseif ($col === "Barème" || str::starts_with("Barème ", $col)) {
+          $this->ses["bareme_cols"][$col] = true;
+        } elseif ($col === "Résultat Final") {
+          # le résultat final prime sur les autres
           $this->ses["res_col"] = $col;
-        } elseif ($col === "ECTS" || $col === "ECTS Finaux") {
+          $this->ses["res_cols"][$col] = true;
+        } elseif ($col === "Résultat" || str::starts_with("Résultat ", $col)) {
+          $this->ses["res_col"] ??= $col;
+          $this->ses["res_cols"][$col] = true;
+        } elseif ($col === "ECTS Finaux") {
+          # les ECTS finaux priment sur les autres
           $this->ses["ects_col"] = $col;
-        } elseif ($col === "Points Jury" || $col === "Points Jury Retenus") {
+          $this->ses["ects_cols"][$col] = true;
+        } elseif ($col === "ECTS" || str::starts_with("ECTS ", $col)) {
+          $this->ses["ects_col"] ??= $col;
+          $this->ses["ects_cols"][$col] = true;
+        } elseif ($col === "Points Jury Retenus") {
+          # les points jury retenus priment sur les autres
           $this->ses["pj_col"] = $col;
+          $this->ses["pj_cols"][$col] = true;
+        } elseif ($col === "Points Jury" || str::starts_with("Points Jury ", $col)) {
+          $this->ses["pj_col"] ??= $col;
+          $this->ses["pj_cols"][$col] = true;
+        } elseif ($col === "Mention") {
+          $this->ses["mention_col"] = $col;
         }
         $cols =& $this->ses["cols"];
         $cols[] = $col;
         $this->ses["col_indexes"][$col] = $colIndex;
 
         if (count($cols) >= $this->ses["size"]) {
+          # corriger les valeurs *_cols
+          foreach (["note", "bareme", "res", "ects", "pj"] as $key) {
+            $key = "{$key}_cols";
+            if ($this->ses[$key] !== null) {
+              $this->ses[$key] = array_keys($this->ses[$key]);
+            }
+          }
+
           $this->xses++;
           $updateRefs = true;
           if ($this->xses >= count($this->obj["sess"])) {
@@ -265,7 +312,16 @@ class PvDataExtractor {
       }
     };
 
-    if (!cl::all_n($row)) $data["headers"][] = $row;
+    # Renommer les colonnes Barème avec le nom de la colonne note précédente
+    $prevNoteCol = null;
+    foreach ($row as &$col) {
+      if ($col === "Note" || str::starts_with("Note ", $col)) {
+        $prevNoteCol = $col;
+      } elseif ($col === "Barème" && $prevNoteCol !== null) {
+        $col .= " $prevNoteCol";
+      }
+    }; unset($col);
+    $data["headers"][] = $row;
     array_splice($row, 0, 3);
     $sindex = 3;
     foreach ($row as $col) {
@@ -286,8 +342,11 @@ class PvDataExtractor {
           if ($value === "-") $row[$sindex] = $value = null;
           # ne pas considérer Barème quand il s'agit de décider s'il y a une
           # valeur
-          if ($col === "Barème") $isValue = false;
-          else $isValue = $value !== null;
+          if ($col === "Barème" || str::starts_with("Barème ", $col)) {
+            $isValue = false;
+          } else {
+            $isValue = $value !== null;
+          }
           $ses["have_value"] = $ses["have_value"] || $isValue;
           $haveNote = $col === $noteCol && $isValue;
           $ses["have_note"] = $ses["have_note"] || $haveNote;
@@ -315,27 +374,56 @@ class PvDataExtractor {
           if ($cses !== null) $pses =& $cses;
           $cses =& $ses;
         }
-        if (($isAcquis || $isSession) && !isset($sesCols[$ises]["cols"])) {
-          A::merge($sesCols[$ises], cl::select($ses, [
-            "have_value", "have_note", "have_res",
-            "is_acquis",
-            "acquis_col",
-            "is_session",
-            "note_col", "res_col", "ects_col", "pj_col",
-            "is_controle",
-            "cols",
-          ]));
+        $bool_cols = ["have_value", "have_note", "have_res", "is_acquis", "is_session", "is_controle"];
+        $scalar_cols = ["acquis_col", "note_col", "res_col", "ects_col", "pj_col", "mention_col"];
+        $array_cols = ["cols", "note_cols", "bareme_cols", "res_cols", "ects_cols", "pj_cols"];
+        if ($isAcquis || $isSession) {
+          if (!isset($sesCols[$ises]["cols"])) {
+            # première fois: prendre en l'état
+            $cols = array_merge($bool_cols, $scalar_cols, $array_cols);
+            A::merge($sesCols[$ises], cl::select($ses, $cols));
+          } else {
+            # fois suivantes, merger si modifications
+            foreach ($bool_cols as $col) {
+              if ($ses[$col]) $sesCols[$ises][$col] = true;
+            }
+            foreach ($scalar_cols as $col) {
+              $sesCols[$ises][$col] ??= $ses[$col];
+            }
+            foreach ($array_cols as $col) {
+              $pvalues = $sesCols[$ises][$col];
+              $values = $ses[$col];
+              if ($values !== $pvalues) {
+                $pvalues = array_fill_keys($pvalues ?? [], true);
+                $values = array_fill_keys($values ?? [], true);
+                $values = array_merge($pvalues, $values);
+                $sesCols[$ises][$col] = array_keys($values);
+              }
+            }
+          }
         }
-        if ($isControle && !isset($ctlCols[$title]["cols"])) {
-          A::merge($ctlCols[$title], cl::select($ses, [
-            "have_value", "have_note", "have_res",
-            "is_acquis",
-            "acquis_col",
-            "is_session",
-            "note_col", "res_col", "ects_col", "pj_col",
-            "is_controle",
-            "cols",
-          ]));
+        if ($isControle) {
+          if (!isset($ctlCols[$title]["cols"])) {
+            $cols = array_merge($bool_cols, $scalar_cols, $array_cols);
+            A::merge($ctlCols[$title], cl::select($ses, $cols));
+          } else {
+            foreach ($bool_cols as $col) {
+              if ($ses[$col]) $ctlCols[$title][$col] = true;
+            }
+            foreach ($scalar_cols as $col) {
+              $ctlCols[$title][$col] ??= $ses[$col];
+            }
+            foreach ($array_cols as $col) {
+              $pvalues = $ctlCols[$title][$col];
+              $values = $ses[$col];
+              if ($values !== $pvalues) {
+                $pvalues = array_fill_keys($pvalues ?? [], true);
+                $values = array_fill_keys($values ?? [], true);
+                $values = array_merge($pvalues, $values);
+                $ctlCols[$title][$col] = array_keys($values);
+              }
+            }
+          }
         }
         if ($cses !== null) {
           if ($isControle) $cses["ctls"][] = $ses;
@@ -360,6 +448,7 @@ class PvDataExtractor {
 
     $reader = SsReader::with($input, [
       "all_null_is_empty_row" => false,
+      "ignore_empty_rows" => false,
       "use_headers" => false,
       "parse_none" => true,
     ]);
@@ -385,23 +474,26 @@ class PvDataExtractor {
       "headers" => null,
       "rows" => null,
     ];
-    $state = 1;
+    $state = 10;
     foreach ($reader as $row) {
       A::ensure_size($row, $maxCols);
-      if ($state == 1 && self::parse1_title($row, $data, $ctx1)) {
-        $state = 2;
-      } elseif ($state == 2 && self::parse2_gpts($row, $data)) {
-        $state = 3;
-      } elseif ($state == 3 && self::parse3_objs($row, $data)) {
-        $state = 4;
-      } elseif ($state == 4 && self::parse4_sess($row, $data)) {
-        $state = 5;
-      } elseif ($state == 5 && self::parse5_cols($row, $data)) {
-        $state = 6;
-      } elseif ($state == 6) {
+      if ($state == 10 && self::parse1_title($row, $data, $ctx1)) {
+      #  $state = 11;
+      #} elseif ($state == 11) {
+        $state = 20;
+      } elseif ($state == 20 && self::parse2_gpts($row, $data)) {
+        $state = 30;
+      } elseif ($state == 30 && self::parse3_objs($row, $data)) {
+        $state = 40;
+      } elseif ($state == 40 && self::parse4_sess($row, $data)) {
+        $state = 50;
+      } elseif ($state == 50 && self::parse5_cols($row, $data)) {
+        $state = 60;
+      } elseif ($state == 60) {
         self::parse6_row($row, $data);
       }
     }
+    if ($data["objs"] === null) throw self::invalid_file();
     self::update_metadata($data);
 
     return new PvData($data);
