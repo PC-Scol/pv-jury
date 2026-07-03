@@ -50,6 +50,8 @@ class TbinDumpExtractPage extends ANavigablePage {
     al::print();
     if ($this->cdumpData !== null) {
       vo::p([
+        v::a("RESET", page::self()),
+        ", ",
         v::a("pvData", page::bu("", F::select(null, ["type"]))),
         ", ",
         v::a("display", page::bu("", F::select(null, null, [

@@ -245,9 +245,11 @@ abstract class PvModelBuilder {
     $pvData = $this->pvData;
     $sess = cl::merge($pvData->sesCols, $pvData->ctlCols);
     $index = 1;
+    $added = [];
     $cols = [];
     foreach ($sess as $ses) {
       foreach ($ses["cols"] as $col) {
+        if ($added[$col] ?? false) continue;
         $found = false;
         foreach (self::STD_COLS as $ref => [$checked, $label, $order]) {
           if (in_array($col, cl::with($ses[$ref] ?? null))) {
@@ -269,6 +271,7 @@ abstract class PvModelBuilder {
           "checked" => $checked,
           "order" => $order,
         ];
+        $added[$col] = true;
       }
     }
     uasort($cols, cl::compare(["order", "icol"]));
