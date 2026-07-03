@@ -1,0 +1,49 @@
+# -*- coding: utf-8 mode: yaml -*- vim:sw=2:sts=2:et:ai:si:sta:fenc=utf-8
+# NE PAS MODIFIER ce fichier: les mises à jour risquent de poser problème
+# si vous devez faire des modifications, vous pouvez les ajouter dans un fichier
+# docker-composer.local.yml et lancer l'application de cette façon:
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
+
+services:
+  web:
+    build: &build-web
+      context: .
+      args:
+        PRIVAREG: ${PRIVAREG:-docker.io}/
+    environment: &environment-web
+      PROD: 1
+      APP_PROFILE: prod
+      BASE_URL: $APP_URL
+      AUTH_CAS: $AUTH_CAS
+      CAS_URL: $CAS_URL
+      CONFIG_ALL_app__cas_url: $CAS_URL
+      ENABLE_SSL: $ENABLE_SSL
+      AUTH_BASIC: $AUTH_BASIC
+      PV_JURY_DATADIR: /data/pv-jury
+      TAIL_LOGFILES: >
+        /data/pv-jury/log/pv-jury*.log
+      LOGROTATE_STATEFILE: /data/pv-jury/logrotate.state
+    volumes: &volumes-web
+      - session-data:/var/lib/php/sessions
+      - app-data:/data/pv-jury
+      - .:/var/www/app
+    ports:
+      - ${LSN_ADDR}:80
+      - ${LSN_ADDR_SSL}:443
+    restart: always
+
+  cron:
+    build: *build-web
+    environment:
+      <<: *environment-web
+      TAIL_LOGFILES: >
+        /data/pv-jury/log/cron*.log
+    command: cron
+    volumes: *volumes-web
+
+volumes:
+  session-data:
+  app-data:
+
+networks:
+  default:
