@@ -13,9 +13,6 @@ use nur\v\vo;
  * affichage exhaustif et en lignes
  */
 class PvModelBuilderDisplay extends PvModelBuilder {
-  protected function verifixPvData(): void {
-  }
-
   static function prepare_layout(PvData $pvData): void {
     $data = $pvData->data;
     $ws =& $pvData->ws;

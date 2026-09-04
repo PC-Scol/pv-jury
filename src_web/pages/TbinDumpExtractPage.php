@@ -1,11 +1,15 @@
 <?php
 namespace web\pages;
 
+use app\PvData;
 use app\PvDataExtractor;
+use app\PvModelBuilderClassicEdition;
 use app\PvModelBuilderDisplay;
 use app\PvModelBuilderPegaseEdition;
 use nulib\os\path;
 use nulib\os\sh;
+use nulib\php\types\vbool;
+use nulib\php\types\vint;
 use nulib\web\params\F;
 use nur\v\al;
 use nur\v\page;
@@ -23,8 +27,18 @@ class TbinDumpExtractPage extends ANavigablePage {
         al::error("input does not exist");
       } else {
         $extractor = new PvDataExtractor();
-        $pvData = $extractor->extract($input);
-        switch (F::get("type")) {
+        $this->pvData = $pvData = $extractor->extract($input);
+        $this->type = $type = F::get("type");
+        switch ($type) {
+        case "c":
+          $classic = new PvModelBuilderClassicEdition($pvData);
+          $this->cc = $cc = vbool::with(F::get("cc", false));
+          $classic->setAddCoeffCol($cc);
+          $this->ises = $ises = vint::with(F::get("i", 0));
+          $classic->setIses($ises);
+          $classic->compute();
+          $data = $pvData->ws;
+          break;
         case "d":
           $display = new PvModelBuilderDisplay($pvData);
           $display->compute();
@@ -44,6 +58,14 @@ class TbinDumpExtractPage extends ANavigablePage {
     }
   }
 
+  protected ?PvData $pvData = null;
+
+  protected ?string $type = null;
+
+  protected ?bool $cc = null;
+
+  protected ?int $ises = null;
+
   protected ?CDumpData $cdumpData = null;
 
   function print(): void {
@@ -54,6 +76,10 @@ class TbinDumpExtractPage extends ANavigablePage {
         ", ",
         v::a("pvData", page::bu("", F::select(null, ["type"]))),
         ", ",
+        v::a("classic", page::bu("", F::select(null, null, [
+          "type" => "c",
+        ]))),
+        ", ",
         v::a("display", page::bu("", F::select(null, null, [
           "type" => "d",
         ]))),
@@ -61,6 +87,29 @@ class TbinDumpExtractPage extends ANavigablePage {
         v::a("pegase", page::bu("", F::select(null, null, [
           "type" => "p",
         ]))),
+        v::if($this->type === "c", [
+          " | ",
+          v::if($this->cc, [
+            v::a("~cc", page::bu("", F::select(null, ["cc"]))),
+          ]),
+          v::unless($this->cc, [
+            v::a("cc", page::bu("", F::select(null, null, [
+              "cc" => 1,
+            ]))),
+          ]),
+          v::foreach($this->pvData->data["ses_cols"], static function($ses, $ises) {
+            return [
+              ", ",
+              v::a([
+                "title" => $ses["title"],
+                "href" => page::bu("", F::select(null, null, [
+                  "i" => $ises,
+                ])),
+                "i=$ises",
+              ]),
+            ];
+          }),
+        ]),
       ]);
       $this->cdumpData->print();
     } else {
