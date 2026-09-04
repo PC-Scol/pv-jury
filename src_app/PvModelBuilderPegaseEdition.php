@@ -7,6 +7,7 @@ use nulib\cl;
 use nulib\cv;
 use nulib\ext\spout\SpoutBuilder;
 use nulib\os\path;
+use nulib\php\types\vbool;
 use nulib\str;
 use nur\b\values\Breaker;
 use nur\v\al;
@@ -47,10 +48,10 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
     return implode(",", $sesTitles);
   }
 
-  private ?array $icols = null;
+  private ?array $types = null;
 
-  function setIcols($icols): static {
-    $this->icols = $icols;
+  function setTypes($types): static {
+    $this->types = cl::withn($types);
     return $this;
   }
 
@@ -121,13 +122,13 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
         } else {
           # calculer les colonnes à afficher
           // pour la session
-          $ses["show_cols"] = $this->getShowCols($this->icols, $ses);
+          $ses["show_cols"] = $this->getShowCols($this->types, $ses);
           // pour les controles
           $ctls = $ses["ctls"] ?? null;
           if ($ctls !== null) {
             $showCtls = null;
             foreach ($ctls as $ctl) {
-              $ctl["show_cols"] = $this->getShowCols($this->icols, $ctl);
+              $ctl["show_cols"] = $this->getShowCols($this->types, $ctl);
               if ($ctl["show_cols"] !== null) $showCtls[] = $ctl;
             }
             if ($showCtls !== null) $ses["ctls"] = $showCtls;
@@ -283,12 +284,12 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
     $headers = $this->pvData->headers;
     $showCols = $ses["show_cols"];
     $count2 = count($showCols);
-    $index2 = cl::first($ses["col_indexes"]);
+    $index2 = self::get_first_index($ses);
     $colIndex2 = 0;
     $maxIndex2 = $count2 - 1;
     $oneCol2 = $colIndex2 === $maxIndex2;
     $firstCol = true;
-    foreach ($showCols as $col => $ref) {
+    foreach ($showCols as $col) {
       $value = $headers[$headersIndex][$index2++];
       if ($firstCol) $value ??= " ";
       $colStyles = null;
@@ -299,7 +300,8 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
       );
       $firstCol = false;
 
-      $value = $headers[$headersIndex + 1][$ses["col_indexes"][$col]];
+      $colIndex = self::get_col_index($col, $ses);
+      $value = $headers[$headersIndex + 1][$colIndex];
       $colStyles = [
         "font" => ["bold" => true],
         "border" => "all thin",
@@ -390,7 +392,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
       $headersIndex = $haveGpts? 2: 1;
       foreach ($obj["sess"] as $ises => $ses) {
         if ($firstSes) {
-          $index1 = cl::first($ses["col_indexes"]);
+          $index1 = self::get_first_index($ses);
           $firstSes = false;
         }
         $showCols = $ses["show_cols"] ?? null;
@@ -490,9 +492,9 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
       else break;
     }
     ["note" => $notea,
-    ] = $this->getAcqNoteResEctsPjCoeff($rowa, $ses, $acq);
+    ] = $this->getAcqNoteResEctsPjCoeffMention($rowa, $ses, $acq);
     ["note" => $noteb,
-    ] = $this->getAcqNoteResEctsPjCoeff($rowb, $ses, $acq);
+    ] = $this->getAcqNoteResEctsPjCoeffMention($rowb, $ses, $acq);
     if (!is_numeric($notea)) $notea = -1;
     if (!is_numeric($noteb)) $noteb = -1;
     $c = -cv::compare($notea, $noteb);
@@ -512,20 +514,23 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
       "res" => $res,
       "ects" => $ects,
       "pj" => $pj,
-    ] = $this->getAcqNoteResEctsPjCoeff($row, $ses, $acq);
+    ] = $this->getAcqNoteResEctsPjCoeffMention($row, $ses, $acq);
 
     $showCols = $ses["show_cols"];
-    foreach ($showCols as $col => $ref) {
+    foreach ($showCols as $col) {
+      [
+        "type" => $type
+      ] = $ses["rev_cols"][$col];
       $colStyles = ["border" => "all thin"];
       $snote = null;
-      switch ($ref) {
-      case "acquis_col":
+      switch ($type) {
+      case "acquis":
         $value = $acquis;
         A::merge($colStyles, [
           "align" => "center",
         ]);
         break;
-      case "note_col":
+      case "note":
         $snote = $note;
         $value = $note;
         A::merge($colStyles, [
@@ -533,7 +538,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
           "format" => "0.000",
         ]);
         break;
-      case "res_col":
+      case "res":
         if ($firstObj && $res !== null) {
           $resultats[$codApr] = $res;
           $firstObj = false;
@@ -543,13 +548,13 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
           "align" => "center",
         ]);
         break;
-      case "ects_col":
+      case "ects":
         $value = $ects;
         A::merge($colStyles, [
           "align" => "center",
         ]);
         break;
-      case "pj_col":
+      case "pj":
         $value = $pj;
         A::merge($colStyles, [
           "align" => "center",
@@ -557,7 +562,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
         ]);
         break;
       default:
-        $value = $row[$ses["col_indexes"][$col]];
+        $value = self::get_col_value($col, $ses, $row);
         if (is_float($value)) {
           A::merge($colStyles, [
             "align" => "right",
@@ -748,6 +753,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
     $pvData = $this->pvData;
     $this->preparePvData($pvData);
     $this->prepareLayout();
+    //$pvData->ws["debug_cols"] = $this->getCols();
 
     $rows = $pvData->rows;
     switch ($this->order) {
@@ -793,7 +799,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
       }
       $builder->write(cl::merge($prefix, $row), $colsStyle, $rowStyle);
     }
-    $builder->setDifferentOddEven(true);
+    if ($builder instanceof SpoutBuilder) $builder->setDifferentOddEven(true);
     $section_colsStyles = $Spv["body_cols_styles"] ?? null;
     $section_rowStyles = $Spv["body_row_styles"] ?? null;
     foreach ($Spv["body"] as $key => $row) {
@@ -802,7 +808,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
       $rowStyle = $section_rowStyles[$key] ?? null;
       $builder->write(cl::merge($prefix, $row), $colsStyle, $rowStyle);
     }
-    $builder->setDifferentOddEven(false);
+    if ($builder instanceof SpoutBuilder) $builder->setDifferentOddEven(false);
     $section_colsStyles = $Spv["footer_cols_styles"] ?? null;
     $section_rowStyles = $Spv["footer_row_styles"] ?? null;
     $builder->write([]);
@@ -851,7 +857,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
         "method" => "post",
         "schema" => [
           "sess" => ["array", [], "Sessions"],
-          "cols" => ["array", [], "Colonnes"],
+          "types" => ["array", [], "Types de colonnes"],
           "order" => ["string", null, "Ordre"],
           "xe" => ["bool", null, "Exclure les objets pour lesquels il n'y a ni note ni résultat"],
           "objs" => ["array", [], "Objets à inclure dans l'édition"],
@@ -859,7 +865,7 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
         "params" => [
           "convert" => ["control" => "hidden", "value" => 1],
           "sess" => false,
-          "cols" => false,
+          "types" => false,
           "order" => [
             "control" => "select",
             "items" => [
@@ -920,14 +926,12 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
       "Colonnes à inclure dans l'édition",
     ]);
     vo::sdiv(["class" => $form->FGC_CLASS()]);
-    $index = 1;
-    foreach ($this->getCols() as [$icol, $label, $checked, $ref]) {
-      $form->printCheckbox($label, "cols[]", $icol, $checked, [
-        "id" => "col$index",
+    foreach ($this->getStdCols() as ["type" => $type, "label" => $label, "checked" => $checked, "index" => $index]) {
+      $form->printCheckbox($label, "types[]", $type, $checked, [
+        "id" => "type$index",
         "naked" => true,
         "naked_label" => true,
       ]);
-      $index++;
     }
     vo::ediv();
     vo::ediv();
@@ -978,9 +982,9 @@ class PvModelBuilderPegaseEdition extends PvModelBuilder {
   function doFormAction(?array $params=null): void {
     $form = $this->getForm();
     $this->setIses($form["sess"]);
-    $this->setIcols($form["cols"]);
+    $this->setTypes($form["types"]);
     $this->setOrder($form["order"]);
-    $this->setExcludeUnlessHaveValue(boolval($form["xe"]));
+    $this->setExcludeUnlessHaveValue(vbool::with($form["xe"] ?? false));
     $this->setIncludeObjs($form["objs"] ?? []);
     $suffix = $this->getSuffix();
     $output = path::filename($this->pvData->origname);

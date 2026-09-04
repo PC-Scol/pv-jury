@@ -8,6 +8,7 @@ use nulib\ext\tab\SsReader;
 use nulib\file\web\Upload;
 use nulib\os\path;
 use nulib\str;
+use nulib\ValueException;
 use stdClass;
 
 /**
@@ -15,9 +16,17 @@ use stdClass;
  * depuis PEGASE
  */
 class PvDataExtractor {
+  static function invalid_file(): ValueException {
+    return new ValueException("Ce fichier ne semble pas être un PV de jury valide");
+  }
   static function parse1_title(array $row, array &$data, &$ctx): bool {
-    if ($ctx === null) $ctx = 1;
-    if ($ctx >=4 && cl::all_n($row)) {
+    if ($ctx === null) {
+      if (!str::starts_with("Pv de jury", cl::first($row))) {
+        throw self::invalid_file();
+      }
+      $ctx = 1;
+    }
+    if ($ctx >= 4 && cl::all_n($row)) {
       # il faut au moins 4 lignes de titre
       return true;
     }
@@ -81,7 +90,7 @@ class PvDataExtractor {
       }
     };
 
-    if (!cl::all_n($row)) $data["headers"][] = $row;
+    $data["headers"][] = $row;
     array_splice($row, 0, 3);
     foreach ($row as $col) {
       if ($c->new($col)) continue;
@@ -146,6 +155,10 @@ class PvDataExtractor {
           "is_session_n" => false,
           "is_session_f" => false,
           "is_session" => false,
+          "cols" => null,
+          "types" => null,
+          "rev_cols" => null,
+          "agg_cols" => null,
           "note_col" => null,
           "res_col" => null,
           "ects_col" => null,
@@ -202,7 +215,7 @@ class PvDataExtractor {
       }
     };
 
-    if (!cl::all_n($row)) $data["headers"][] = $row;
+    $data["headers"][] = $row;
     array_splice($row, 0, 3);
     foreach ($row as $col) {
       if ($c->new($col)) continue;
@@ -234,20 +247,137 @@ class PvDataExtractor {
       function addCol($col, int $colIndex): void {
         if (str::starts_with("Amngt/Acquis", $col)) {
           $this->ses["acquis_col"] = $col;
-        } elseif ($col === "Note" || $col === "Note Retenue" || $col === "Note Finale") {
+          $this->ses["types"]["acquis"] = true;
+          $this->ses["agg_cols"]["acquis"][] = $col;
+          $this->ses["rev_cols"][$col] = [
+            "type" => "acquis",
+            "index" => $colIndex,
+          ];
+        } elseif ($col === "Note Finale") {
+          # la note finale prime sur les autres
           $this->ses["note_col"] = $col;
-        } elseif ($col === "Résultat" || $col === "Résultat Final") {
+          $this->ses["types"]["note"] = true;
+          $this->ses["agg_cols"]["note"][] = $col;
+          $this->ses["rev_cols"][$col] = [
+            "type" => "note",
+            "index" => $colIndex,
+          ];
+        } elseif ($col === "Note" || str::starts_with("Note ", $col)) {
+          $this->ses["note_col"] ??= $col;
+          $this->ses["types"]["note"] = true;
+          $this->ses["agg_cols"]["note"][] = $col;
+          $this->ses["rev_cols"][$col] = [
+            "type" => "note",
+            "index" => $colIndex,
+          ];
+        } elseif ($col === "Résultat Final") {
+          # le résultat final prime sur les autres
           $this->ses["res_col"] = $col;
-        } elseif ($col === "ECTS" || $col === "ECTS Finaux") {
+          $this->ses["types"]["res"] = true;
+          $this->ses["agg_cols"]["res"][] = $col;
+          $this->ses["rev_cols"][$col] = [
+            "type" => "res",
+            "index" => $colIndex,
+          ];
+        } elseif ($col === "Résultat" || str::starts_with("Résultat ", $col)) {
+          $this->ses["res_col"] ??= $col;
+          $this->ses["types"]["res"] = true;
+          $this->ses["agg_cols"]["res"][] = $col;
+          $this->ses["rev_cols"][$col] = [
+            "type" => "res",
+            "index" => $colIndex,
+          ];
+        } elseif ($col === "ECTS Finaux") {
+          # les ECTS finaux priment sur les autres
           $this->ses["ects_col"] = $col;
-        } elseif ($col === "Points Jury" || $col === "Points Jury Retenus") {
+          $this->ses["types"]["ects"] = true;
+          $this->ses["agg_cols"]["ects"][] = $col;
+          $this->ses["rev_cols"][$col] = [
+            "type" => "ects",
+            "index" => $colIndex,
+          ];
+        } elseif ($col === "ECTS" || str::starts_with("ECTS ", $col)) {
+          $this->ses["ects_col"] ??= $col;
+          $this->ses["types"]["ects"] = true;
+          $this->ses["agg_cols"]["ects"][] = $col;
+          $this->ses["rev_cols"][$col] = [
+            "type" => "ects",
+            "index" => $colIndex,
+          ];
+        } elseif ($col === "Points Jury Retenus") {
+          # les points jury retenus priment sur les autres
           $this->ses["pj_col"] = $col;
+          $this->ses["types"]["pj"] = true;
+          $this->ses["agg_cols"]["pj"][] = $col;
+          $this->ses["rev_cols"][$col] = [
+            "type" => "pj",
+            "index" => $colIndex,
+          ];
+        } elseif ($col === "Points Jury" || str::starts_with("Points Jury ", $col)) {
+          $this->ses["pj_col"] ??= $col;
+          $this->ses["types"]["pj"] = true;
+          $this->ses["agg_cols"]["pj"][] = $col;
+          $this->ses["rev_cols"][$col] = [
+            "type" => "pj",
+            "index" => $colIndex,
+          ];
+        } elseif ($col === "Barème" || str::starts_with("Barème ", $col)) {
+          $this->ses["types"]["bareme"] = true;
+          $this->ses["agg_cols"]["bareme"][] = $col;
+          $this->ses["rev_cols"][$col] = [
+            "type" => "bareme",
+            "index" => $colIndex,
+          ];
+        } elseif ($col === "Coefficient") {
+          $this->ses["types"]["coeff"] = true;
+          $this->ses["agg_cols"]["coeff"][] = $col;
+          $this->ses["rev_cols"][$col] = [
+            "type" => "coeff",
+            "index" => $colIndex,
+          ];
+        } elseif ($col === "Mention") {
+          $this->ses["types"]["mention"] = true;
+          $this->ses["agg_cols"]["mention"][] = $col;
+          $this->ses["rev_cols"][$col] = [
+            "type" => "mention",
+            "index" => $colIndex,
+          ];
+        } elseif ($col === "Rang Final" || str::starts_with("Rang Final ", $col)) {
+          # le rang final prime sur les autres
+          $actualCol = $col;
+          $col = "Rang Final";
+          $this->ses["types"]["rang"] = true;
+          $this->ses["agg_cols"]["rang"][] = $col;
+          $this->ses["rev_cols"][$col] = $this->ses["rev_cols"][$actualCol] = [
+            "type" => "rang",
+            "index" => $colIndex,
+            "col" => $col,
+            "actual_col" => $actualCol,
+          ];
+        } elseif ($col === "Rang" || str::starts_with("Rang ", $col)) {
+          $actualCol = $col;
+          $col = "Rang";
+          $this->ses["types"]["rang"] = true;
+          $this->ses["agg_cols"]["rang"][] = $col;
+          $this->ses["rev_cols"][$col] = $this->ses["rev_cols"][$actualCol] = [
+            "type" => "rang",
+            "index" => $colIndex,
+            "col" => $col,
+            "actual_col" => $actualCol,
+          ];
+        } else {
+          $this->ses["types"]["divers"] = true;
+          $this->ses["agg_cols"]["divers"][] = $col;
+          $this->ses["rev_cols"][$col] = [
+            "type" => "divers",
+            "index" => $colIndex,
+          ];
         }
-        $cols =& $this->ses["cols"];
-        $cols[] = $col;
-        $this->ses["col_indexes"][$col] = $colIndex;
+        $this->ses["cols"][] = $col;
 
-        if (count($cols) >= $this->ses["size"]) {
+        if (count($this->ses["cols"]) >= $this->ses["size"]) {
+          $this->ses["types"] = array_keys($this->ses["types"]);
+
           $this->xses++;
           $updateRefs = true;
           if ($this->xses >= count($this->obj["sess"])) {
@@ -265,7 +395,16 @@ class PvDataExtractor {
       }
     };
 
-    if (!cl::all_n($row)) $data["headers"][] = $row;
+    # Renommer les colonnes Barème avec le nom de la colonne note précédente
+    $prevNoteCol = null;
+    foreach ($row as &$col) {
+      if ($col === "Note" || str::starts_with("Note ", $col)) {
+        $prevNoteCol = $col;
+      } elseif ($col === "Barème" && $prevNoteCol !== null) {
+        $col .= " $prevNoteCol";
+      }
+    }; unset($col);
+    $data["headers"][] = $row;
     array_splice($row, 0, 3);
     $sindex = 3;
     foreach ($row as $col) {
@@ -286,8 +425,11 @@ class PvDataExtractor {
           if ($value === "-") $row[$sindex] = $value = null;
           # ne pas considérer Barème quand il s'agit de décider s'il y a une
           # valeur
-          if ($col === "Barème") $isValue = false;
-          else $isValue = $value !== null;
+          if ($col === "Barème" || str::starts_with("Barème ", $col)) {
+            $isValue = false;
+          } else {
+            $isValue = $value !== null;
+          }
           $ses["have_value"] = $ses["have_value"] || $isValue;
           $haveNote = $col === $noteCol && $isValue;
           $ses["have_note"] = $ses["have_note"] || $haveNote;
@@ -298,6 +440,41 @@ class PvDataExtractor {
       }; unset($ses);
     }; unset($obj);
     $data["rows"][$codApr] = $row;
+  }
+
+  const BOOL_COLS = ["have_value", "have_note", "have_res", "is_acquis", "is_session", "is_controle"];
+  const SCALAR_COLS = ["acquis_col", "note_col", "res_col", "ects_col", "pj_col"];
+  const ARRAY_COLS = ["cols", "types"];
+
+  protected static function merge_cols(?array &$destCols, array $ses): void {
+    $boolCols = self::BOOL_COLS;
+    $scalarCols = self::SCALAR_COLS;
+    $arrayCols = self::ARRAY_COLS;
+    $allCols = array_merge($boolCols, $scalarCols, $arrayCols);
+    if (!isset($destCols["cols"])) {
+      # première fois: prendre en l'état
+      A::merge($destCols, cl::select($ses, $allCols));
+      $destCols["rev_cols"] = $ses["rev_cols"];
+    } else {
+      # fois suivantes, merger si modifications
+      foreach ($boolCols as $col) {
+        if ($ses[$col]) $destCols[$col] = true;
+      }
+      foreach ($scalarCols as $col) {
+        $destCols[$col] ??= $ses[$col];
+      }
+      foreach ($arrayCols as $col) {
+        $pvalues = $destCols[$col];
+        $values = $ses[$col];
+        if ($values !== $pvalues) {
+          $pvalues = array_fill_keys($pvalues ?? [], true);
+          $values = array_fill_keys($values ?? [], true);
+          $values = array_merge($pvalues, $values);
+          $destCols[$col] = array_keys($values);
+        }
+      }
+      A::merge($destCols["rev_cols"], $ses["rev_cols"]);
+    }
   }
 
   static function update_metadata(array &$data): void {
@@ -315,28 +492,8 @@ class PvDataExtractor {
           if ($cses !== null) $pses =& $cses;
           $cses =& $ses;
         }
-        if (($isAcquis || $isSession) && !isset($sesCols[$ises]["cols"])) {
-          A::merge($sesCols[$ises], cl::select($ses, [
-            "have_value", "have_note", "have_res",
-            "is_acquis",
-            "acquis_col",
-            "is_session",
-            "note_col", "res_col", "ects_col", "pj_col",
-            "is_controle",
-            "cols",
-          ]));
-        }
-        if ($isControle && !isset($ctlCols[$title]["cols"])) {
-          A::merge($ctlCols[$title], cl::select($ses, [
-            "have_value", "have_note", "have_res",
-            "is_acquis",
-            "acquis_col",
-            "is_session",
-            "note_col", "res_col", "ects_col", "pj_col",
-            "is_controle",
-            "cols",
-          ]));
-        }
+        if ($isAcquis || $isSession) self::merge_cols($sesCols[$ises], $ses);
+        if ($isControle) self::merge_cols($ctlCols[$title], $ses);
         if ($cses !== null) {
           if ($isControle) $cses["ctls"][] = $ses;
           if ($pses !== null && $pses["is_session_n"]) $pses["nses"] = $ses;
@@ -360,6 +517,7 @@ class PvDataExtractor {
 
     $reader = SsReader::with($input, [
       "all_null_is_empty_row" => false,
+      "ignore_empty_rows" => false,
       "use_headers" => false,
       "parse_none" => true,
     ]);
@@ -385,23 +543,26 @@ class PvDataExtractor {
       "headers" => null,
       "rows" => null,
     ];
-    $state = 1;
+    $state = 10;
     foreach ($reader as $row) {
       A::ensure_size($row, $maxCols);
-      if ($state == 1 && self::parse1_title($row, $data, $ctx1)) {
-        $state = 2;
-      } elseif ($state == 2 && self::parse2_gpts($row, $data)) {
-        $state = 3;
-      } elseif ($state == 3 && self::parse3_objs($row, $data)) {
-        $state = 4;
-      } elseif ($state == 4 && self::parse4_sess($row, $data)) {
-        $state = 5;
-      } elseif ($state == 5 && self::parse5_cols($row, $data)) {
-        $state = 6;
-      } elseif ($state == 6) {
+      if ($state == 10 && self::parse1_title($row, $data, $ctx1)) {
+      #  $state = 11;
+      #} elseif ($state == 11) {
+        $state = 20;
+      } elseif ($state == 20 && self::parse2_gpts($row, $data)) {
+        $state = 30;
+      } elseif ($state == 30 && self::parse3_objs($row, $data)) {
+        $state = 40;
+      } elseif ($state == 40 && self::parse4_sess($row, $data)) {
+        $state = 50;
+      } elseif ($state == 50 && self::parse5_cols($row, $data)) {
+        $state = 60;
+      } elseif ($state == 60) {
         self::parse6_row($row, $data);
       }
     }
+    if ($data["objs"] === null) throw self::invalid_file();
     self::update_metadata($data);
 
     return new PvData($data);

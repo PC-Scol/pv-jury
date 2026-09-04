@@ -1,12 +1,9 @@
 <?php
 namespace app\cli;
 
-use app\config\bootstrap;
+use app\PvDataExtractor;
 use app\PvModelBuilder;
 use app\PvModelBuilderClassicEdition;
-use app\PvModelBuilderDisplay;
-use app\PvDataExtractor;
-use app\PvModelBuilderTemplateEdition;
 use app\PvModelBuilderPegaseEdition;
 use nulib\app\cli\Application;
 use nulib\ext\json;
@@ -19,9 +16,6 @@ class ConvertPvJuryApp extends Application {
     "purpose" => "convertir une extraction de PV de jury",
     "usage" => "INPUT.csv [-o OUTPUT.csv]",
 
-    ["-1", "--model-display", "name" => "model", "value" => 1,
-      "help" => "Sélectionner le modèle 'affichage individuel' (c'est la valeur par défaut)",
-    ],
     ["-2", "--model-classic-edition", "name" => "model", "value" => 2,
       "help" => "Sélectionner le modèle 'édition classique'",
     ],
@@ -32,8 +26,8 @@ class ConvertPvJuryApp extends Application {
       "help" => "spécifier l'identifiant de session pour le modèle 'édition classique'
 ou les identifiants séparés par des virgules pour le modèle 'édition PEGASE'",
     ],
-    ["-c", "--icols", "args" => 1, "argsdesc" => "ICOLS",
-      "help" => "spécifier les colonnes séparées par des virgules pour le modèle 'édition PEGASE'",
+    ["-t", "--types", "args" => 1, "argsdesc" => "TYPES",
+      "help" => "spécifier les types de colonnes séparées par des virgules pour le modèle 'édition PEGASE'",
     ],
     ["-d", "--dump-yaml", "value" => true,
       "help" => "Afficher les données au format YAML",
@@ -44,26 +38,20 @@ ou les identifiants séparés par des virgules pour le modèle 'édition PEGASE'
     ["-o", "--csv-output", "args" => "file",
       "help" => "Spécifier le fichier CSV en sortie",
     ],
-    ["-x", "--xlsx-output", "args" => "file",
-      "help" => "Spécifier le fichier XLSX mis en forme en sortie",
-    ],
     ["args" => "file", "name" => "args"],
   ];
 
   const CSV_BUILDERS = [
-    1 => PvModelBuilderDisplay::class,
     2 => PvModelBuilderClassicEdition::class,
     3 => PvModelBuilderPegaseEdition::class,
   ];
 
   protected int $model = 1;
   protected $ises = null;
-  protected $icols = null;
+  protected $types = null;
   protected bool $dumpYaml = false;
   protected ?string $jsonOutput = null;
   protected ?string $csvOutput = null;
-  protected ?string $xlsxOutput = null;
-  protected ?array $args = null;
 
   function main() {
     $args = $this->args;
@@ -76,11 +64,10 @@ ou les identifiants séparés par des virgules pour le modèle 'édition PEGASE'
     $dumpYaml = $this->dumpYaml;
     $jsonOutput = $this->jsonOutput;
     $csvOutput = $this->csvOutput;
-    $xlsxOutput = $this ->xlsxOutput;
-    if (!$dumpYaml && $jsonOutput === null && $csvOutput === null && $xlsxOutput === null) {
+    if (!$dumpYaml && $jsonOutput === null && $csvOutput === null) {
       $csvOutput = "-";
     }
-    $wsdump = $dumpYaml && $csvOutput !== null || $xlsxOutput !== null;
+    $wsdump = $dumpYaml && $csvOutput !== null;
 
     if ($dumpYaml && !$wsdump) {
       yaml::dump($pvData->data);
@@ -98,10 +85,10 @@ ou les identifiants séparés par des virgules pour le modèle 'édition PEGASE'
         $ises = preg_split('/\s*,\s*/', str::trim($ises));
         $builder->setIses($ises);
       }
-      $icols = $this->icols;
-      if ($icols !== null) {
-        $icols = preg_split('/\s*,\s*/', str::trim($icols));
-        $builder->setIcols($icols);
+      $types = $this->types;
+      if ($types !== null) {
+        $types = preg_split('/\s*,\s*/', str::trim($types));
+        $builder->setTypes($types);
       }
       $builder->build($csvOutput);
       if ($dumpYaml) {
@@ -112,10 +99,6 @@ ou les identifiants séparés par des virgules pour le modèle 'édition PEGASE'
       } else {
         $builder->write();
       }
-    }
-    if($xlsxOutput !== null){
-      $builder = new PvModelBuilderTemplateEdition();
-      $builder->build($pvData->data, $xlsxOutput)->write();
     }
   }
 }

@@ -251,6 +251,16 @@ class PvModelBuilderClassicEdition extends PvModelBuilder {
           ];
         }
 
+        if (in_array("mention", $obj["ses"]["types"])) {
+          $hrow[] = "Mention";
+          $hrow_colsStyles[] = [
+            "font" => ["bold" => true],
+            "border" => "all thin",
+            "align" => "center",
+            "wrap" => true,
+          ];
+        }
+
         if (!$this->excludeControles && ($obj["ses"]["ctls"] ?? null) !== null) {
           foreach ($obj["ses"]["ctls"] as $ctl) {
             $title = $ctl["title"];
@@ -276,9 +286,9 @@ class PvModelBuilderClassicEdition extends PvModelBuilder {
   function compareNote(array $rowa, array $rowb) {
     $obj = cl::first($this->pvData->ws["objs"]);
     ["note" => $notea,
-    ] = $this->getAcqNoteResEctsPjCoeff($rowa, $obj["ses"], $obj["acq"]);
+    ] = $this->getAcqNoteResEctsPjCoeffMention($rowa, $obj["ses"], $obj["acq"]);
     ["note" => $noteb,
-    ] = $this->getAcqNoteResEctsPjCoeff($rowb, $obj["ses"], $obj["acq"]);
+    ] = $this->getAcqNoteResEctsPjCoeffMention($rowb, $obj["ses"], $obj["acq"]);
     if (!is_numeric($notea)) $notea = -1;
     if (!is_numeric($noteb)) $noteb = -1;
     $c = -cv::compare($notea, $noteb);
@@ -298,7 +308,9 @@ class PvModelBuilderClassicEdition extends PvModelBuilder {
       "ects" => $ects,
       "pj" => $pj,
       "coeff" => $coeff,
-    ] = $this->getAcqNoteResEctsPjCoeff($row, $obj["ses"], $obj["acq"]);
+      "have_mention" => $haveMention,
+      "mention" => $mention,
+    ] = $this->getAcqNoteResEctsPjCoeffMention($row, $obj["ses"], $obj["acq"]);
 
     $nses = $ses["nses"] ?? null;
     if ($acquis !== null && $res === "AJ" && $nses !== null) {
@@ -343,6 +355,14 @@ class PvModelBuilderClassicEdition extends PvModelBuilder {
         "format" => "0",
       ];
     }
+    if ($haveMention) {
+      $brow1[] = $mention;
+      $brow1Styles[] = [
+        "border" => "left top right thin",
+        "align" => "center",
+        "format" => "0",
+      ];
+    }
     $brow2[] = $res;
     $brow2Styles[] = [
       "border" => "left bottom thin",
@@ -354,6 +374,12 @@ class PvModelBuilderClassicEdition extends PvModelBuilder {
       "align" => "center",
     ];
     if ($addCoeffCol) {
+      $brow2[] = null;
+      $brow2Styles[] = [
+        "border" => "left bottom right thin",
+      ];
+    }
+    if ($haveMention) {
       $brow2[] = null;
       $brow2Styles[] = [
         "border" => "left bottom right thin",
