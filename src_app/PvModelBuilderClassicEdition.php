@@ -251,7 +251,7 @@ class PvModelBuilderClassicEdition extends PvModelBuilder {
           ];
         }
 
-        if ($obj["ses"]["mention_col"] !== null) {
+        if (in_array("mention", $obj["ses"]["types"])) {
           $hrow[] = "Mention";
           $hrow_colsStyles[] = [
             "font" => ["bold" => true],

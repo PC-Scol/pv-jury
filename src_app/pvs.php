@@ -83,7 +83,7 @@ class pvs {
     return self::$config->ensureSetup();
   }
 
-  const EXPECTED_VERSION = 2;
+  const EXPECTED_VERSION = 3;
 
   const CONFIG_VERSION = "version";
 

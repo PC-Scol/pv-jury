@@ -1,3 +1,7 @@
+## Release 0.14.1 du 04/09/2026-11:07
+
+* `c7904b8` support des colonnes rangs
+
 ## Release 0.14.0 du 03/07/2026-11:30
 
 * `a745147` maj environnement de démo

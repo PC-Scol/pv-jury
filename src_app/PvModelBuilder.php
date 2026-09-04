@@ -1,6 +1,7 @@
 <?php
 namespace app;
 
+use nulib\A;
 use nulib\cl;
 use nulib\ext\tab\SsBuilder;
 use nulib\file;
@@ -71,11 +72,26 @@ abstract class PvModelBuilder {
     return $this;
   }
 
+  protected static function get_col_index(?string $col, ?array $ses) {
+    if ($ses === null || $col === null) return null;
+    return $ses["rev_cols"][$col]["index"] ?? null;
+  }
+
+  protected static function get_first_index(?array $ses) {
+    return self::get_col_index(cl::first($ses["cols"]), $ses);
+  }
+
+  protected static function get_col_value(?string $col, ?array $ses, ?array $row) {
+    $colIndex = self::get_col_index($col, $ses);
+    if ($row === null || $colIndex === null) return null;
+    return $row[$colIndex] ?? null;
+  }
+
   function getAcq(array $row, array $acq): array {
     $acquisCol = $acq["acquis_col"];
     $acquis = null;
     if ($acquisCol !== null) {
-      $acquis = $row[$acq["col_indexes"][$acquisCol]];
+      $acquis = self::get_col_value($acquisCol, $acq, $row);
       if (preg_match('/CAPITALISÉ(?: \(\d{2}(\d{2})-\d{2}(\d{2})\))?/u', $acquis, $ms)) {
         $f = $ms[1] ?? null;
         $t = $ms[2] ?? null;
@@ -98,11 +114,11 @@ abstract class PvModelBuilder {
     $pjCol = $ses["pj_col"];
     $pj = null;
     if ($resCol !== null) {
-      $res = $row[$ses["col_indexes"][$resCol]];
+      $res = self::get_col_value($resCol, $ses, $row);
       $res = cl::get(self::RES_MAP, $res, $res);
     }
     if ($noteCol !== null) {
-      $note = $row[$ses["col_indexes"][$noteCol]];
+      $note = self::get_col_value($noteCol, $ses, $row);
       if (is_numeric($note)) {
         $note = bcnumber::with($note)->floatval(3);
       } elseif (is_string($note)) {
@@ -111,7 +127,7 @@ abstract class PvModelBuilder {
       }
     }
     if ($ectsCol !== null) {
-      $ects = $row[$ses["col_indexes"][$ectsCol]];
+      $ects = self::get_col_value($ectsCol, $ses, $row);
       if (is_numeric($ects)) {
         $ects = bcnumber::with($ects)->numval(3);
       } elseif (is_string($ects)) {
@@ -119,7 +135,7 @@ abstract class PvModelBuilder {
       }
     }
     if ($pjCol !== null) {
-      $pj = $row[$ses["col_indexes"][$pjCol]];
+      $pj = self::get_col_value($pjCol, $ses, $row);
       if (is_numeric($pj)) {
         $pj = bcnumber::with($pj)->numval(3);
       } elseif (is_string($pj)) {
@@ -137,12 +153,12 @@ abstract class PvModelBuilder {
   function getAcqNoteResEctsPjCoeffMention(array $row, array $ses, ?array $acq): array {
     if ($acq !== null) $acq = $this->getAcq($row, $acq);
     $noteResEctsPj = $this->getNoteResEctsPj($row, $ses);
-    $coeffCol = $ses["col_indexes"]["Coefficient"] ?? null;
-    $mentionCol = $ses["col_indexes"]["Mention"] ?? null;
+    $coeffIndex = self::get_col_index("Coefficient", $ses);
+    $mentionIndex = self::get_col_index("Mention", $ses);
     return cl::merge($acq, $noteResEctsPj, [
-      "coeff" => $row[$coeffCol] ?? null,
-      "have_mention" => $mentionCol !== null,
-      "mention" => $row[$mentionCol] ?? null,
+      "coeff" => $row[$coeffIndex] ?? null,
+      "have_mention" => $mentionIndex !== null,
+      "mention" => $row[$mentionIndex] ?? null,
     ]);
   }
 
@@ -222,68 +238,62 @@ abstract class PvModelBuilder {
   protected ?array $selectableObjs = null;
 
   function getSelectableObjs(): array {
-    if ($this->selectableObjs === null) {
-      $this->selectableObjs = array_slice($this->pvData->objs, 1);
-    }
-    return $this->selectableObjs;
+    return $this->selectableObjs ??= array_slice($this->pvData->objs, 1);
   }
 
+  const STD_COLS_KEYS = ["checked", "label", "order"];
   const STD_COLS = [
-    "acquis_col" => [true, "Aménagements / Acquis / CHC incomplet", 1],
-    "note_cols" => [true, null, 2],
-    "bareme_cols" => [false, null, 2],
-    "res_cols" => [true, null, 4],
-    "ects_cols" => [true, null, 5],
-    "pj_cols" => [true, null, 6],
-    "mention_col" => [true, null, 7],
+    "acquis" => [true, null, 1],
+    "rang" => [false, "colonnes rangs", 2],
+    "note" => [true, "colonnes notes", 3],
+    "bareme" => [false, "colonnes barèmes", 3],
+    "coeff" => [false, "colonnes coefficients", 3],
+    "res" => [true, "colonnes résultats", 4],
+    "ects" => [true, "colonnes ECTs", 5],
+    "pj" => [true, "colonnes points jury", 6],
+    "mention" => [true, "colonnes mention", 7],
+    "divers" => [false, "autres colonnes", 8],
   ];
 
-  protected ?array $cols = null;
+  protected ?array $stdCols = null;
 
-  function getCols(): array {
-    if ($this->cols !== null) return $this->cols;
+  function getStdCols(): array {
+    if ($this->stdCols !== null) return $this->stdCols;
     $pvData = $this->pvData;
     $sess = cl::merge($pvData->sesCols, $pvData->ctlCols);
-    $index = 1;
-    $added = [];
-    $cols = [];
+    $stdCols = [];
     foreach ($sess as $ses) {
       foreach ($ses["cols"] as $col) {
-        if ($added[$col] ?? false) continue;
-        $found = false;
-        foreach (self::STD_COLS as $ref => [$checked, $label, $order]) {
-          if (in_array($col, cl::with($ses[$ref] ?? null))) {
-            $found = true;
-            break;
-          }
-        }
-        $label ??= $col;
-        if (!$found) {
-          $ref = null;
-          $checked = false;
-          $order = 999;
-        }
-        $icol = $index++;
-        $cols[$icol] = [
-          "col" => $col,
-          "ref" => $ref,
-          "label" => $label,
-          "checked" => $checked,
-          "order" => $order,
-        ];
-        $added[$col] = true;
+        $type = $ses["rev_cols"][$col]["type"];
+        $stdCols[$type][$col] = true;
       }
     }
-    uasort($cols, cl::compare(["order", "icol"]));
-    return $this->cols = $cols;
+    $index = 1;
+    foreach ($stdCols as $type => &$stdCol) {
+      $labels = array_keys($stdCol);
+      $label = implode(", ", $labels);
+      $stdCol = self::STD_COLS[$type];
+      A::ensure_assoc($stdCol, self::STD_COLS_KEYS);
+      if ($stdCol["label"] === null || count($labels) == 1) {
+        $stdCol["label"] = $label;
+      } else {
+        $stdCol["label"] .= " ($label)";
+      }
+      $stdCol["type"] = $type;
+      $stdCol["index"] = $index++;
+    }; unset($stdCol);
+    uasort($stdCols, cl::compare(["order", "index"]));
+    return $this->stdCols = $stdCols;
   }
 
-  function getShowCols(?array $icols=null, ?array $ses=null): ?array {
+  function getShowCols(?array $types, array $ses): ?array {
     $showCols = null;
-    foreach ($this->getCols() as $icol => ["col" => $col, "ref" => $ref]) {
-      if ($icols !== null && !in_array($icol, $icols)) continue;
-      if (in_array($col, $ses["cols"])) $showCols[$col] = $ref;
+    foreach ($ses["cols"] as $col) {
+      if ($types === null || in_array($ses["rev_cols"][$col]["type"], $types)) {
+        $showCols[$col] = true;
+      }
     }
+    if ($showCols !== null) $showCols = array_keys($showCols);
     return $showCols;
   }
 
